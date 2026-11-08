@@ -58,12 +58,11 @@ STATE_MARGIN_DEG = 0.05
 # ANDORINHA_MIN_FREE_DISK_GB muda (ex.: numa máquina do GitHub Actions depois de liberar espaço).
 MIN_FREE_DISK_BYTES = int(float(os.environ.get("ANDORINHA_MIN_FREE_DISK_GB") or 25) * 1_000_000_000)
 
-# De quantos em quantos dias o agendamento gera de novo (andorinha/schedule.py, scripts/due.py).
-GENERATION_INTERVAL_DAYS = 29
-
 # Quantas gerações ficam nas releases: a do catálogo publicado e as anteriores mais recentes. As demais são apagadas
 # no fim de cada publicação (publishing.prune_releases). 0 = não apaga nenhuma. ANDORINHA_KEEP_GENERATIONS muda.
-KEEP_GENERATIONS = int(os.environ.get("ANDORINHA_KEEP_GENERATIONS") or 3)
+# 12 gerações semanais (~3 meses, ~16 GB): quem instalou uma geração acrescenta outro estado dela enquanto a release
+# existir; depois, precisa atualizar tudo. Eram 3 enquanto a geração era a cada 29 dias (~87 dias).
+KEEP_GENERATIONS = int(os.environ.get("ANDORINHA_KEEP_GENERATIONS") or 12)
 
 # O GitHub Releases recusa arquivo a partir de 2 GiB; esta é a trava, com folga.
 MAX_ASSET_BYTES = 1_900_000_000

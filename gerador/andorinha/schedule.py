@@ -1,12 +1,19 @@
-"""Quando gerar de novo: a geração publicada tem uma data (`built_at` do catalogo.json), e o agendamento só segue
-para o build quando ela completa o intervalo, ou no dia marcado para uma geração extra. A linha de comando fica em
-scripts/due.py."""
+"""Quando gerar de novo: toda semana, no domingo. O agendamento dispara todo dia, e só segue para o build quando a
+geração publicada (`built_at` do catalogo.json) é de antes do último domingo, 00:00 em Brasília. Assim, num domingo
+normal, gera no primeiro disparo e os seguintes só conferem a data; se o domingo falhar, os dias seguintes tentam de
+novo até sair. A linha de comando fica em scripts/due.py.
+
+Até 2026-11-08 a regra era "a cada 29 dias desde a geração publicada", com uma geração extra marcada; mudou para
+semanal porque os dados mudam pouco de uma semana para outra e o domingo fica previsível para quem usa os pacotes."""
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional, Tuple
+
+# O domingo é o de Brasília: sem horário de verão desde 2019, sempre UTC-3.
+BRASILIA = timezone(timedelta(hours=-3), "Brasília")
 
 
 def catalog_built_at(catalog: Path) -> Optional[str]:
@@ -18,23 +25,27 @@ def catalog_built_at(catalog: Path) -> Optional[str]:
     return built_at if isinstance(built_at, str) else None
 
 
-def generation_due(built_at: Optional[str], now: datetime, interval_days: int,
-                   manual: bool = False, generate_from: Optional[date] = None) -> Tuple[bool, str]:
-    """(gera?, motivo). Os dias são arredondados, para o horário do build não empurrar a geração para o dia
-    seguinte: uma geração que terminou às 07:10 conta 29 dias no agendamento das 06:17 do 29º dia.
+def week_start(now: datetime) -> datetime:
+    """O domingo mais recente (o de hoje, se hoje é domingo), 00:00 em Brasília, em UTC."""
+    local = now.astimezone(BRASILIA)
+    sunday = local.date() - timedelta(days=(local.weekday() + 1) % 7)  # weekday(): segunda 0 ... domingo 6
+    return datetime(sunday.year, sunday.month, sunday.day, tzinfo=BRASILIA).astimezone(timezone.utc)
 
-    `generate_from` marca uma geração extra, fora do intervalo: a partir desse dia (UTC), gera se a publicada for
-    de antes dele, e tenta de novo nos dias seguintes se falhar. Depois de publicar, não tem mais efeito, e o
-    intervalo passa a contar da geração extra."""
+
+def _day(moment: datetime) -> str:
+    return moment.astimezone(BRASILIA).strftime("%d/%m")
+
+
+def generation_due(built_at: Optional[str], now: datetime, manual: bool = False) -> Tuple[bool, str]:
+    """(gera?, motivo). Gera se a geração publicada é de antes do último domingo (00:00 em Brasília)."""
     if manual:
         return True, "disparado à mão: gera"
     try:
         built = datetime.strptime(built_at or "", "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
     except ValueError:
         return True, "sem a data da geração publicada: gera"
-    if generate_from and now.date() >= generate_from and built.date() < generate_from:
-        return True, f"geração extra marcada para {generate_from} (publicada em {built_at}): gera"
-    days = (now - built + timedelta(hours=12)) // timedelta(days=1)
-    if days >= interval_days:
-        return True, f"geração publicada em {built_at} ({days} dias): gera"
-    return False, f"geração publicada em {built_at} ({days} dias): ainda não, gera ao completar {interval_days} dias"
+    start = week_start(now)
+    if built < start:
+        return True, f"geração publicada em {built_at}, antes do domingo {_day(start)}: gera"
+    return False, (f"geração publicada em {built_at}, já nesta semana (desde o domingo {_day(start)}): "
+                   f"ainda não, gera no domingo {_day(start + timedelta(days=7))}")

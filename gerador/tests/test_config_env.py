@@ -61,7 +61,7 @@ class EnvironmentTest(unittest.TestCase):
         self.assertEqual(25_000_000_000, reload_config().MIN_FREE_DISK_BYTES)
 
     def test_kept_generations(self):
-        self.assertEqual(3, reload_config().KEEP_GENERATIONS)
+        self.assertEqual(12, reload_config().KEEP_GENERATIONS)  # ~3 meses de gerações semanais
         self.assertEqual(5, reload_config(ANDORINHA_KEEP_GENERATIONS="5").KEEP_GENERATIONS)
         self.assertEqual(0, reload_config(ANDORINHA_KEEP_GENERATIONS="0").KEEP_GENERATIONS)  # 0 = não apaga
 

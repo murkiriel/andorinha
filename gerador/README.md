@@ -29,16 +29,13 @@ python -m unittest discover -s tests -t .
 Os testes também rodam no GitHub Actions a cada push e pull request (`.github/workflows/testes.yml`), sem o
 pyvalhalla e sem os dados baixados: os 2 testes que dependem deles são pulados, com o motivo no log.
 
-A geração inteira roda no Actions, no workflow `gerar` (`.github/workflows/gerar.yml`), **a cada 29 dias**: ele
-dispara todo dia às 03:17 e às 09:17 de Brasília, o job `interval` pergunta ao `scripts/due.py` se a geração
-publicada (`built_at` do `catalogo.json`) já tem 29 dias, e só então o build roda e publica. Se a geração falhar, o
-disparo seguinte tenta de novo. São dois horários, fora da hora cheia, porque o GitHub atrasa ou pula disparos
+A geração inteira roda no Actions, no workflow `gerar` (`.github/workflows/gerar.yml`), **toda semana, no
+domingo**: ele dispara todo dia às 03:17 e às 09:17 de Brasília, o job `interval` pergunta ao `scripts/due.py` se a
+geração publicada (`built_at` do `catalogo.json`) é de antes do último domingo, 00:00 em Brasília, e só então o build
+roda e publica. Se a geração falhar, o disparo seguinte tenta de novo, e os dias seguintes também, até sair; uma
+geração à mão no meio da semana não adia a do domingo. São dois horários, fora da hora cheia, porque o GitHub atrasa ou pula disparos
 agendados sem avisar: o segundo cobre o primeiro e, se o primeiro já publicou, só confere a data e para. Disparado à
 mão, gera na hora e só publica com `publish` marcado. Num fork, o agendamento não gera.
-
-Para uma geração fora do intervalo sem disparar à mão, a variável `GENERATE_FROM` do job `interval` marca um dia
-(`AAAA-MM-DD`, UTC): a partir dele, o agendamento gera se a geração publicada for de antes desse dia. Depois de
-publicar, a marca não tem mais efeito, e os 29 dias passam a contar dessa geração.
 
 O job do build libera espaço apagando ferramentas pré-instaladas da máquina, põe os dados e 12 GB de swap no disco
 com mais espaço livre, gera, guarda os logs e as medições (memória, swap e disco a cada 30 s) como artefato e
@@ -75,9 +72,8 @@ Módulos de apoio:
   a do build e a de quem usa os pacotes (`routing_config`, com `use_connectivity` desligado e o limite de distância da
   moto aumentado), que a validação usa.
 - `andorinha/publishing.py`: as travas da publicação (`check`, `drops`); `scripts/publish.py` é só a linha de comando.
-- `andorinha/schedule.py`: a regra do intervalo entre gerações (29 dias, `GENERATION_INTERVAL_DAYS`), contada do
-  `built_at` do `catalogo.json` publicado, em dias arredondados, e a geração extra com dia marcado;
-  `scripts/due.py` é só a linha de comando.
+- `andorinha/schedule.py`: a regra semanal (gera se o `built_at` do `catalogo.json` publicado é de antes do último
+  domingo, 00:00 em Brasília); `scripts/due.py` é só a linha de comando. Até 2026-11-08 era a cada 29 dias.
 - `andorinha/tiles.py`: a grade de tiles (caminho do arquivo, nível, índice e retângulo).
 - `andorinha/net.py`: downloads que retomam de onde pararam (`Range`), nunca deixam arquivo pela metade com o nome final e só repetem erro passageiro (4xx, fora 408 e 429, falha na hora).
   Corpo comprimido (gzip) é descomprimido ao gravar: o IBGE manda a malha assim para os executores do Actions,
@@ -120,10 +116,11 @@ No git, o histórico incharia a cada mês. Cada geração vira uma release (`bui
 só o gerador e o `catalogo.json`. Limites do GitHub Releases: cada arquivo abaixo de 2 GiB, sem limite de tamanho
 total nem de banda.
 
-**Ficam 3 gerações.** No fim de cada publicação, depois do push do `catalogo.json` novo, o `publish.py` apaga as
-releases antigas (e as tags delas): ficam a do catálogo e as 2 anteriores mais recentes (`KEEP_GENERATIONS`;
-`ANDORINHA_KEEP_GENERATIONS=0` desliga). Três, e não uma, porque pacotes de gerações diferentes não se misturam:
-quem instalou a geração anterior só consegue baixar mais um estado dela enquanto a release existir. Também saem os
+**Ficam 12 gerações** (~3 meses de gerações semanais, ~16 GB). No fim de cada publicação, depois do push do
+`catalogo.json` novo, o `publish.py` apaga as releases antigas (e as tags delas): ficam a do catálogo e as 11
+anteriores mais recentes (`KEEP_GENERATIONS`; `ANDORINHA_KEEP_GENERATIONS=0` desliga). Várias, e não uma, porque
+pacotes de gerações diferentes não se misturam: quem instalou uma geração anterior só consegue baixar mais um estado
+dela enquanto a release existir. Eram 3 enquanto a geração era a cada 29 dias (a mesma janela, ~87 dias). Também saem os
 rascunhos órfãos (uma subida que caiu deixa um rascunho que a geração seguinte, com outro `build_id`, não retoma).
 Release com tag fora do formato do `build_id` nunca é tocada; se a release do catálogo não estiver publicada, nada
 é apagado. Uma falha na limpeza vira aviso e não derruba a publicação: a geração seguinte tenta de novo.

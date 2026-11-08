@@ -1,9 +1,10 @@
 # Gera uma geração completa (extrato do OpenStreetMap -> tiles do Valhalla -> pacotes -> validação -> catálogo) e
 # publica a release e o catalogo.json pelo scripts/publish.py, com todas as travas dele.
 #
-# A cada 29 dias: todo dia, às 03:17 e às 09:17 em Brasília, o job "interval" lê a data da geração publicada
-# (built_at do catalogo.json) e só segue para o build se ela tiver 29 dias ou mais (scripts/due.py). Se a geração
-# falhar, o disparo seguinte tenta de novo: a publicada continua com a data velha.
+# Toda semana, no domingo: todo dia, às 03:17 e às 09:17 em Brasília, o job "interval" lê a data da geração publicada
+# (built_at do catalogo.json) e só segue para o build se ela for de antes do último domingo, 00:00 em Brasília
+# (scripts/due.py). Num domingo normal, gera às 03:17 e o disparo das 09:17 só confere a data. Se a geração falhar, o
+# disparo seguinte tenta de novo, e os dias seguintes também, até sair: a publicada continua com a data velha.
 # Os horários ficam fora da hora cheia de propósito: é quando o GitHub mais atrasa ou pula os disparos agendados
 # (em 01/10/2026, o das 06:00 UTC não apareceu no horário). São dois por dia porque um disparo pulado não avisa
 # ninguém: o segundo cobre o primeiro e, se o primeiro já publicou, só confere a data e para.
@@ -61,11 +62,7 @@ jobs:
         id: age
         env:
           MANUAL: ${{ github.event_name != 'schedule' && '--manual' || '' }}
-          # Geração extra, fora do intervalo: a partir desta data (UTC), gera se a geração publicada for de antes
-          # dela (e tenta de novo nos dias seguintes se falhar). Depois de publicar, não tem mais efeito, e os 29
-          # dias passam a contar dessa geração. Vazio = só o intervalo.
-          GENERATE_FROM: "2026-10-02"
-        run: python3 gerador/scripts/due.py $MANUAL --generate-from "$GENERATE_FROM"
+        run: python3 gerador/scripts/due.py $MANUAL
 
   generate:
     needs: interval

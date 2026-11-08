@@ -50,9 +50,10 @@ class ScheduledGenerationTest(unittest.TestCase):
         for cron in self.crons():
             self.assertNotEqual("0", cron.split()[0], cron)
 
-    def test_extra_generation_day_reaches_the_rule(self):
-        self.assertRegex(self.interval, r'(?m)^\s+GENERATE_FROM: "(\d{4}-\d{2}-\d{2})?"')
-        self.assertIn('--generate-from "$GENERATE_FROM"', self.interval)
+    def test_interval_job_asks_only_the_weekly_rule(self):
+        """A geração extra marcada (GENERATE_FROM) saiu com a regra dos 29 dias: o disparo à mão cobre."""
+        self.assertIn("run: python3 gerador/scripts/due.py $MANUAL\n", self.interval)
+        self.assertNotIn("GENERATE_FROM", self.text)
 
     def test_published_date_is_the_one_on_the_branch_now(self):
         """Um run que esperou na fila atrás de outro que publicou lê o catálogo de agora, não o do disparo: sem

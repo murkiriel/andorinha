@@ -113,14 +113,14 @@ def main() -> None:
         return
 
     tag = cat["build_id"]
-    files = [config.DIST / name for name in publishing.package_files(cat)]
+    files = publishing.release_files(cat, config.DIST)  # os pacotes e o LICENCA-DADOS.txt
     notes = (f"Tiles de roteamento do Valhalla {cat['valhalla_version']} para o Brasil, OpenStreetMap de "
              f"{cat['osm']['timestamp']}. Índice: catalogo.json na raiz do repositório.\n\n{config.ATTRIBUTION}")
     try:
         publishing.publish_release(publishing.gh_real, tag, files, f"Andorinha {tag}", notes)
     except (publishing.GhError, publishing.ReleaseAlreadyPublished) as e:
         sys.exit(f"Release não publicada: {e}")
-    print(f"Release {tag} publicada com {len(files)} pacotes.")
+    print(f"Release {tag} publicada com {len(files) - 1} pacotes e o {publishing.LICENSE_FILE}.")
 
     shutil.copyfile(config.DIST / "catalogo.json", root_catalog)
     readme = config.REPO / "README.md"

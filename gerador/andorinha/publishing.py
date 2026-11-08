@@ -223,6 +223,37 @@ def package_files(cat: dict) -> List[str]:
     return out
 
 
+LICENSE_FILE = "LICENCA-DADOS.txt"
+
+
+def license_text(cat: dict) -> str:
+    """A licença e a atribuição de uma geração, para ir na release ao lado dos pacotes: quem baixa só os arquivos
+    recebe o aviso. O texto da ODbL vai inteiro (o LICENSE da raiz do repositório)."""
+    odbl = (config.REPO / "LICENSE").read_text(encoding="utf-8").strip()
+    osm = cat["osm"]
+    return (f"Andorinha, geração {cat['build_id']}: tiles de roteamento do Valhalla {cat['valhalla_version']} para o "
+            f"Brasil.\n\n"
+            f"{config.ATTRIBUTION}\n\n"
+            "Os pacotes desta release são uma base de dados derivada do OpenStreetMap, distribuída sob a Open "
+            "Database License (ODbL) 1.0, cujo texto inteiro segue abaixo. Cite \"© colaboradores do "
+            "OpenStreetMap\" (https://www.openstreetmap.org/copyright). Quem publicar uma base derivada destes "
+            "pacotes precisa mantê-la sob a ODbL.\n\n"
+            f"Dados de origem:\n"
+            f"- OpenStreetMap, extrato de {osm['timestamp']}: {osm['url']}\n"
+            f"- Limites das UFs (que pacote leva cada tile): malha de UFs do IBGE, "
+            f"https://servicodados.ibge.gov.br/api/docs/malhas\n\n"
+            f"Gerador (código sob MIT): https://github.com/{config.GITHUB_REPO}\n\n"
+            f"{'=' * 78}\n\n{odbl}\n")
+
+
+def release_files(cat: dict, dist: Path) -> List[Path]:
+    """Os arquivos da release, na ordem de subida: os pacotes e, por último, o LICENCA-DADOS.txt (gravado em `dist`).
+    Ele fica fora dos pacotes: quem lê os .tar.zst recusa um caminho que não seja de tile."""
+    license_path = dist / LICENSE_FILE
+    license_path.write_text(license_text(cat), encoding="utf-8", newline="\n")
+    return [dist / name for name in package_files(cat)] + [license_path]
+
+
 def entries(cat: dict) -> dict:
     """{'base': {...}, 'GO': {...}, ...}: todos os pacotes do catálogo."""
     return {"base": cat["base"], **cat["states"]}

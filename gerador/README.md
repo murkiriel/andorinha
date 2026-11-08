@@ -134,7 +134,9 @@ O `scripts/publish.py` não publica se:
 - a geração ainda roda ou caiu no meio (marca `GERACAO_EM_ANDAMENTO` em `data/dist/`),
 - o catálogo foi gerado com outra versão do Valhalla,
 - algum pacote falta, não bate o sha256 ou passa do limite do GitHub Releases,
-- algum pacote perdeu mais de 5% dos tiles em relação ao `catalogo.json` publicado (`--accept-drop` para passar),
+- algum pacote perdeu mais de 5% dos tiles em relação ao `catalogo.json` publicado, ou mais de 10% quando o
+  extrato vem de outra fonte que o da publicada (os recortes do openstreetmap.fr e da Geofabrik diferem na
+  fronteira: o AC perde 6,4% na Geofabrik, só de vias do Peru e da Bolívia) (`--accept-drop` para passar),
 - a geração usa um OpenStreetMap mais antigo que o da publicada (`--accept-older` para passar),
 - já existe uma release PUBLICADA com o mesmo `build_id`,
 - com `--commit`, o git do repositório não está com o e-mail anônimo do GitHub (`…@users.noreply.github.com`).

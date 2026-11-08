@@ -17,6 +17,7 @@ import json
 import re
 import subprocess
 import unicodedata
+import urllib.parse
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
@@ -211,6 +212,22 @@ def flags_problem(release: bool, commit: bool, push: bool, prune: bool = False,
 # Queda máxima de tiles de um pacote em relação ao catálogo publicado. Uma fonte quebrada (extrato truncado, malha
 # errada) aparece assim; o OSM de um mês para o outro varia bem menos.
 MAX_DROP = 0.05
+# Com o extrato de outra fonte que o da publicada (openstreetmap.fr <-> Geofabrik), a folga é maior: os recortes diferem
+# na fronteira. Em 2026-11-08, a Geofabrik deu 11 tiles a menos no AC (172 -> 161, -6,4%), só de vias do lado peruano e
+# boliviano dentro da margem de 5 km; RS, AM, MS e RO perderam menos de 1%. Um extrato quebrado perde muito mais.
+MAX_DROP_SOURCE_CHANGE = 0.10
+
+
+def _extract_host(cat: Optional[dict]) -> Optional[str]:
+    url = ((cat or {}).get("osm") or {}).get("url")
+    return urllib.parse.urlparse(url).netloc or None if isinstance(url, str) else None
+
+
+def allowed_drop(published: Optional[dict], updated: dict) -> float:
+    """A queda tolerada: MAX_DROP_SOURCE_CHANGE quando o extrato vem de outra fonte que o da publicada (o servidor da
+    URL; outro arquivo datado da mesma fonte é a mesma fonte), MAX_DROP nos demais casos, inclusive sem a URL."""
+    before, after = _extract_host(published), _extract_host(updated)
+    return MAX_DROP_SOURCE_CHANGE if before and after and before != after else MAX_DROP
 
 
 def package_files(cat: dict) -> List[str]:
@@ -290,7 +307,7 @@ def check(cat: dict, published: Optional[dict], accept_drop: bool, accept_older:
             elif file_hash(file) != item["sha256"]:
                 problems.append(f"{name}: sha256 de {item['file']} não bate com o catálogo")
     if published and not accept_drop:
-        problems += drops(published, cat)
+        problems += drops(published, cat, allowed_drop(published, cat))
     if not accept_older:
         problems += older_generation(published, cat)
     return problems

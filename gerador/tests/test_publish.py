@@ -75,6 +75,66 @@ if __name__ == "__main__":
     unittest.main()
 
 
+
+FR = "https://download.openstreetmap.fr/extracts/south-america/brazil-latest.osm.pbf"
+GEOFABRIK = "https://download.geofabrik.de/south-america/brazil-261107.osm.pbf"
+
+
+def from_source(c, url):
+    return {**c, "osm": {"url": url}}
+
+
+class SourceChangeTest(unittest.TestCase):
+    """Os recortes do openstreetmap.fr e da Geofabrik diferem na fronteira: em 2026-11-08, a Geofabrik deu 11 tiles a
+    menos no AC (172 -> 161, -6,4%), só de vias do lado peruano e boliviano dentro da margem de 5 km. Na troca de
+    fonte, a folga sobe para 10%; um extrato quebrado perde muito mais que isso."""
+
+    def test_same_source_keeps_the_usual_limit(self):
+        self.assertEqual(publishing.MAX_DROP, publishing.allowed_drop(from_source(cat(), FR), from_source(cat(), FR)))
+        self.assertEqual(["AC: 172 -> 161 tiles"], drops(cat(AC=172), cat(AC=161), publishing.MAX_DROP))
+
+    def test_another_source_gets_more_room(self):
+        self.assertEqual(0.10, publishing.allowed_drop(from_source(cat(), FR), from_source(cat(), GEOFABRIK)))
+        self.assertEqual(0.10, publishing.allowed_drop(from_source(cat(), GEOFABRIK), from_source(cat(), FR)))
+
+    def test_the_other_dated_file_of_the_same_source_is_the_same_source(self):
+        other_day = GEOFABRIK.replace("261107", "261115")
+        self.assertEqual(publishing.MAX_DROP,
+                         publishing.allowed_drop(from_source(cat(), GEOFABRIK), from_source(cat(), other_day)))
+
+    def test_catalog_without_the_extract_url_keeps_the_usual_limit(self):
+        self.assertEqual(publishing.MAX_DROP, publishing.allowed_drop(cat(), from_source(cat(), GEOFABRIK)))
+
+    def check(self, published_url, published_tiles, new_url, new_tiles):
+        import tempfile
+        from unittest import mock
+        from andorinha.util import file_hash
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            entries = {}
+            for name, tiles in (("base", 65), ("AC", new_tiles)):
+                f = folder / f"andorinha-{name}.tar.zst"
+                f.write_bytes(name.encode())
+                entries[name] = {"file": f.name, "sha256": file_hash(f), "tiles": tiles}
+            new = {"valhalla_version": config.VALHALLA_VERSION, "osm": {"url": new_url, "timestamp": "2"},
+                   "base": entries["base"], "states": {"AC": entries["AC"]}}
+            published = {"osm": {"url": published_url, "timestamp": "1"}, "base": {"tiles": 65},
+                         "states": {"AC": {"tiles": published_tiles}}}
+            with mock.patch.object(config, "DIST", folder):
+                return publishing.check(new, published, accept_drop=False)
+
+    def test_publishing_from_the_reserve_passes_the_border_difference(self):
+        self.assertEqual([], self.check(FR, 172, GEOFABRIK, 161))
+
+    def test_a_broken_extract_from_the_reserve_is_still_blocked(self):
+        problems = self.check(FR, 172, GEOFABRIK, 150)  # -12,8%
+        self.assertEqual(1, len(problems))
+        self.assertIn("AC: 172 -> 150 tiles", problems[0])
+
+    def test_same_source_with_the_border_difference_is_blocked(self):
+        self.assertEqual(["AC: 172 -> 161 tiles"], self.check(FR, 172, FR, 161))
+
+
 class ZstdFilesTest(unittest.TestCase):
     """O .tar.zst de cada pacote (2026-10-05) sobe na release junto do .tar.gz e é conferido do mesmo jeito: existe,
     cabe no limite do GitHub e o sha256 bate com o catálogo."""

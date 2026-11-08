@@ -55,16 +55,17 @@ Geração **2026-11-08-8252be82**: OpenStreetMap de 2026-11-07, Valhalla 3.6.3. 
 
 | Andorinha | Valhalla | Bibliotecas que leem |
 |---|---|---|
-| gerações atuais | **3.6.3** | `valhalla_service` 3.6.3, `pyvalhalla` 3.6.3, [`valhalla-mobile`](https://github.com/Rallista/valhalla-mobile) 0.6.3 (Android e iOS); o 0.6.4 já é da série 3.9 e **não** lê estes pacotes |
+| gerações atuais | **3.9.1** | `valhalla_service` 3.9.1, `pyvalhalla` 3.9.1, [`valhalla-mobile`](https://github.com/Rallista/valhalla-mobile) 0.6.4 (Android e iOS) |
+| gerações anteriores à troca | série 3.6 | `valhalla-mobile` 0.6.3 |
 
 Os tiles precisam ser lidos pela versão do Valhalla que os gerou: o formato muda entre versões. A versão de cada
 geração está no campo `valhalla_version` do `catalogo.json`: confira antes de baixar e recuse uma geração de
 versão diferente da do seu motor.
 
-A versão é a 3.6.3 porque era a que o `valhalla-mobile` publicado embutia. Desde 2026-10-06, o `valhalla-mobile`
-0.6.4 traz a série 3.9: os pacotes sobem para ela numa geração futura, anunciada com antecedência (o plano está em
-[`gerador/PENDENCIAS.md`](gerador/PENDENCIAS.md)). Até lá, use o `valhalla-mobile` 0.6.3. Nessa troca o formato do tile muda: os pacotes novos não servem
-para um motor 3.6.3, nem os atuais para um motor 3.9.
+Os pacotes passaram da série 3.6 para a 3.9 junto com o `valhalla-mobile` 0.6.4 (2026-10-06), o primeiro a embutir
+a série 3.9. O formato do tile mudou nessa troca: os pacotes novos não servem para um motor da série 3.6 (como o
+`valhalla-mobile` 0.6.3), nem os anteriores para um motor 3.9. Quem tem pacotes de antes da troca precisa baixar
+todos de novo, com o motor novo (o que falta e o histórico estão em [`gerador/PENDENCIAS.md`](gerador/PENDENCIAS.md)).
 
 ## Como usar
 
@@ -81,7 +82,7 @@ mkdir tiles && tar --zstd -xf andorinha-base.tar.zst -C tiles && tar --zstd -xf 
 ```
 
 ```python
-import json, valhalla   # pip install pyvalhalla==3.6.3
+import json, valhalla   # pip install pyvalhalla==3.9.1
 cfg = valhalla.get_config(tile_extract="", tile_dir="tiles")
 cfg["service_limits"]["motorcycle"]["max_distance"] = 5_000_000.0   # o padrão recusa rota acima de 500 km
 cfg["loki"]["use_connectivity"] = False   # obrigatório com pacotes parciais (ver "Viagens longas")
@@ -90,8 +91,8 @@ rota = actor.route(json.dumps({"locations": [{"lat": -16.6869, "lon": -49.2648},
                                "costing": "motorcycle", "directions_options": {"language": "pt-BR"}}))
 ```
 
-No Android e no iOS, com o [`valhalla-mobile`](https://github.com/Rallista/valhalla-mobile) 0.6.3 (o 0.6.4 já é
-da série 3.9 e não lê estes pacotes; testado com o 0.6.3 no Android: Porto Alegre → Fortaleza só com base + RS + CE em 0,3 s):
+No Android e no iOS, com o [`valhalla-mobile`](https://github.com/Rallista/valhalla-mobile) 0.6.4 (o primeiro da
+série 3.9; o 0.6.3 é da série 3.6 e não lê estes pacotes):
 
 ```kotlin
 val padrao = ValhallaConfigFactory.usingTilesDir(pastaDosTiles.absolutePath)
@@ -197,7 +198,7 @@ A divisão por estado usa a malha das UFs do IBGE, guardada em
 **Andorinha** publishes ready-to-use **Valhalla routing tiles for Brazil**, rebuilt periodically from OpenStreetMap and
 split into a base pack (the country's highways) plus one pack per state. Download the base and the states you
 need, extract them into one folder and point Valhalla's `mjolnir.tile_dir` at it. Tiles are built with Valhalla
-**3.6.3** and must be read by that version (e.g. `valhalla-mobile` 0.6.3 on Android/iOS; 0.6.4 ships Valhalla 3.9 and cannot read them). All packs in a folder
+**3.9.1** and must be read by that version (e.g. `valhalla-mobile` 0.6.4 on Android/iOS; 0.6.3 ships Valhalla 3.6 and cannot read them). All packs in a folder
 must share the same `build_id`. Data under the ODbL 1.0 (© OpenStreetMap contributors); generator code under MIT.
 
 <sub>Palavras-chave: Valhalla Brasil, tiles Valhalla, roteamento offline, navegação offline, rotas offline Brasil,

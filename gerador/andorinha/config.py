@@ -12,10 +12,10 @@ BUILD = DATA / "build"    # tiles soltos e bancos auxiliares do Valhalla
 DIST = DATA / "dist"      # pacotes .tar.zst e o catalogo.json desta geração
 
 # Versão do Valhalla que gera os tiles. TEM de ser a mesma do motor que vai lê-los: o formato do tile muda entre
-# versões (o cabeçalho mudou na 3.8). 3.6.3 é a embutida no valhalla-mobile 0.6.3, a biblioteca Android/iOS (o 0.6.4,
-# de 2026-10-06, já traz a 3.9.1: a troca está em gerador/PENDENCIAS.md).
+# versões (o cabeçalho mudou na 3.8). 3.9.1 é a embutida no valhalla-mobile 0.6.4 (2026-10-06), a biblioteca
+# Android/iOS; até a troca, era a 3.6.3, a do valhalla-mobile 0.6.3.
 # Trocar aqui = gerar tudo de novo e publicar como geração nova, com a versão nova no catálogo.
-VALHALLA_VERSION = "3.6.3"
+VALHALLA_VERSION = "3.9.1"
 
 # Extrato do Brasil, de uma destas fontes, na ordem de OSM_SOURCES: a primeira que entregar um extrato conferido pelo
 # md5 vale; se uma falha (fora do ar, tempo esgotado, md5 que não confere), a geração tenta a seguinte e avisa no log.

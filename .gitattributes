@@ -1,2 +1,4 @@
+# Fim de linha sempre LF no repositório, independente do sistema de quem edita
+* text=auto eol=lf
 # O catalogo.json traz o sha256 de cada pacote: sem conversão de fim de linha
 *.json -text

@@ -31,7 +31,7 @@ def job(text: str, name: str) -> str:
 
 
 class ScheduledGenerationTest(unittest.TestCase):
-    """O workflow gerar roda todo dia e só segue para o build quando a geração publicada completa o intervalo."""
+    """O workflow gerar roda todo dia e só segue para o build quando a geração publicada é de antes do domingo."""
 
     def setUp(self):
         self.text = workflows()["gerar.yml"].replace("\r\n", "\n")
@@ -98,6 +98,23 @@ class ScheduledGenerationTest(unittest.TestCase):
         """Para testar a Geofabrik no Actions sem esperar o openstreetmap.fr cair; vazio = a ordem padrão."""
         self.assertRegex(self.text, r'(?s)osm_sources:\n.*?type: string\n\s+default: ""\n')
         self.assertIn("ANDORINHA_OSM_SOURCES: ${{ inputs.osm_sources }}\n", self.generate)
+
+    def test_failed_scheduled_run_is_reported_in_an_issue(self):
+        """De 2026-11-03 a 2026-11-08, 11 gerações agendadas falharam sem ninguém saber."""
+        report = job(self.text, "alert")
+        self.assertTrue(report, "falta o job alert")
+        self.assertIn("needs: [interval, generate]\n", report)
+        self.assertIn("if: always() && github.event_name == 'schedule' && "
+                      "github.repository == 'Murkiriel/andorinha'\n", report)
+        self.assertIn("scripts/alert.py", report)
+        for value in ("${{ needs.interval.result }}", "${{ needs.generate.result }}", "${{ github.run_id }}"):
+            self.assertIn(value, report)
+
+    def test_only_the_alert_job_writes_issues(self):
+        top = self.text.split("\njobs:\n", 1)[0]
+        self.assertNotIn("issues:", top)
+        self.assertIn("      issues: write\n", job(self.text, "alert"))
+        self.assertNotIn("issues:", self.generate)
 
     def test_one_generation_at_a_time(self):
         self.assertRegex(self.text, r"(?m)^concurrency:\n  group: generate\n  cancel-in-progress: false")

@@ -33,7 +33,9 @@ A geração inteira roda no Actions, no workflow `gerar` (`.github/workflows/ger
 domingo**: ele dispara todo dia às 03:17 e às 09:17 de Brasília, o job `interval` pergunta ao `scripts/due.py` se a
 geração publicada (`built_at` do `catalogo.json`) é de antes do último domingo, 00:00 em Brasília, e só então o build
 roda e publica. Se a geração falhar, o disparo seguinte tenta de novo, e os dias seguintes também, até sair; uma
-geração à mão no meio da semana não adia a do domingo. São dois horários, fora da hora cheia, porque o GitHub atrasa ou pula disparos
+geração à mão no meio da semana não adia a do domingo. Uma execução agendada que falha abre a issue **"Geração
+falhando"** (ou comenta nela, se já estiver aberta), com o link da execução; a primeira que gerar e publicar comenta e
+fecha a issue (job `alert`, `scripts/alert.py`). Quem acompanha o repositório recebe a notificação. São dois horários, fora da hora cheia, porque o GitHub atrasa ou pula disparos
 agendados sem avisar: o segundo cobre o primeiro e, se o primeiro já publicou, só confere a data e para. Disparado à
 mão, gera na hora e só publica com `publish` marcado. Num fork, o agendamento não gera.
 

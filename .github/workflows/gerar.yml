@@ -145,3 +145,25 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           python scripts/publish.py --release --commit --push
+
+  alert:
+    # Aviso de falha: numa execução agendada que falhou, abre a issue "Geração falhando" (ou comenta nela); na primeira
+    # que gerar e publicar, comenta e fecha (scripts/alert.py). À mão não avisa: quem disparou está olhando. Sem isto,
+    # as gerações agendadas de 2026-11-03 a 2026-11-08 falharam sem ninguém saber.
+    needs: [interval, generate]
+    if: always() && github.event_name == 'schedule' && github.repository == 'Murkiriel/andorinha'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Issue "Geração falhando"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INTERVAL_RESULT: ${{ needs.interval.result }}
+          GENERATE_RESULT: ${{ needs.generate.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python3 gerador/scripts/alert.py --interval "$INTERVAL_RESULT" --generate "$GENERATE_RESULT" --run-url "$RUN_URL"

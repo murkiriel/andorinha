@@ -7,7 +7,7 @@ from pathlib import Path
 GENERATOR_DIR = Path(__file__).resolve().parent.parent
 REPO = GENERATOR_DIR.parent
 DATA = GENERATOR_DIR / "data"
-RAW = DATA / "raw"        # extrato do OpenStreetMap e malha do IBGE
+RAW = DATA / "raw"        # extrato do OpenStreetMap
 BUILD = DATA / "build"    # tiles soltos e bancos auxiliares do Valhalla
 DIST = DATA / "dist"      # pacotes .tar.zst e o catalogo.json desta geração
 
@@ -21,9 +21,15 @@ OSM_PBF_URL = "https://download.openstreetmap.fr/extracts/south-america/brazil-l
 OSM_STATE_URL = "https://download.openstreetmap.fr/extracts/south-america/brazil.state.txt"
 OSM_MD5_URL = "https://download.openstreetmap.fr/extracts/south-america/brazil.osm.pbf.md5"
 
-# Malha oficial das UFs (API de malhas do IBGE, v3, qualidade máxima): decide em que pacote cada tile entra.
+# Malha oficial das UFs (API de malhas do IBGE, v3, qualidade máxima): decide em que pacote cada tile entra. A geração
+# usa só a cópia no repositório, baixada desta URL em 2026-11-08 (1.001.279 bytes, as 27 UFs, idêntica à de 2026-09-30,
+# que gerou as primeiras releases). Até 2026-11-08 a geração baixava a malha; desde 2026-11-03 a API não respondia aos
+# executores do GitHub Actions. Para trocar a cópia (uma divisa mudou): baixar desta URL, conferir com
+# `sources.mesh_problem` e atualizar o sha256; os pacotes da geração seguinte podem mudar de composição.
 IBGE_MESH_URL = ("https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR"
                  "?formato=application/vnd.geo%2Bjson&intrarregiao=UF&qualidade=maxima")
+IBGE_MESH_COPY = GENERATOR_DIR / "ibge_malha_uf.json"
+IBGE_MESH_COPY_SHA256 = "4435b2e0e62de6d68f5c5387e01efc31655242948ae9434b78a3b5b05582e497"
 
 USER_AGENT = "andorinha-gerador/1 (+https://github.com/Murkiriel/andorinha)"
 

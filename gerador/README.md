@@ -63,6 +63,7 @@ novo, somar o download de 2,3 GB (25 min numa conexão de ~1,5 MB/s).
 
 | Etapa | Módulo | O que faz |
 |---|---|---|
+| (antes de tudo) | `andorinha/sources.py` | Confere a malha das UFs do IBGE, a cópia versionada `ibge_malha_uf.json`: as 27 UFs e o sha256 de `config.py`. Nada é baixado (a API do IBGE deixou de responder ao Actions em 2026-11-03), e a mesma malha dá sempre a mesma divisão dos pacotes. Vem primeiro para uma falha aparecer em segundos, não depois dos tiles. Para trocar a cópia, ver `IBGE_MESH_URL` em `config.py` |
 | osm | `andorinha/sources.py` | Baixa o extrato do Brasil do openstreetmap.fr quando há versão nova e confere o md5 publicado. Se o site troca o extrato durante o download (uma vez por dia), lê o md5 de novo e baixa a versão nova uma vez |
 | tiles | `andorinha/builder.py` | Roda `valhalla_build_admins` e `valhalla_build_tiles` do pyvalhalla, com 8 threads (config e executáveis vêm do `engine.py`), com o banco de fusos só do Brasil de `andorinha/timezones.py` (desde 2026-10-05; precisa do SpatiaLite, `mod_spatialite`) |
 | packages | `andorinha/packing.py` | Divide os tiles em base (nível 0) e um pacote por UF (níveis 1 e 2), pela malha do IBGE, e grava os `.tar.zst` (zstd 19; até 2026-10-05, `.tar.gz`) |

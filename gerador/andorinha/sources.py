@@ -1,4 +1,4 @@
-"""Downloads: o extrato do Brasil no OpenStreetMap e a malha das UFs do IBGE.
+"""Fontes: o extrato do Brasil no OpenStreetMap (baixado) e a malha das UFs do IBGE (cópia versionada).
 
 O extrato só é baixado de novo quando o openstreetmap.fr tem versão mais nova (md5 publicado ao lado do arquivo);
 depois do download, o md5 é conferido. A Geofabrik não é usada: a partir de algumas redes o download dela entra em
@@ -74,8 +74,8 @@ def osm_extract() -> Dict[str, object]:
 def mesh_problem(path: Path) -> Optional[str]:
     """O que há de errado com o arquivo da malha das UFs, ou None se é um GeoJSON com as 27 UFs.
 
-    Uma API pode responder 200 com uma página de erro; sem esta conferência ela seria gravada e quebraria todas as
-    gerações seguintes até alguém apagar o arquivo à mão."""
+    Uma API pode responder 200 com uma página de erro: ao trocar a cópia versionada por uma baixada de novo, esta
+    conferência barra uma página de erro ou uma malha sem alguma UF."""
     try:
         gj = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
@@ -89,21 +89,16 @@ def mesh_problem(path: Path) -> Optional[str]:
 
 
 def ibge_mesh() -> Path:
-    """Garante data/raw/ibge_malha_uf.json (GeoJSON das 27 UFs, código IBGE em `codarea`), sempre conferido."""
-    config.RAW.mkdir(parents=True, exist_ok=True)
-    dest = config.RAW / "ibge_malha_uf.json"
-    if dest.exists():
-        problem = mesh_problem(dest)
-        if problem is None:
-            return dest
-        print(f"[ibge] malha guardada inválida ({problem}); baixando de novo")
-        dest.unlink()
-    updated = dest.with_name(dest.name + ".novo")
-    print("[ibge] baixando a malha das UFs...")
-    net.download(config.IBGE_MESH_URL, updated, delay=RETRY_DELAY)
-    problem = mesh_problem(updated)
+    """A malha das UFs (GeoJSON das 27 UFs, código IBGE em `codarea`): a cópia versionada, config.IBGE_MESH_COPY,
+    conferida pelas 27 UFs e pelo sha256 do config. Nada é baixado: a mesma malha gera sempre a mesma divisão dos
+    pacotes, e a geração não depende da API do IBGE (que deixou de responder ao Actions em 2026-11-03)."""
+    copy = config.IBGE_MESH_COPY
+    problem = mesh_problem(copy)
     if problem is not None:
-        updated.unlink()
-        raise RuntimeError(f"a malha do IBGE veio inválida ({problem}): {config.IBGE_MESH_URL}")
-    updated.replace(dest)
-    return dest
+        raise RuntimeError(f"a malha do IBGE em {copy.name} não serve ({problem})")
+    sha256 = file_hash(copy, "sha256")
+    if sha256 != config.IBGE_MESH_COPY_SHA256:
+        raise RuntimeError(f"{copy.name} mudou (sha256 {sha256}, o config espera {config.IBGE_MESH_COPY_SHA256}): "
+                           "uma malha nova muda a divisão dos pacotes; confira e atualize o IBGE_MESH_COPY_SHA256")
+    print(f"[ibge] malha das UFs: {copy.name}, 27 UFs, sha256 confere")
+    return copy

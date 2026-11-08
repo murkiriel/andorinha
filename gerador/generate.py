@@ -1,4 +1,4 @@
-"""Gera uma geração completa do Andorinha em data/dist/: pacotes .tar.gz e catalogo.json.
+"""Gera uma geração completa do Andorinha em data/dist/: pacotes .tar.zst e catalogo.json.
 
     python generate.py                      # tudo: extrato, tiles, pacotes, validação e catálogo
     python generate.py --from packages      # reaproveita os tiles de data/build/ (ex.: depois de mudar a divisão)
@@ -44,6 +44,10 @@ def _utf8_output() -> None:
 
 def _generate(from_stage: str, recorder: run_record.RunRecorder) -> str:
     start = STAGES.index(from_stage)
+    if start <= 2:
+        # A malha vem antes de tudo: se a cópia versionada não serve, a geração para em segundos, não depois do
+        # extrato e dos tiles (~25 min no Actions).
+        mesh = sources.ibge_mesh()
     osm_meta_file = config.RAW / "brazil-latest.meta.json"
     with recorder.stage("osm"):
         osm = sources.osm_extract() if start <= 0 else json.loads(osm_meta_file.read_text(encoding="utf-8"))
@@ -54,7 +58,7 @@ def _generate(from_stage: str, recorder: run_record.RunRecorder) -> str:
     with recorder.stage("packages"):
         if start <= 2:
             packing.clean_output(config.DIST)
-            generated = packing.generate(tiles_dir, sources.ibge_mesh(), config.DIST)
+            generated = packing.generate(tiles_dir, mesh, config.DIST)
             packages_file.write_text(json.dumps({k: vars(v) for k, v in generated.items()}, indent=2), encoding="utf-8")
         else:
             generated = {k: Package(**v) for k, v in json.loads(packages_file.read_text(encoding="utf-8")).items()}

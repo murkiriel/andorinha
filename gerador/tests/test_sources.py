@@ -7,7 +7,8 @@ from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from andorinha import sources, config  # noqa: E402
+from andorinha import sources, config, net  # noqa: E402
+from andorinha.util import file_hash  # noqa: E402
 from tests.fake_server import FakeServer  # noqa: E402
 
 A = b"extrato versao A " * 5000
@@ -93,56 +94,72 @@ def fake_mesh(exclude=()) -> bytes:
 
 
 class MeshTest(unittest.TestCase):
-    """sources.malha_ibge: só grava (e só aceita do cache) uma malha com as 27 UFs."""
+    """sources.ibge_mesh: a malha é a cópia versionada, conferida (27 UFs e sha256) e sem nenhum acesso à rede.
+
+    Até 2026-11-08 a malha vinha da API do IBGE; de 2026-11-03 em diante a API não respondeu aos executores do
+    GitHub Actions e todas as gerações agendadas falharam."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
-        self.raw = Path(self._tmp.name)
-        self.dest = self.raw / "ibge_malha_uf.json"
-        self.server = FakeServer().__enter__()
-        self.server.files["/malha"] = fake_mesh()
-        self._patches = [mock.patch.object(config, "RAW", self.raw),
-                         mock.patch.object(config, "IBGE_MESH_URL", self.server.url("/malha")),
-                         mock.patch.object(sources, "RETRY_DELAY", 0)]
+        self.copy = Path(self._tmp.name) / "ibge_malha_uf.json"
+        self._patches = [mock.patch.object(config, "IBGE_MESH_COPY", self.copy),
+                         mock.patch.object(net, "download", side_effect=AssertionError("baixou a malha")),
+                         mock.patch.object(net, "fetch_text", side_effect=AssertionError("acessou a rede"))]
         for p in self._patches:
             p.start()
 
     def tearDown(self):
-        for p in self._patches:
+        for p in reversed(self._patches):
             p.stop()
-        self.server.__exit__(None, None, None)
         self._tmp.cleanup()
 
-    def downloads(self):
-        return sum(1 for path, _ in self.server.requests if path == "/malha")
+    def write_copy(self, content: bytes, sha256: str = "") -> None:
+        self.copy.write_bytes(content)
+        patch = mock.patch.object(config, "IBGE_MESH_COPY_SHA256", sha256 or hashlib.sha256(content).hexdigest())
+        patch.start()
+        self._patches.append(patch)
 
-    def test_good_mesh_is_saved(self):
-        self.assertEqual(self.dest, sources.ibge_mesh())
-        self.assertEqual(27, len(json.loads(self.dest.read_text())["features"]))
+    def test_good_copy_is_used_without_network(self):
+        self.write_copy(fake_mesh())
+        self.assertEqual(self.copy, sources.ibge_mesh())
 
-    def test_error_page_with_200_is_not_saved(self):
-        self.server.files["/malha"] = b"<html><body>Servico indisponivel</body></html>"
-        with self.assertRaises(RuntimeError):
-            sources.ibge_mesh()
-        self.assertFalse(self.dest.exists())
-
-    def test_mesh_missing_a_state_is_rejected(self):
-        self.server.files["/malha"] = fake_mesh(exclude=("53",))  # sem o DF
+    def test_copy_missing_a_state_stops(self):
+        self.write_copy(fake_mesh(exclude=("53",)))  # sem o DF
         with self.assertRaises(RuntimeError) as ctx:
             sources.ibge_mesh()
         self.assertIn("DF", str(ctx.exception))
-        self.assertFalse(self.dest.exists())
 
-    def test_invalid_cache_is_replaced(self):
-        self.dest.write_text("<html>erro gravado por uma versão antiga</html>")
-        sources.ibge_mesh()
-        self.assertEqual(27, len(json.loads(self.dest.read_text())["features"]))
-        self.assertEqual(1, self.downloads())
+    def test_copy_that_is_not_json_stops(self):
+        self.write_copy(b"<html><body>Servico indisponivel</body></html>")
+        with self.assertRaises(RuntimeError) as ctx:
+            sources.ibge_mesh()
+        self.assertIn("JSON", str(ctx.exception))
 
-    def test_valid_cache_does_not_download(self):
-        self.dest.write_bytes(fake_mesh())
-        sources.ibge_mesh()
-        self.assertEqual(0, self.downloads())
+    def test_missing_copy_stops(self):
+        with self.assertRaises(RuntimeError) as ctx:
+            sources.ibge_mesh()
+        self.assertIn(self.copy.name, str(ctx.exception))
+
+    def test_copy_changed_without_new_sha256_stops(self):
+        """Uma malha diferente muda a divisão dos pacotes: só entra com o sha256 novo no config, de propósito."""
+        self.write_copy(fake_mesh(), sha256="0" * 64)
+        with self.assertRaises(RuntimeError) as ctx:
+            sources.ibge_mesh()
+        self.assertIn("sha256", str(ctx.exception))
+
+
+class VersionedMeshTest(unittest.TestCase):
+    """A cópia da malha que vai no repositório (config.IBGE_MESH_COPY)."""
+
+    def test_has_the_27_states(self):
+        self.assertIsNone(sources.mesh_problem(config.IBGE_MESH_COPY))
+
+    def test_is_the_reviewed_file(self):
+        """Trocar a cópia é decisão consciente: baixar da URL do config, conferir e atualizar o sha256."""
+        self.assertEqual(config.IBGE_MESH_COPY_SHA256, file_hash(config.IBGE_MESH_COPY, "sha256"))
+
+    def test_generation_uses_the_real_copy(self):
+        self.assertEqual(config.IBGE_MESH_COPY, sources.ibge_mesh())
 
 
 if __name__ == "__main__":

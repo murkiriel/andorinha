@@ -186,8 +186,8 @@ Os **pacotes** são uma base derivada do OpenStreetMap, distribuída sob a **Ope
 - Cite "© colaboradores do OpenStreetMap".
 - Se você publicar uma base derivada destes pacotes, ela precisa manter a ODbL.
 
-A divisão por estado usa a malha das UFs do IBGE. O **código** (pasta `gerador/`) é MIT
-([`gerador/LICENSE`](gerador/LICENSE)). O Valhalla é MIT.
+A divisão por estado usa a malha das UFs do IBGE, guardada em
+[`gerador/ibge_malha_uf.json`](gerador/ibge_malha_uf.json); ela é dado do IBGE, não parte do código. O **código** (pasta `gerador/`) é MIT ([`gerador/LICENSE`](gerador/LICENSE)). O Valhalla é MIT.
 
 ## English
 

@@ -27,17 +27,15 @@ class RoutesTest(unittest.TestCase):
         self.assertEqual(len(names), len(set(names)))
 
     def test_points_are_inside_the_route_state(self):
-        # Confere as coordenadas contra a malha do IBGE (se já baixada): um ponto no estado errado faria a rota
-        # "de uma UF" depender de outro pacote e a validação não provaria nada sobre aquela UF.
-        mesh = config.RAW / "ibge_malha_uf.json"
+        # Confere as coordenadas contra a malha do IBGE (a cópia versionada que a geração usa): um ponto no estado
+        # errado faria a rota "de uma UF" depender de outro pacote e a validação não provaria nada sobre aquela UF.
+        mesh = config.IBGE_MESH_COPY
         try:
             from shapely.geometry import Point
 
             from andorinha.packing import state_polygons
         except ImportError:
             self.skipTest("shapely não instalado")
-        if not mesh.exists():
-            self.skipTest("malha do IBGE não baixada")
         polygons = state_polygons(mesh)
         for route in single_state_routes():
             state = route.packages[0]

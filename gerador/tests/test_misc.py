@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 GENERATOR_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(GENERATOR_DIR))
@@ -40,6 +41,29 @@ class StagesTest(unittest.TestCase):
     def test_other_stages_validate(self):
         for stage in ("osm", "tiles", "packages", "validate"):
             self.assertTrue(self.script.should_validate(stage), stage)
+
+    def test_mesh_comes_before_the_long_stages(self):
+        """Uma malha que não serve tem de parar a geração em segundos, não depois do extrato e dos tiles (~25 min no
+        Actions), como nas gerações agendadas de 2026-11-03 a 2026-11-08, quando a API do IBGE não respondia."""
+        calls = []
+
+        class Stop(Exception):
+            pass
+
+        def osm_extract():
+            calls.append("osm")
+            raise Stop
+
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(self.script.sources, "ibge_mesh", side_effect=lambda: calls.append("mesh")), \
+                mock.patch.object(self.script.sources, "osm_extract", side_effect=osm_extract):
+            recorder = run_record.RunRecorder(Path(tmp), interval=3600)
+            try:
+                with self.assertRaises(Stop):
+                    self.script._generate("osm", recorder)
+            finally:
+                recorder.save(Path(tmp) / "geracao.json", "teste")
+        self.assertEqual(["mesh", "osm"], calls)
 
 
 class CleanOutputTest(unittest.TestCase):

@@ -1,19 +1,19 @@
 {
   "schema": 1,
-  "build_id": "2026-10-05-93a54bc6",
-  "built_at": "2026-10-05T19:07:55Z",
+  "build_id": "2026-11-08-8252be82",
+  "built_at": "2026-11-08T18:38:18Z",
   "valhalla_version": "3.6.3",
-  "generator_commit": "30c4bf9",
+  "generator_commit": "18821fb",
   "required_config": {
     "loki.use_connectivity": false,
     "service_limits.motorcycle.max_distance": 5000000
   },
   "osm": {
-    "timestamp": "2026-10-05T00:58:57Z",
-    "md5": "93a54bc6b85f5f39abfb43fdc046b1e7",
+    "timestamp": "2026-11-07T00:33:49Z",
+    "md5": "8252be82c2832ea901960acf6e6ed0ce",
     "url": "https://download.openstreetmap.fr/extracts/south-america/brazil-latest.osm.pbf"
   },
-  "release_url": "https://github.com/Murkiriel/andorinha/releases/download/2026-10-05-93a54bc6/",
+  "release_url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-08-8252be82/",
   "attribution": "© colaboradores do OpenStreetMap (ODbL 1.0); limites das UFs: IBGE",
   "timezones": {
     "release": "2026d",
@@ -37,10 +37,10 @@
     ]
   },
   "base": {
-    "file": "andorinha-base.tar.gz",
-    "sha256": "66979b54c9b424937257b3de711ed74fff2c5326797987ab37a406ee1b91be3c",
-    "tiles": 64,
-    "bytes_tiles": 159461480,
+    "file": "andorinha-base.tar.zst",
+    "sha256": "d475c28b87b31327cdebb4bd17edc6ad5e84941f709bb8d759f6425c8a4027fc",
+    "tiles": 65,
+    "bytes_tiles": 160394920,
     "bbox": [
       -33.76,
       -74.0,
@@ -53,20 +53,15 @@
       6.0,
       -32.0
     ],
-    "zstd": {
-      "file": "andorinha-base.tar.zst",
-      "bytes": 53086760,
-      "sha256": "e209bfde43d449bea14f0b5c9a64f492bb754a4eccc3fa18b7482ecaa482bf3b"
-    },
-    "bytes": 62392027
+    "bytes": 53339103
   },
   "states": {
     "AC": {
       "name": "Acre",
-      "file": "andorinha-AC.tar.gz",
-      "sha256": "529b498b1138f8b08b38b27cd62f04a85c014534865da9632980725333c6b5c5",
+      "file": "andorinha-AC.tar.zst",
+      "sha256": "7a720b73b9cb50265dbe97d42497426600438e9629761fbdc800dd1894cf2790",
       "tiles": 172,
-      "bytes_tiles": 11082136,
+      "bytes_tiles": 11119400,
       "bbox": [
         -11.15,
         -74.0,
@@ -79,19 +74,14 @@
         -7.0,
         -66.0
       ],
-      "zstd": {
-        "file": "andorinha-AC.tar.zst",
-        "bytes": 3884981,
-        "sha256": "836b7e28c38c10922c46e6cbeb1fd18af4f03107719c9d174cba272a1e011b1c"
-      },
-      "bytes": 4601961
+      "bytes": 3904274
     },
     "AL": {
       "name": "Alagoas",
-      "file": "andorinha-AL.tar.gz",
-      "sha256": "2e84fcf11b86ccd12146259ccfcfdd5c0de38a4dc366e1dd62520280b660e813",
+      "file": "andorinha-AL.tar.zst",
+      "sha256": "ba457fff01093254f5a855bd80118a5a0292e8ab5281578fcffe687bf3bbaf00",
       "tiles": 71,
-      "bytes_tiles": 57675720,
+      "bytes_tiles": 57933448,
       "bbox": [
         -10.5,
         -38.24,
@@ -104,19 +94,14 @@
         -8.0,
         -35.0
       ],
-      "zstd": {
-        "file": "andorinha-AL.tar.zst",
-        "bytes": 19637743,
-        "sha256": "fff25c1042ef796e052b74e0155f4e7d328297850dd367413ab77f8e7d7cf9d4"
-      },
-      "bytes": 22682170
+      "bytes": 19726978
     },
     "AM": {
       "name": "Amazonas",
-      "file": "andorinha-AM.tar.gz",
-      "sha256": "b780c6924fc64a1e6ddb8bb755f75324fa6d7e8ec41210b4924d548e575b2fc8",
+      "file": "andorinha-AM.tar.zst",
+      "sha256": "a8c4b10a7d158db3965aa218e21cebc8394f9bc52dbf79593adaa4e5ca32cf8a",
       "tiles": 801,
-      "bytes_tiles": 32660384,
+      "bytes_tiles": 32948872,
       "bbox": [
         -9.82,
         -73.81,
@@ -129,19 +114,14 @@
         2.25,
         -56.0
       ],
-      "zstd": {
-        "file": "andorinha-AM.tar.zst",
-        "bytes": 10328427,
-        "sha256": "5b64ef75f77585f092d853861c9be4fa3be63c40225d0b936ce7f14e2ac8b339"
-      },
-      "bytes": 12282159
+      "bytes": 10437693
     },
     "AP": {
       "name": "Amapá",
-      "file": "andorinha-AP.tar.gz",
-      "sha256": "a2077826c7a09135966ea70f886536fbea5c7542da29d29037903204d2279f88",
-      "tiles": 111,
-      "bytes_tiles": 5885152,
+      "file": "andorinha-AP.tar.zst",
+      "sha256": "8d0d65c3f347d447d6bfb4e34c4727470f5d7c3dff2057bd1008952f14b7b415",
+      "tiles": 112,
+      "bytes_tiles": 6031136,
       "bbox": [
         -1.24,
         -54.88,
@@ -154,19 +134,14 @@
         4.25,
         -49.75
       ],
-      "zstd": {
-        "file": "andorinha-AP.tar.zst",
-        "bytes": 1902928,
-        "sha256": "7f1b2b068136f8b94380bad4cbd8bde6bba6c4d2e59806e46b515f3309ba264a"
-      },
-      "bytes": 2270355
+      "bytes": 1964080
     },
     "BA": {
       "name": "Bahia",
-      "file": "andorinha-BA.tar.gz",
-      "sha256": "7b3307fda217de32085da7ef0d4820f13835628c2035dc944121eb625a9dd1c2",
+      "file": "andorinha-BA.tar.zst",
+      "sha256": "ff958a7d28bcc6733270cca39ca610b81df390b9ffde1b2ed759d06d62e30c76",
       "tiles": 960,
-      "bytes_tiles": 275330896,
+      "bytes_tiles": 276544384,
       "bbox": [
         -18.34,
         -46.58,
@@ -179,19 +154,14 @@
         -8.0,
         -37.0
       ],
-      "zstd": {
-        "file": "andorinha-BA.tar.zst",
-        "bytes": 98702691,
-        "sha256": "0717a489bb9acb07663d1031baa80c1df1fc64e2db3e1bbbdb51ec1df0204cb2"
-      },
-      "bytes": 113957610
+      "bytes": 99123942
     },
     "CE": {
       "name": "Ceará",
-      "file": "andorinha-CE.tar.gz",
-      "sha256": "3fc8867ee940aa84f494bb96bc6a472fc2a15fa18b0db871e78b85c78e1219ae",
+      "file": "andorinha-CE.tar.zst",
+      "sha256": "34ecba7f1bc8096879e33486d22f68ceef303c6705091abdc44a3f8818509572",
       "tiles": 268,
-      "bytes_tiles": 159448488,
+      "bytes_tiles": 160408272,
       "bbox": [
         -7.86,
         -41.43,
@@ -204,19 +174,14 @@
         -2.0,
         -37.0
       ],
-      "zstd": {
-        "file": "andorinha-CE.tar.zst",
-        "bytes": 54374577,
-        "sha256": "9b32ec0034cd98b814519767ed9f9ac9e083aa1e803deaa21e1966afb459307c"
-      },
-      "bytes": 62894104
+      "bytes": 54707890
     },
     "DF": {
       "name": "Distrito Federal",
-      "file": "andorinha-DF.tar.gz",
-      "sha256": "58c68847ec06e8b0f6f4c1188f29c9505bf1f0fbd6c52fac7842890fd0f34c2b",
+      "file": "andorinha-DF.tar.zst",
+      "sha256": "e3bd0875aa81a5c47d431e752aaffc2596a2613608c1f77a91d90604f8442739",
       "tiles": 23,
-      "bytes_tiles": 53869584,
+      "bytes_tiles": 54337864,
       "bbox": [
         -16.05,
         -48.29,
@@ -229,19 +194,14 @@
         -15.0,
         -47.0
       ],
-      "zstd": {
-        "file": "andorinha-DF.tar.zst",
-        "bytes": 15788256,
-        "sha256": "ac164a87476b4113deefae360b458d5d53c79d5fb1692f098811e0e98ce0b473"
-      },
-      "bytes": 18696725
+      "bytes": 15992096
     },
     "ES": {
       "name": "Espírito Santo",
-      "file": "andorinha-ES.tar.gz",
-      "sha256": "e4e5057532abf501c44a3a52aec030f09adabb44637b121f1120d8fb853d0128",
+      "file": "andorinha-ES.tar.zst",
+      "sha256": "6bce710802969b585cf1449a99f592c4d7a590eda73619f13af3c880b89ea4fb",
       "tiles": 108,
-      "bytes_tiles": 80679584,
+      "bytes_tiles": 81013856,
       "bbox": [
         -21.31,
         -41.88,
@@ -254,19 +214,14 @@
         -17.0,
         -29.25
       ],
-      "zstd": {
-        "file": "andorinha-ES.tar.zst",
-        "bytes": 30665622,
-        "sha256": "1c0c67360d63b1b79bf8490d65c39f3f265d06d4977a0fd5da316cf7b78ce467"
-      },
-      "bytes": 34849496
+      "bytes": 30765473
     },
     "GO": {
       "name": "Goiás",
-      "file": "andorinha-GO.tar.gz",
-      "sha256": "bd7f4a35e255a6c7ba08d2512a8519d68960b0759908208552c5686b230cbbf3",
+      "file": "andorinha-GO.tar.zst",
+      "sha256": "f86db20e3481967b3e3163d467614b5a881c1051666b7961cc2600a3c5d844b7",
       "tiles": 605,
-      "bytes_tiles": 184162088,
+      "bytes_tiles": 185883664,
       "bbox": [
         -19.5,
         -53.25,
@@ -279,19 +234,14 @@
         -12.0,
         -45.0
       ],
-      "zstd": {
-        "file": "andorinha-GO.tar.zst",
-        "bytes": 58384957,
-        "sha256": "1752a6f1df4d7e1627921a9a8742ff2d9684e1fe84860fc7b5ef637c17f2bf3a"
-      },
-      "bytes": 68853850
+      "bytes": 59146081
     },
     "MA": {
       "name": "Maranhão",
-      "file": "andorinha-MA.tar.gz",
-      "sha256": "a2726ded7b320ff0dff78ced63e66caadaab80c0aa4e27f8b619bff57bbc8d04",
+      "file": "andorinha-MA.tar.zst",
+      "sha256": "33b4362111418550759a3de00ffa65a08152e6819bc2e8db116486d7fcb743ac",
       "tiles": 573,
-      "bytes_tiles": 100496472,
+      "bytes_tiles": 101007400,
       "bbox": [
         -10.26,
         -48.76,
@@ -304,19 +254,14 @@
         -1.0,
         -41.0
       ],
-      "zstd": {
-        "file": "andorinha-MA.tar.zst",
-        "bytes": 34360316,
-        "sha256": "0848d39247d3023037e77f3063b4c2d03c603a0dbd71d67d9b3348b0b5fbba41"
-      },
-      "bytes": 40328215
+      "bytes": 34540625
     },
     "MG": {
       "name": "Minas Gerais",
-      "file": "andorinha-MG.tar.gz",
-      "sha256": "f19cfcb9abdb8f8c16a7ffb221ad28c9ee64d7c0f8757cb41aafd5084a19bd84",
+      "file": "andorinha-MG.tar.zst",
+      "sha256": "f27b3ca4010b57b1ed78f379c6341ae0e0100853c98b4f3c0a44df62eb6b9137",
       "tiles": 1006,
-      "bytes_tiles": 487579896,
+      "bytes_tiles": 490063304,
       "bbox": [
         -22.93,
         -51.05,
@@ -329,19 +274,14 @@
         -14.0,
         -39.0
       ],
-      "zstd": {
-        "file": "andorinha-MG.tar.zst",
-        "bytes": 178645450,
-        "sha256": "1efef24afc812abc286ab6efd7627a21b6ec8cd99225b02eb46060cfc855d892"
-      },
-      "bytes": 204508720
+      "bytes": 179477861
     },
     "MS": {
       "name": "Mato Grosso do Sul",
-      "file": "andorinha-MS.tar.gz",
-      "sha256": "b1fceac5ec2f52929d83cde4e07bffa7348bc6084aac9fbd2580a0c22a5d0896",
+      "file": "andorinha-MS.tar.zst",
+      "sha256": "1a6e43f59b377b4abe8901c57fcd3151260d14c0a151610e4b4bbe07d78bd230",
       "tiles": 634,
-      "bytes_tiles": 74001168,
+      "bytes_tiles": 74471408,
       "bbox": [
         -24.07,
         -58.17,
@@ -354,19 +294,14 @@
         -17.0,
         -50.0
       ],
-      "zstd": {
-        "file": "andorinha-MS.tar.zst",
-        "bytes": 23472382,
-        "sha256": "2e122038760170fbbf5d5cca235df1e2bbdec868a128662648dd19e5e93419f6"
-      },
-      "bytes": 27821465
+      "bytes": 23630504
     },
     "MT": {
       "name": "Mato Grosso",
-      "file": "andorinha-MT.tar.gz",
-      "sha256": "08975c4d5ce7dd20bd00f231a9b3d01f0d160294ffed79ffa4fc4d9895d15ffa",
-      "tiles": 1351,
-      "bytes_tiles": 91140400,
+      "file": "andorinha-MT.tar.zst",
+      "sha256": "5161ea31d02352129dee48b7b78b4811072ec1dd8c591bb33b4aea576e4dbc09",
+      "tiles": 1352,
+      "bytes_tiles": 92445368,
       "bbox": [
         -18.05,
         -61.64,
@@ -379,19 +314,14 @@
         -7.25,
         -50.0
       ],
-      "zstd": {
-        "file": "andorinha-MT.tar.zst",
-        "bytes": 30055292,
-        "sha256": "dbd438341348d265179094e620c7aca24ed1ca93066d01d4c6408484ef9c220c"
-      },
-      "bytes": 35705334
+      "bytes": 30588783
     },
     "PA": {
       "name": "Pará",
-      "file": "andorinha-PA.tar.gz",
-      "sha256": "ec2eaa93a35249a06364fb3819a92c52d2641f7a92b2c5ae24d221983fe7e2d8",
-      "tiles": 1224,
-      "bytes_tiles": 90378544,
+      "file": "andorinha-PA.tar.zst",
+      "sha256": "b5ca7acf65b364e76e57ce2033c3034f7890afcaf34744637ace69e442c92e2d",
+      "tiles": 1225,
+      "bytes_tiles": 91448976,
       "bbox": [
         -9.85,
         -58.9,
@@ -404,19 +334,14 @@
         2.5,
         -46.0
       ],
-      "zstd": {
-        "file": "andorinha-PA.tar.zst",
-        "bytes": 31252268,
-        "sha256": "98718e897db6b2f9e2726035c8476f761b0b0935f629608561e2f410025c212d"
-      },
-      "bytes": 36899530
+      "bytes": 31642656
     },
     "PB": {
       "name": "Paraíba",
-      "file": "andorinha-PB.tar.gz",
-      "sha256": "79a27a7057d138d7957206f4fb5fb93451ce6871753a67484519ee97d125ff40",
+      "file": "andorinha-PB.tar.zst",
+      "sha256": "9108d914485e261662d466a3d7bbbd373c38d374caabcc70ee1036bff8ecd9e0",
       "tiles": 136,
-      "bytes_tiles": 110396048,
+      "bytes_tiles": 110816072,
       "bbox": [
         -8.31,
         -38.77,
@@ -429,19 +354,14 @@
         -5.0,
         -34.0
       ],
-      "zstd": {
-        "file": "andorinha-PB.tar.zst",
-        "bytes": 38962632,
-        "sha256": "5d13d7c86af7942cf9b67421e2a506a1ee376d1a4c62d00719ca88d0baf19f8a"
-      },
-      "bytes": 44633175
+      "bytes": 39130073
     },
     "PE": {
       "name": "Pernambuco",
-      "file": "andorinha-PE.tar.gz",
-      "sha256": "3d97b7fae6d3b888e83a4dda7a74b17b12fa966c95532964832787c7cb979a0a",
+      "file": "andorinha-PE.tar.zst",
+      "sha256": "d2d63ac5c26a07a25f215420bf6fef88f991503b9ea9f2d8a5b0e741469826d6",
       "tiles": 218,
-      "bytes_tiles": 179796312,
+      "bytes_tiles": 180798888,
       "bbox": [
         -9.49,
         -41.36,
@@ -454,19 +374,14 @@
         -3.0,
         -32.0
       ],
-      "zstd": {
-        "file": "andorinha-PE.tar.zst",
-        "bytes": 61925325,
-        "sha256": "a4f0187a2b96775867d889409f58cffb575c17e41504283b833436868a36a6d7"
-      },
-      "bytes": 71248177
+      "bytes": 62302519
     },
     "PI": {
       "name": "Piauí",
-      "file": "andorinha-PI.tar.gz",
-      "sha256": "b43f0355b60f7e4e243290514657858fcecd0cdb9637f2ea4a29e4b17be263ba",
+      "file": "andorinha-PI.tar.zst",
+      "sha256": "59d82fd97c0835d8aac23c738c174c8e342043cf731a9c184f45541874799f78",
       "tiles": 450,
-      "bytes_tiles": 87378896,
+      "bytes_tiles": 87818608,
       "bbox": [
         -10.93,
         -46.03,
@@ -479,19 +394,14 @@
         -2.0,
         -40.0
       ],
-      "zstd": {
-        "file": "andorinha-PI.tar.zst",
-        "bytes": 30702569,
-        "sha256": "9905fc6ba7716f611544aab37deb7d0b85e7b5cb3e5d83faf3c07b71cff8fbeb"
-      },
-      "bytes": 35776142
+      "bytes": 30872290
     },
     "PR": {
       "name": "Paraná",
-      "file": "andorinha-PR.tar.gz",
-      "sha256": "392c18303fcdfda39f54d06783bf0aea2092610d4f5201b69ab378469b4905d2",
+      "file": "andorinha-PR.tar.zst",
+      "sha256": "3d9dbb8c3f6c9da279b8b08cdab037834a9acde86597b45a4cca5ec5b7c55a7e",
       "tiles": 380,
-      "bytes_tiles": 264980584,
+      "bytes_tiles": 266231152,
       "bbox": [
         -26.72,
         -54.62,
@@ -504,19 +414,14 @@
         -22.0,
         -47.0
       ],
-      "zstd": {
-        "file": "andorinha-PR.tar.zst",
-        "bytes": 88055822,
-        "sha256": "2012838866e3f84002a2138039467f29729b55a9e0484ec04b0f4f28fb2fad21"
-      },
-      "bytes": 102167412
+      "bytes": 88473742
     },
     "RJ": {
       "name": "Rio de Janeiro",
-      "file": "andorinha-RJ.tar.gz",
-      "sha256": "e058a86ea3d7c99ef3b64839cf279bf39b931682bac80a598bc0f1f2d053eb8c",
+      "file": "andorinha-RJ.tar.zst",
+      "sha256": "8c6faea6110355ca6e98348117e220ae27c9430230c84d92b5127a64232e87ff",
       "tiles": 117,
-      "bytes_tiles": 152150320,
+      "bytes_tiles": 152914352,
       "bbox": [
         -23.37,
         -44.89,
@@ -529,19 +434,14 @@
         -20.0,
         -40.0
       ],
-      "zstd": {
-        "file": "andorinha-RJ.tar.zst",
-        "bytes": 51181808,
-        "sha256": "6bccfc956e2c023a433e9ea96679c750cdff6af04b4e5d52bc2ba7ec393997f3"
-      },
-      "bytes": 59282907
+      "bytes": 51453357
     },
     "RN": {
       "name": "Rio Grande do Norte",
-      "file": "andorinha-RN.tar.gz",
-      "sha256": "85e8dbb64f7ad30f053a6aa2c37bc2d6ade54f73cb5dd1457a2379759683bd90",
+      "file": "andorinha-RN.tar.zst",
+      "sha256": "ade8fa10c422a3abddca5ccba9a2e4d4615d872afb94ccb3bab864db624966cd",
       "tiles": 119,
-      "bytes_tiles": 74320360,
+      "bytes_tiles": 74590168,
       "bbox": [
         -6.99,
         -38.59,
@@ -554,19 +454,14 @@
         -4.0,
         -34.0
       ],
-      "zstd": {
-        "file": "andorinha-RN.tar.zst",
-        "bytes": 24907406,
-        "sha256": "a48a47a08ec600fc6db0381544a9d07d07f8cba4371266d80d8c6cfb9d38eb0c"
-      },
-      "bytes": 28874868
+      "bytes": 24985974
     },
     "RO": {
       "name": "Rondônia",
-      "file": "andorinha-RO.tar.gz",
-      "sha256": "c213de35863d3ce24a38a363b68a517b84e4c17356e7cb40bac3d13d75c7dbcb",
+      "file": "andorinha-RO.tar.zst",
+      "sha256": "a0ec93964a1d28ce14cac90ee1ec0b76014f956b76427b85e22283fcf3e2daa8",
       "tiles": 351,
-      "bytes_tiles": 27733192,
+      "bytes_tiles": 27906224,
       "bbox": [
         -13.7,
         -66.82,
@@ -579,19 +474,14 @@
         -7.0,
         -59.0
       ],
-      "zstd": {
-        "file": "andorinha-RO.tar.zst",
-        "bytes": 9292090,
-        "sha256": "cdc8ae304dc906867b7a5a8a242bfe0c7bd313986e7532b6249e4d7dbee0c99f"
-      },
-      "bytes": 11046858
+      "bytes": 9350864
     },
     "RR": {
       "name": "Roraima",
-      "file": "andorinha-RR.tar.gz",
-      "sha256": "cfd34bf1960679a0d6dfbcfd1b9943efffa48c149345b688913d240259b73005",
+      "file": "andorinha-RR.tar.zst",
+      "sha256": "139a84b58ec14ae7061350ff3030d79ecd3403948a933538312eba37e560b91f",
       "tiles": 236,
-      "bytes_tiles": 10766248,
+      "bytes_tiles": 10800720,
       "bbox": [
         -1.59,
         -64.83,
@@ -604,19 +494,14 @@
         5.5,
         -59.0
       ],
-      "zstd": {
-        "file": "andorinha-RR.tar.zst",
-        "bytes": 3645090,
-        "sha256": "405f20811def90536970218095dfcf20810dbdd58823f182f3c8e93907a55403"
-      },
-      "bytes": 4338459
+      "bytes": 3664348
     },
     "RS": {
       "name": "Rio Grande do Sul",
-      "file": "andorinha-RS.tar.gz",
-      "sha256": "9df306cd3a8b2789d8f5ae4f98ea8e8c7704fa161b87a78bf4af9c2b3289a5ae",
+      "file": "andorinha-RS.tar.zst",
+      "sha256": "a5ac0ace64fe88264ca4596ed30af1a44591588d954b4b412dd1c321c77441e9",
       "tiles": 538,
-      "bytes_tiles": 228924968,
+      "bytes_tiles": 230388072,
       "bbox": [
         -33.76,
         -57.65,
@@ -629,19 +514,14 @@
         -27.0,
         -49.0
       ],
-      "zstd": {
-        "file": "andorinha-RS.tar.zst",
-        "bytes": 77396466,
-        "sha256": "2daad62d7d7ad3e031d8cab4c24a335bf1c9f7e0a0a0fb042af5ffa29610dff9"
-      },
-      "bytes": 90037848
+      "bytes": 77904988
     },
     "SC": {
       "name": "Santa Catarina",
-      "file": "andorinha-SC.tar.gz",
-      "sha256": "cf4614b3c80a024bd6eeadbf0a480bd2eacd8844560370833c823795581dac5e",
+      "file": "andorinha-SC.tar.zst",
+      "sha256": "44b0dff50ca9862867e96cbeb83abfaf5cd112ca96b56cde1c7ea87927997f67",
       "tiles": 223,
-      "bytes_tiles": 191134480,
+      "bytes_tiles": 192532224,
       "bbox": [
         -29.36,
         -53.84,
@@ -654,19 +534,14 @@
         -25.0,
         -48.0
       ],
-      "zstd": {
-        "file": "andorinha-SC.tar.zst",
-        "bytes": 66322654,
-        "sha256": "877f49374dba546c78bf2fcb10c111aeae1693a889697a307528285d8e1988a3"
-      },
-      "bytes": 76564421
+      "bytes": 66780327
     },
     "SE": {
       "name": "Sergipe",
-      "file": "andorinha-SE.tar.gz",
-      "sha256": "536f4257470799a6cdfc5c9716019563234604da4a7386f0ef0da9440815ae7a",
+      "file": "andorinha-SE.tar.zst",
+      "sha256": "fac1716b97ad63c15eabb150572616f8213155ffe1f6b3d05db39620944d1597",
       "tiles": 62,
-      "bytes_tiles": 44657288,
+      "bytes_tiles": 44954392,
       "bbox": [
         -11.57,
         -38.25,
@@ -679,19 +554,14 @@
         -9.0,
         -36.0
       ],
-      "zstd": {
-        "file": "andorinha-SE.tar.zst",
-        "bytes": 15475873,
-        "sha256": "9f4ed7856d5ab94bb70ae68289c46ad204372a4cba7bdfc3d99d537725f0c9dc"
-      },
-      "bytes": 17841913
+      "bytes": 15578698
     },
     "SP": {
       "name": "São Paulo",
-      "file": "andorinha-SP.tar.gz",
-      "sha256": "066a36ba352b3f713f918f685404f0d0a36ca7d29879567f8443001deb74e507",
+      "file": "andorinha-SP.tar.zst",
+      "sha256": "ae407392eb704e183a9314a3b6133483b11cf4c7ed44f5bcd922f17c935f3617",
       "tiles": 476,
-      "bytes_tiles": 576275056,
+      "bytes_tiles": 579708296,
       "bbox": [
         -25.31,
         -53.12,
@@ -704,19 +574,14 @@
         -19.0,
         -44.0
       ],
-      "zstd": {
-        "file": "andorinha-SP.tar.zst",
-        "bytes": 184942712,
-        "sha256": "14416160e18b51ba2fa7d90ac523471466f3e17d8dc45266f2e5d29231be3fd5"
-      },
-      "bytes": 216382071
+      "bytes": 186001000
     },
     "TO": {
       "name": "Tocantins",
-      "file": "andorinha-TO.tar.gz",
-      "sha256": "5b0108984b01433ddf5dd8f8738ad62c172a992f1daa8dbb5a4db69895961b6f",
+      "file": "andorinha-TO.tar.zst",
+      "sha256": "1063e0274d0073d8d32e494c2f04dc7a6611f7e1e3fc5c86984cdf4aa316ec67",
       "tiles": 490,
-      "bytes_tiles": 49627688,
+      "bytes_tiles": 50029464,
       "bbox": [
         -13.47,
         -50.75,
@@ -729,12 +594,7 @@
         -5.0,
         -45.0
       ],
-      "zstd": {
-        "file": "andorinha-TO.tar.zst",
-        "bytes": 17686356,
-        "sha256": "9a3511c6724fb70dd675f99caefcb8e9a9dce19e77c4cfaa583bda82fc3e26e0"
-      },
-      "bytes": 20859996
+      "bytes": 17826238
     }
   }
 }

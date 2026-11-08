@@ -120,6 +120,43 @@ class TextTest(unittest.TestCase):
             self.assertEqual(1, len(s.requests))
 
 
+class RedirectTargetTest(unittest.TestCase):
+    """net.redirect_target: para onde uma URL redireciona, sem seguir (o `-latest` da Geofabrik -> o arquivo datado)."""
+
+    def test_gives_the_target_without_following(self):
+        with FakeServer() as s:
+            s.redirect["/brazil-latest.osm.pbf"] = "/brazil-261107.osm.pbf"  # relativo: vira absoluto
+            s.files["/brazil-261107.osm.pbf"] = SAMPLE_DATA
+            target = net.redirect_target(s.url("/brazil-latest.osm.pbf"), delay=0)
+            self.assertEqual(s.url("/brazil-261107.osm.pbf"), target)
+            self.assertEqual([("/brazil-latest.osm.pbf", None)], s.requests)
+
+    def test_absolute_target_is_kept(self):
+        with FakeServer() as s:
+            s.redirect["/latest"] = "https://download.example.org/brazil-261107.osm.pbf"
+            self.assertEqual("https://download.example.org/brazil-261107.osm.pbf",
+                             net.redirect_target(s.url("/latest"), delay=0))
+
+    def test_answer_without_redirect_fails(self):
+        with FakeServer() as s:
+            s.files["/latest"] = SAMPLE_DATA
+            with self.assertRaises(net.PermanentError):
+                net.redirect_target(s.url("/latest"), delay=0)
+
+    def test_404_fails_immediately(self):
+        with FakeServer() as s:
+            with self.assertRaises(net.PermanentError):
+                net.redirect_target(s.url("/nada"), delay=5)
+            self.assertEqual(1, len(s.requests))
+
+    def test_503_is_retried(self):
+        with FakeServer() as s:
+            s.code["/latest"] = 503
+            with self.assertRaises(net.DownloadError):
+                net.redirect_target(s.url("/latest"), attempts=3, delay=0)
+            self.assertEqual(3, len(s.requests))
+
+
 def md5(b: bytes) -> str:
     return hashlib.md5(b).hexdigest()
 

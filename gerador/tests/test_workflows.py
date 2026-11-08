@@ -93,6 +93,11 @@ class ScheduledGenerationTest(unittest.TestCase):
         self.assertIn("if: env.PUBLISH == 'true'\n", publish_step)
         self.assertNotIn("inputs.publish }}", publish_step)
 
+    def test_manual_run_can_choose_the_extract_source(self):
+        """Para testar a Geofabrik no Actions sem esperar o openstreetmap.fr cair; vazio = a ordem padrão."""
+        self.assertRegex(self.text, r'(?s)osm_sources:\n.*?type: string\n\s+default: ""\n')
+        self.assertIn("ANDORINHA_OSM_SOURCES: ${{ inputs.osm_sources }}\n", self.generate)
+
     def test_one_generation_at_a_time(self):
         self.assertRegex(self.text, r"(?m)^concurrency:\n  group: generate\n  cancel-in-progress: false")
 

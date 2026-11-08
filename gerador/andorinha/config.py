@@ -16,10 +16,21 @@ DIST = DATA / "dist"      # pacotes .tar.zst e o catalogo.json desta geração
 # Trocar aqui = gerar tudo de novo e publicar como geração nova, com a versão nova no catálogo.
 VALHALLA_VERSION = "3.6.3"
 
-# Extrato do Brasil. O openstreetmap.fr recorta pelo polígono do país e publica a data e o md5 ao lado.
+# Extrato do Brasil, de uma destas fontes, na ordem de OSM_SOURCES: a primeira que entregar um extrato conferido pelo
+# md5 vale; se uma falha (fora do ar, tempo esgotado, md5 que não confere), a geração tenta a seguinte e avisa no log.
+# As duas recortam o país inteiro, ilhas oceânicas inclusive (conferido contra a malha do IBGE em 2026-11-08); a
+# divisão por UF vem da malha, não do recorte da fonte. ANDORINHA_OSM_SOURCES muda a ordem (ex.: "geofabrik").
+OSM_SOURCES = tuple(s.strip() for s in (os.environ.get("ANDORINHA_OSM_SOURCES") or "openstreetmap.fr,geofabrik")
+                    .split(",") if s.strip())
+# openstreetmap.fr: o extrato de sempre (~2,35 GB); a data e o md5 ficam ao lado.
 OSM_PBF_URL = "https://download.openstreetmap.fr/extracts/south-america/brazil-latest.osm.pbf"
 OSM_STATE_URL = "https://download.openstreetmap.fr/extracts/south-america/brazil.state.txt"
 OSM_MD5_URL = "https://download.openstreetmap.fr/extracts/south-america/brazil.osm.pbf.md5"
+# Geofabrik (~2,1 GB, sem os metadados de usuário, que o Valhalla não usa): o `-latest` redireciona para o arquivo
+# datado do dia (brazil-AAMMDD.osm.pbf), que tem o próprio .md5 e não muda depois de publicado. A data e a hora vêm do
+# state.txt das atualizações.
+GEOFABRIK_LATEST_URL = "https://download.geofabrik.de/south-america/brazil-latest.osm.pbf"
+GEOFABRIK_STATE_URL = "https://download.geofabrik.de/south-america/brazil-updates/state.txt"
 
 # Malha oficial das UFs (API de malhas do IBGE, v3, qualidade máxima): decide em que pacote cada tile entra. A geração
 # usa só a cópia no repositório, baixada desta URL em 2026-11-08 (1.001.279 bytes, as 27 UFs, idêntica à de 2026-09-30,

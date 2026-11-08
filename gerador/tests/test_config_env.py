@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from andorinha import config  # noqa: E402
 
 ENV_VARS = ("ANDORINHA_REPO", "GITHUB_REPOSITORY", "ANDORINHA_THREADS", "ANDORINHA_MIN_FREE_DISK_GB",
-            "ANDORINHA_KEEP_GENERATIONS")
+            "ANDORINHA_KEEP_GENERATIONS", "ANDORINHA_OSM_SOURCES")
 
 
 def reload_config(**env):
@@ -39,6 +39,18 @@ class EnvironmentTest(unittest.TestCase):
 
     def test_threads_from_environment(self):
         self.assertEqual(2, reload_config(ANDORINHA_THREADS="2").THREADS)
+
+    def test_extract_comes_from_openstreetmap_fr_then_geofabrik(self):
+        self.assertEqual(("openstreetmap.fr", "geofabrik"), reload_config().OSM_SOURCES)
+
+    def test_extract_sources_from_environment(self):
+        self.assertEqual(("geofabrik",), reload_config(ANDORINHA_OSM_SOURCES="geofabrik").OSM_SOURCES)
+        self.assertEqual(("geofabrik", "openstreetmap.fr"),
+                         reload_config(ANDORINHA_OSM_SOURCES=" geofabrik , openstreetmap.fr ").OSM_SOURCES)
+
+    def test_empty_extract_sources_is_the_default(self):
+        """O disparo agendado não tem entradas: a variável chega vazia ao gerador."""
+        self.assertEqual(("openstreetmap.fr", "geofabrik"), reload_config(ANDORINHA_OSM_SOURCES="").OSM_SOURCES)
 
     def test_default_threads_at_most_8(self):
         c = reload_config()

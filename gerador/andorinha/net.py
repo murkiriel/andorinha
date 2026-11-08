@@ -16,6 +16,7 @@ from __future__ import annotations
 import http.client
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import zlib
 from pathlib import Path
@@ -79,6 +80,38 @@ def fetch_text(url: str, attempts: int = 3, delay: float = 5) -> str:
             if _is_permanent(e):
                 raise PermanentError(f"{url}: HTTP {e.code}") from e
             error: Exception = e
+        except (OSError, http.client.HTTPException) as e:
+            error = e
+        if attempt < attempts:
+            time.sleep(delay * attempt)
+    raise DownloadError(f"{url}: {attempts} tentativas falharam ({error})")
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[no-untyped-def]
+        return None  # o urllib devolve o 3xx como HTTPError, com o Location nos cabeçalhos
+
+
+def redirect_target(url: str, attempts: int = 3, delay: float = 5) -> str:
+    """Para onde `url` redireciona (o Location, absoluto), sem seguir. Uma resposta sem redirecionamento é erro
+    permanente: quem chama conta com o redirecionamento (ex.: o `-latest` da Geofabrik aponta o arquivo datado)."""
+    opener = urllib.request.build_opener(_NoRedirect)
+    error: Exception = DownloadError("nenhuma tentativa")
+    for attempt in range(1, attempts + 1):
+        req = urllib.request.Request(url, headers={"User-Agent": config.USER_AGENT})
+        try:
+            with opener.open(req, timeout=60):
+                pass
+            raise PermanentError(f"{url}: respondeu sem redirecionar")
+        except urllib.error.HTTPError as e:
+            location = e.headers.get("Location") if 300 <= e.code < 400 else None
+            if location:
+                return urllib.parse.urljoin(url, location)
+            if 300 <= e.code < 400 or _is_permanent(e):
+                raise PermanentError(f"{url}: HTTP {e.code}") from e
+            error = e
+        except PermanentError:
+            raise
         except (OSError, http.client.HTTPException) as e:
             error = e
         if attempt < attempts:

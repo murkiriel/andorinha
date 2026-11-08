@@ -8,7 +8,8 @@
 # (em 01/10/2026, o das 06:00 UTC não apareceu no horário). São dois por dia porque um disparo pulado não avisa
 # ninguém: o segundo cobre o primeiro e, se o primeiro já publicou, só confere a data e para.
 # Também pode ser disparado à mão (Actions -> gerar -> Run workflow), a qualquer momento; à mão, só publica se
-# "publish" for marcado; sem isso, gera e valida (os logs e as medições ficam nos artefatos).
+# "publish" for marcado; sem isso, gera e valida (os logs e as medições ficam nos artefatos). "osm_sources" escolhe
+# de onde vem o extrato (ex.: "geofabrik", para testar a reserva sem esperar o openstreetmap.fr cair).
 #
 # A máquina do Actions é menor que o build pede sem ajuste. Medido numa máquina de 32 GB: pico de RAM de 20,3 GB com
 # 8 threads e 13,4 GB com 2 (a leitura do extrato sozinha passa de 7 GB); 17,5 GB de disco em data/. Por isso o job
@@ -27,6 +28,10 @@ on:
         description: "Publicar a release e o catalogo.json no fim. Sem marcar: só gera e valida."
         type: boolean
         default: false
+      osm_sources:
+        description: "Fontes do extrato, em ordem (ex.: geofabrik). Vazio: openstreetmap.fr e, se falhar, Geofabrik."
+        type: string
+        default: ""
 
 permissions:
   contents: write
@@ -72,6 +77,8 @@ jobs:
       PUBLISH: ${{ github.event_name == 'schedule' || inputs.publish == true }}
       SWAP_GB: "12"
       ANDORINHA_MIN_FREE_DISK_GB: "20"
+      # Vazio no agendamento (sem entradas): o gerador usa a ordem padrão de config.OSM_SOURCES.
+      ANDORINHA_OSM_SOURCES: ${{ inputs.osm_sources }}
     steps:
       - uses: actions/checkout@v7
 

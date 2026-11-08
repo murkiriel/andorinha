@@ -35,6 +35,7 @@ class ExtractTest(unittest.TestCase):
                          mock.patch.object(config, "OSM_STATE_URL", s.url("/state.txt")),
                          mock.patch.object(config, "OSM_MD5_URL", s.url("/x.md5")),
                          mock.patch.object(config, "OSM_PBF_URL", s.url("/x.pbf")),
+                         mock.patch.object(config, "OSM_SOURCES", ("openstreetmap.fr",)),  # sem a reserva
                          mock.patch.object(sources, "RETRY_DELAY", 0)]
         for p in self._patches:
             p.start()
@@ -83,6 +84,135 @@ class ExtractTest(unittest.TestCase):
         sources.osm_extract()
         self.assertEqual(A, pbf.read_bytes())
         self.assertEqual(2, self.downloads())
+
+
+GEOFABRIK_STATE = b"# original OSM minutely replication sequence number 7362973\n" \
+                  b"timestamp=2026-11-07T21\\:21\\:36Z\nsequenceNumber=4967\n"
+
+
+def serve_geofabrik(s: FakeServer, content: bytes = A, day: str = "261107") -> None:
+    """Imita a Geofabrik: `-latest` redireciona para o arquivo datado do dia, que tem o próprio .md5."""
+    s.redirect["/gf/brazil-latest.osm.pbf"] = f"/gf/brazil-{day}.osm.pbf"
+    s.files[f"/gf/brazil-{day}.osm.pbf"] = content
+    s.files[f"/gf/brazil-{day}.osm.pbf.md5"] = f"{md5(A)}  brazil-{day}.osm.pbf\n".encode()
+    s.files["/gf/state.txt"] = GEOFABRIK_STATE
+
+
+class SourcesTestCase(unittest.TestCase):
+    """Um servidor local com as duas fontes: o openstreetmap.fr em /fr/ e a Geofabrik em /gf/."""
+    order = ("openstreetmap.fr", "geofabrik")
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.raw = Path(self._tmp.name)
+        self.pbf = self.raw / "brazil-latest.osm.pbf"
+        self.server = FakeServer().__enter__()
+        s = self.server
+        s.files["/fr/state.txt"] = b"sequenceNumber=1\ntimestamp=2026-11-07T00\\:33\\:49Z\n"
+        s.files["/fr/x.md5"] = f"{md5(B)}  brazil.osm.pbf\n".encode()
+        s.files["/fr/x.pbf"] = B
+        serve_geofabrik(s)
+        self._patches = [mock.patch.object(config, "RAW", self.raw),
+                         mock.patch.object(config, "OSM_STATE_URL", s.url("/fr/state.txt")),
+                         mock.patch.object(config, "OSM_MD5_URL", s.url("/fr/x.md5")),
+                         mock.patch.object(config, "OSM_PBF_URL", s.url("/fr/x.pbf")),
+                         mock.patch.object(config, "GEOFABRIK_LATEST_URL", s.url("/gf/brazil-latest.osm.pbf")),
+                         mock.patch.object(config, "GEOFABRIK_STATE_URL", s.url("/gf/state.txt")),
+                         mock.patch.object(config, "OSM_SOURCES", self.order),
+                         mock.patch.object(sources, "RETRY_DELAY", 0)]
+        for p in self._patches:
+            p.start()
+
+    def tearDown(self):
+        for p in reversed(self._patches):
+            p.stop()
+        self.server.__exit__(None, None, None)
+        self._tmp.cleanup()
+
+    def requested(self, prefix: str) -> int:
+        return sum(1 for path, _ in self.server.requests if path.startswith(prefix))
+
+
+class GeofabrikTest(SourcesTestCase):
+    """sources.osm_extract só com a Geofabrik: o arquivo datado do dia, que não muda depois de publicado."""
+    order = ("geofabrik",)
+
+    def test_downloads_the_dated_file(self):
+        meta = sources.osm_extract()
+        self.assertEqual(A, self.pbf.read_bytes())
+        self.assertEqual(md5(A), meta["md5"])
+        self.assertEqual("2026-11-07T21:21:36Z", meta["timestamp"])
+        self.assertEqual(self.server.url("/gf/brazil-261107.osm.pbf"), meta["url"])
+        self.assertEqual(0, self.requested("/fr/"))
+
+    def test_does_not_download_again_when_up_to_date(self):
+        sources.osm_extract()
+        sources.osm_extract()
+        self.assertEqual(1, sum(1 for path, _ in self.server.requests if path == "/gf/brazil-261107.osm.pbf"))
+
+    def test_corrupted_file_fails_and_is_removed(self):
+        serve_geofabrik(self.server, content=A[:-10] + b"corrompido")
+        with self.assertRaises(RuntimeError) as ctx:
+            sources.osm_extract()
+        self.assertIn("md5", str(ctx.exception))
+        self.assertFalse(self.pbf.exists())
+
+    def test_state_of_another_day_is_read_again(self):
+        """A troca diária pode cair entre ler o `-latest` e o state.txt: lê os dois de novo uma vez."""
+        states = [GEOFABRIK_STATE.replace(b"2026-11-07T21", b"2026-11-08T21"), GEOFABRIK_STATE]
+        self.server.files["/gf/state.txt"] = lambda: states.pop(0) if len(states) > 1 else states[0]
+        meta = sources.osm_extract()
+        self.assertEqual("2026-11-07T21:21:36Z", meta["timestamp"])
+        self.assertEqual(A, self.pbf.read_bytes())
+
+    def test_state_that_never_matches_the_file_fails(self):
+        self.server.files["/gf/state.txt"] = GEOFABRIK_STATE.replace(b"2026-11-07T21", b"2026-11-09T21")
+        with self.assertRaises(RuntimeError) as ctx:
+            sources.osm_extract()
+        self.assertIn("261107", str(ctx.exception))
+        self.assertFalse(self.pbf.exists())
+
+    def test_unexpected_file_name_fails(self):
+        self.server.redirect["/gf/brazil-latest.osm.pbf"] = "/gf/outra-coisa.osm.pbf"
+        with self.assertRaises(RuntimeError):
+            sources.osm_extract()
+
+
+class FallbackTest(SourcesTestCase):
+    """O openstreetmap.fr primeiro; a Geofabrik só se ele não entregar um extrato conferido."""
+
+    def test_first_source_answering_is_used(self):
+        meta = sources.osm_extract()
+        self.assertEqual(self.server.url("/fr/x.pbf"), meta["url"])
+        self.assertEqual(B, self.pbf.read_bytes())
+        self.assertEqual(0, self.requested("/gf/"))
+
+    def test_first_source_down_uses_the_next(self):
+        self.server.code["/fr/state.txt"] = 503
+        meta = sources.osm_extract()
+        self.assertEqual(self.server.url("/gf/brazil-261107.osm.pbf"), meta["url"])
+        self.assertEqual(A, self.pbf.read_bytes())
+
+    def test_first_source_with_bad_md5_uses_the_next(self):
+        self.server.files["/fr/x.pbf"] = B[:-10] + b"corrompido"
+        meta = sources.osm_extract()
+        self.assertEqual(md5(A), meta["md5"])
+        self.assertEqual(A, self.pbf.read_bytes())
+
+    def test_all_sources_down_fails_naming_each_one(self):
+        self.server.code["/fr/state.txt"] = 503
+        self.server.code["/gf/brazil-latest.osm.pbf"] = 404
+        with self.assertRaises(RuntimeError) as ctx:
+            sources.osm_extract()
+        self.assertIn("openstreetmap.fr", str(ctx.exception))
+        self.assertIn("geofabrik", str(ctx.exception))
+
+    def test_unknown_source_fails_before_any_request(self):
+        with mock.patch.object(config, "OSM_SOURCES", ("openstreetmap.fr", "planeta")):
+            with self.assertRaises(ValueError) as ctx:
+                sources.osm_extract()
+        self.assertIn("planeta", str(ctx.exception))
+        self.assertEqual([], self.server.requests)
 
 
 def fake_mesh(exclude=()) -> bytes:

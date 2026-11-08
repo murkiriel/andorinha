@@ -1,18 +1,23 @@
 """Fontes: o extrato do Brasil no OpenStreetMap (baixado) e a malha das UFs do IBGE (cópia versionada).
 
-O extrato só é baixado de novo quando o openstreetmap.fr tem versão mais nova (md5 publicado ao lado do arquivo);
-depois do download, o md5 é conferido. A Geofabrik não é usada: a partir de algumas redes o download dela entra em
-redirecionamento sem fim, e ela só recorta o Brasil por macrorregião.
+O extrato vem da primeira fonte de `config.OSM_SOURCES` que entregar um arquivo conferido pelo md5 publicado: o
+openstreetmap.fr e, se ele falhar (fora do ar, tempo esgotado, md5 que não confere), a Geofabrik. Nas duas, o extrato
+só é baixado de novo quando há versão mais nova que a local.
 
-O openstreetmap.fr troca o extrato uma vez por dia (por volta de 01:00 UTC). Se a troca acontece durante o download
-(~25 min), o arquivo baixado é o novo e o md5 lido antes é o velho: nesse caso o md5 e a data são lidos de novo e, se
-mudaram, a versão nova é baixada uma vez. Se não mudaram, o arquivo veio corrompido e a geração para.
+O openstreetmap.fr troca o extrato uma vez por dia (por volta de 01:00 UTC), sempre na mesma URL. Se a troca acontece
+durante o download (~25 min), o arquivo baixado é o novo e o md5 lido antes é o velho: nesse caso o md5 e a data são
+lidos de novo e, se mudaram, a versão nova é baixada uma vez. Se não mudaram, o arquivo veio corrompido.
+
+Na Geofabrik, o `-latest` redireciona para o arquivo datado do dia (brazil-AAMMDD.osm.pbf), que não muda depois de
+publicado e tem o próprio .md5: o download não corre contra a troca diária. Só o redirecionamento é lido (sem
+segui-lo). Em 2026-09, a partir de uma rede doméstica, seguir o `-latest` entrou em redirecionamento sem fim.
 """
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 from . import config, net
 from .util import file_hash
@@ -20,12 +25,19 @@ from .util import file_hash
 # Espera base entre tentativas, em segundos (multiplicada pelo número da tentativa). Os testes zeram.
 RETRY_DELAY = 10
 
+Extract = Tuple[str, str, str]  # (url do arquivo baixado, timestamp, md5)
+
+
+def _state_timestamp(url: str) -> str:
+    """O `timestamp` de um state.txt de replicação (os `:` vêm escapados)."""
+    state = dict(line.split("=", 1) for line in net.fetch_text(url, delay=RETRY_DELAY).splitlines()
+                 if "=" in line and not line.startswith("#"))
+    return state["timestamp"].strip().replace("\\:", ":")
+
 
 def _published() -> Tuple[str, str]:
-    """(timestamp, md5) do extrato publicado agora."""
-    state = dict(line.split("=", 1) for line in net.fetch_text(config.OSM_STATE_URL, delay=RETRY_DELAY).splitlines()
-                 if "=" in line)
-    timestamp = state["timestamp"].replace("\\:", ":")
+    """(timestamp, md5) do extrato publicado agora no openstreetmap.fr."""
+    timestamp = _state_timestamp(config.OSM_STATE_URL)
     md5 = net.fetch_text(config.OSM_MD5_URL, delay=RETRY_DELAY).split()[0]
     return timestamp, md5
 
@@ -41,32 +53,90 @@ def _local_matches(pbf: Path, local_meta: Path, md5: str) -> bool:
     return file_hash(pbf, "md5") == md5  # extrato copiado à mão, meta antigo ou arquivo mexido
 
 
+def _from_openstreetmap_fr(pbf: Path, local_meta: Path) -> Extract:
+    timestamp, md5 = _published()
+    if _local_matches(pbf, local_meta, md5):
+        print(f"[osm] extrato local já é o mais novo ({timestamp})")
+        return config.OSM_PBF_URL, timestamp, md5
+    for attempt in (1, 2):
+        print(f"[osm] baixando o extrato de {timestamp} do openstreetmap.fr...")
+        net.download(config.OSM_PBF_URL, pbf, identity=md5, delay=RETRY_DELAY)
+        local = file_hash(pbf, "md5")
+        if local == md5:
+            break
+        timestamp_now, md5_now = _published()
+        if attempt == 1 and md5_now != md5:
+            print(f"[osm] o extrato foi atualizado durante o download ({timestamp_now}); baixando a versão nova")
+            timestamp, md5 = timestamp_now, md5_now
+            continue
+        pbf.unlink()
+        raise RuntimeError(f"md5 do extrato não confere: {local} != {md5_now} publicado")
+    return config.OSM_PBF_URL, timestamp, md5
+
+
+def _geofabrik_dated() -> Tuple[str, str]:
+    """(url do arquivo datado de agora, timestamp dele). O state.txt é lido depois do `-latest`; se a troca diária
+    cair entre os dois, a data do state não é a do arquivo, e os dois são lidos de novo uma vez."""
+    for attempt in (1, 2):
+        url = net.redirect_target(config.GEOFABRIK_LATEST_URL, delay=RETRY_DELAY)
+        name = re.search(r"/brazil-(\d{6})\.osm\.pbf$", url)
+        if name is None:
+            raise RuntimeError(f"o -latest da Geofabrik aponta um arquivo inesperado: {url}")
+        day = name.group(1)
+        timestamp = _state_timestamp(config.GEOFABRIK_STATE_URL)
+        if timestamp[2:10].replace("-", "") == day:
+            return url, timestamp
+    raise RuntimeError(f"o state.txt da Geofabrik ({timestamp}) não é do dia do arquivo brazil-{day}")
+
+
+def _from_geofabrik(pbf: Path, local_meta: Path) -> Extract:
+    url, timestamp = _geofabrik_dated()
+    md5 = net.fetch_text(url + ".md5", delay=RETRY_DELAY).split()[0]
+    if _local_matches(pbf, local_meta, md5):
+        print(f"[osm] extrato local já é o mais novo ({timestamp})")
+        return url, timestamp, md5
+    print(f"[osm] baixando o extrato de {timestamp} da Geofabrik ({url.rsplit('/', 1)[-1]})...")
+    net.download(url, pbf, identity=md5, delay=RETRY_DELAY)
+    local = file_hash(pbf, "md5")
+    if local != md5:  # o arquivo datado não muda: md5 diferente é arquivo corrompido
+        pbf.unlink()
+        raise RuntimeError(f"md5 do extrato não confere: {local} != {md5} publicado")
+    return url, timestamp, md5
+
+
+SOURCES: Dict[str, Callable[[Path, Path], Extract]] = {
+    "openstreetmap.fr": _from_openstreetmap_fr,
+    "geofabrik": _from_geofabrik,
+}
+
+
 def osm_extract() -> Dict[str, object]:
-    """Garante data/raw/brazil-latest.osm.pbf na versão mais nova. Devolve {path, url, timestamp, md5, size}."""
+    """Garante data/raw/brazil-latest.osm.pbf na versão mais nova da primeira fonte que funcionar.
+    Devolve {path, url, timestamp, md5, size}; `url` diz de qual fonte (e, na Geofabrik, de qual dia) ele veio."""
+    unknown = [s for s in config.OSM_SOURCES if s not in SOURCES]
+    if unknown or not config.OSM_SOURCES:
+        raise ValueError(f"fonte do extrato desconhecida: {', '.join(unknown) or '(nenhuma)'} "
+                         f"(as que existem: {', '.join(SOURCES)})")
     config.RAW.mkdir(parents=True, exist_ok=True)
     pbf = config.RAW / "brazil-latest.osm.pbf"
     local_meta = config.RAW / "brazil-latest.meta.json"
 
-    timestamp, md5 = _published()
-    if _local_matches(pbf, local_meta, md5):
-        print(f"[osm] extrato local já é o mais novo ({timestamp})")
-    else:
-        for attempt in (1, 2):
-            print(f"[osm] baixando o extrato de {timestamp}...")
-            net.download(config.OSM_PBF_URL, pbf, identity=md5, delay=RETRY_DELAY)
-            local = file_hash(pbf, "md5")
-            if local == md5:
-                break
-            timestamp_now, md5_now = _published()
-            if attempt == 1 and md5_now != md5:
-                print(f"[osm] o extrato foi atualizado durante o download ({timestamp_now}); baixando a versão nova")
-                timestamp, md5 = timestamp_now, md5_now
-                continue
-            pbf.unlink()
-            raise RuntimeError(f"md5 do extrato não confere: {local} != {md5_now} publicado")
-        print(f"[osm] {pbf.stat().st_size / 1e9:.2f} GB, md5 confere")
-    meta = {"path": str(pbf), "url": config.OSM_PBF_URL, "timestamp": timestamp, "md5": md5,
-            "size": pbf.stat().st_size}
+    failures: List[str] = []
+    found: Optional[Extract] = None
+    for source in config.OSM_SOURCES:
+        try:
+            found = SOURCES[source](pbf, local_meta)
+            break
+        except (RuntimeError, OSError, KeyError, IndexError) as e:  # RuntimeError inclui net.DownloadError
+            failures.append(f"{source}: {e.__class__.__name__}: {e}")
+            print(f"[osm] AVISO: {source} falhou ({e.__class__.__name__}: {e})")
+    if found is None:
+        raise RuntimeError("nenhuma fonte entregou o extrato: " + "; ".join(failures))
+    url, timestamp, md5 = found
+    if failures:
+        print(f"[osm] extrato de {timestamp} veio da reserva: {url}")
+    print(f"[osm] {pbf.stat().st_size / 1e9:.2f} GB, md5 confere")
+    meta = {"path": str(pbf), "url": url, "timestamp": timestamp, "md5": md5, "size": pbf.stat().st_size}
     local_meta.write_text(json.dumps(meta, indent=2), encoding="utf-8")
     return meta
 

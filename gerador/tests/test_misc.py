@@ -109,6 +109,13 @@ class ReadmeCompatibilityTest(unittest.TestCase):
     def test_points_to_what_the_next_version_waits_for(self):
         self.assertIn("gerador/PENDENCIAS.md", self.section)
 
+    def test_does_not_promise_every_valhalla_mobile_0_6(self):
+        """O valhalla-mobile 0.6.4 (2026-10-06) já traz o Valhalla 3.9.1 e não lê os tiles 3.6.3: "0.6.x" mandaria
+        quem usa a biblioteca mais nova baixar pacotes que ela não abre. Vale para o README inteiro, inglês incluso."""
+        readme = (config.REPO / "README.md").read_text(encoding="utf-8")
+        self.assertNotIn("0.6.x", readme)
+        self.assertIn("0.6.4", self.section)
+
 
 class RunRecorderTest(unittest.TestCase):
     def test_saves_stages_disk_peak_and_result(self):

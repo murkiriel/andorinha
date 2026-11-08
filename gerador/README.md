@@ -86,8 +86,8 @@ Módulos de apoio:
 ## Decisões e medições
 
 **Versão do Valhalla fixada em 3.6.3.** O formato do tile muda entre versões (o cabeçalho mudou na 3.8), e os
-tiles precisam ser lidos pelo mesmo Valhalla que os gerou. 3.6.3 é a versão embutida no `valhalla-mobile` 0.6.x,
-a biblioteca Android e iOS. O `builder.py` recusa rodar com outra versão do pyvalhalla instalada. Para trocar:
+tiles precisam ser lidos pelo mesmo Valhalla que os gerou. 3.6.3 é a versão embutida no `valhalla-mobile` 0.6.3,
+a biblioteca Android e iOS (o 0.6.4, de 2026-10-06, já traz a 3.9.1). O `builder.py` recusa rodar com outra versão do pyvalhalla instalada. Para trocar:
 mude `VALHALLA_VERSION` e `requirements.txt` juntos, gere tudo de novo e publique como geração nova.
 
 **8 threads, não todas.** Numa máquina Windows de 16 threads, o `valhalla_build_tiles` com todas caiu duas vezes

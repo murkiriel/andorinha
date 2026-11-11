@@ -17,6 +17,9 @@
 # libera espaço apagando ferramentas pré-instaladas, põe os dados e o swap no disco com mais espaço livre (/ ou o
 # disco temporário em /mnt, quando a máquina tem um) e usa as threads da máquina (2 num repositório privado, 4 num
 # público). Memória, swap e disco são registrados a cada 30 s e vão, com os logs, para os artefatos do job.
+#
+# Reprodutível só a geração corrente (D-12): as actions vão fixadas pelo SHA do commit, com a tag em comentário (uma
+# tag pode ser movida), e as dependências Python saem do gerador/requirements.txt, travado com hashes.
 name: gerar
 
 on:
@@ -54,7 +57,7 @@ jobs:
       # responde 404, a data sumiria e o job geraria todo dia. O checkout é o do ramo como está agora, não o do
       # commit do disparo: um run que esperou na fila atrás de outro que publicou tem de ler o catálogo novo, ou
       # geraria de novo logo em seguida.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: ${{ github.ref }}
 
@@ -77,7 +80,7 @@ jobs:
       # Vazio no agendamento (sem entradas): o gerador usa a ordem padrão de config.OSM_SOURCES.
       ANDORINHA_OSM_SOURCES: ${{ inputs.osm_sources }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Liberar disco
         run: |
@@ -102,7 +105,7 @@ jobs:
           free -h
           echo "CPUs: $(nproc)"
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version: "3.12"
 
@@ -129,7 +132,7 @@ jobs:
           for log in gerador/data/build/*.log; do [ -f "$log" ] && tail -n 3000 "$log" > "relatorio/$(basename "$log")"; done
           ls -la relatorio
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         if: always()
         with:
           name: relatorio-da-geracao
@@ -158,7 +161,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Issue "Geração falhando"
         env:

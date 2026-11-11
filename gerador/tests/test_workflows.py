@@ -44,6 +44,19 @@ class PinnedDependenciesTest(unittest.TestCase):
                 self.assertTrue((folder / m.group(1)).is_file(), f"{name}: {m.group(1)} não existe")
         self.assertEqual(2, seen)
 
+    def test_every_action_is_pinned_by_commit_sha(self):
+        """Toda `uses:` pelo SHA de 40 caracteres do commit, com a tag exata em comentário: uma tag (`v7`) pode ser
+        movida para outro commit sem aviso; o SHA não."""
+        seen = 0
+        for name, text in workflows().items():
+            for line in text.splitlines():
+                if not re.match(r"^\s*(- )?uses:", line):
+                    continue
+                seen += 1
+                self.assertRegex(line, r"^\s*(- )?uses: [\w.-]+/[\w./-]+@[0-9a-f]{40}  # v\d+\.\d+\.\d+$",
+                                 f"{name}: {line.strip()}")
+        self.assertEqual(7, seen)
+
 
 def job(text: str, name: str) -> str:
     """O trecho de um job: da linha `  nome:` até o próximo job (ou o fim do arquivo)."""
@@ -79,7 +92,8 @@ class ScheduledGenerationTest(unittest.TestCase):
     def test_published_date_is_the_one_on_the_branch_now(self):
         """Um run que esperou na fila atrás de outro que publicou lê o catálogo de agora, não o do disparo: sem
         isso geraria de novo logo depois da publicação."""
-        self.assertRegex(self.interval, r"- uses: actions/checkout@v\d+\n\s+with:\n\s+ref: \$\{\{ github\.ref \}\}\n")
+        self.assertRegex(self.interval, r"- uses: actions/checkout@[0-9a-f]{40}  # v[\d.]+\n\s+with:\n"
+                                        r"\s+ref: \$\{\{ github\.ref \}\}\n")
 
     def test_can_still_be_started_by_hand(self):
         self.assertIn("  workflow_dispatch:\n", self.text)

@@ -195,6 +195,15 @@ Cada geração só é publicada se 33 rotas derem, com os pacotes separados, a m
 inteiro. O foco é a moto: uma rota dentro de cada estado, duas entre estados vizinhos e uma viagem longa só com
 os pacotes das pontas. Carro, bicicleta e a pé têm uma rota curta cada.
 
+**Só a geração corrente é reproduzível.** Enquanto o extrato do OpenStreetMap usado ainda está na fonte, o gerador do
+commit `generator_commit` refaz a geração com as mesmas entradas: o Valhalla e as dependências Python travados com
+hashes ([`gerador/requirements.txt`](gerador/requirements.txt)), as actions do GitHub fixadas pelo SHA do commit, a
+malha do IBGE versionada no repositório e o zip de fusos conferido pelo sha256. O extrato, não: ele vem do arquivo
+"latest" do dia, que a fonte troca e que o Andorinha não arquiva. O catálogo registra o md5 (`osm.md5`), a data e o
+endereço do extrato usado; com isso dá para conferir um extrato, não recuperá-lo. Uma geração antiga não pode ser
+refeita depois que a fonte troca o arquivo; os pacotes dela continuam nas releases enquanto ela estiver entre as 12.
+O SpatiaLite do build vem do `apt` da imagem `ubuntu-24.04` do Actions, sem versão fixa.
+
 ## Licença
 
 Os **pacotes** são uma base derivada do OpenStreetMap, distribuída sob a **Open Database License (ODbL) 1.0**

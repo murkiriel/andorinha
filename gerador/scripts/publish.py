@@ -2,7 +2,7 @@
 
     python scripts/publish.py                  # só confere (nada é publicado)
     python scripts/publish.py --release        # confere, sobe a release <build_id> e grava o catálogo
-    python scripts/publish.py --release --commit --push   # e ainda faz commit e push só do catalogo.json
+    python scripts/publish.py --release --commit --push   # e ainda faz commit e push do catalogo.json e do README
     python scripts/publish.py --accept-drop    # passa por cima da trava de queda (publishing.drops)
     python scripts/publish.py --accept-older   # publica uma geração de OSM mais antigo que a publicada
     python scripts/publish.py --prune --dry-run   # só lista as releases antigas que a limpeza apagaria
@@ -74,7 +74,7 @@ def main() -> None:
             pass
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--release", action="store_true", help="sobe a release e grava o catalogo.json na raiz")
-    ap.add_argument("--commit", action="store_true", help="commit só do catalogo.json (exige --release)")
+    ap.add_argument("--commit", action="store_true", help="commit do catalogo.json e do README (exige --release)")
     ap.add_argument("--push", action="store_true", help="push do commit (exige --commit)")
     ap.add_argument("--accept-drop", action="store_true", help="publica mesmo com pacote que perdeu tiles")
     ap.add_argument("--accept-older", action="store_true",

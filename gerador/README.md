@@ -99,8 +99,10 @@ e das regras por tipo de via do próprio Valhalla. Num teste no DF, tiles gerado
 por densidade urbana estimaram 39 km/h para a moto na DF-002 (Eixão, via expressa de 80 km/h), contra 73 km/h sem
 a tabela, e quase o dobro do tempo na rota inteira.
 
-**Sem trânsito, fusos horários, transporte público e pontos de referência.** O pacote é só o grafo de rotas. Sem
-o banco de fusos, rotas com hora marcada (`date_time`) não saem; rota sem hora funciona normalmente.
+**Com fusos horários; sem trânsito, transporte público e pontos de referência.** O pacote é o grafo de rotas com o
+fuso de cada nó (desde 2026-10-05: o banco só do Brasil, de `andorinha/timezones.py`, entra no build), então uma rota
+com hora marcada (`date_time`) responde com a hora e o fuso de cada ponto, sem arquivo a mais para quem usa. Trânsito,
+transporte público e pontos de referência ficam de fora.
 
 **Divisão por UF.** O nível 0 (motorway, trunk e primary) vai inteiro para o pacote base: longe da origem e do
 destino, o Valhalla só usa esse nível, então uma viagem longa funciona com a base e os pacotes das duas pontas. Os
@@ -108,13 +110,13 @@ níveis 1 e 2 vão para as UFs cujo polígono (malha do IBGE, com margem de 0,05
 entra nas duas UFs. Os tiles que não tocam nenhuma UF (sobras do recorte do extrato em países vizinhos) ficam de
 fora.
 
-**Pacotes parciais exigem `loki.use_connectivity: false`.** A checagem prévia de conectividade do Valhalla olha só as vias locais: com a base e os pacotes das duas pontas, sem os estados do meio, ela recusava Porto Alegre → Fortaleza ("regiões desconectadas") sem tentar. Desligada, sai a mesma rota do Brasil inteiro (4.242 km). A validação roda assim, e o README da raiz manda quem usa fazer o mesmo.
+**Pacotes parciais exigem `loki.use_connectivity: false`.** A checagem prévia de conectividade do Valhalla olha só as vias locais: com a base e os pacotes das duas pontas, sem os estados do meio, ela recusava Porto Alegre → Fortaleza ("regiões desconectadas") sem tentar. Desligada, sai a mesma rota do Brasil inteiro (4.278,5 km na geração `2026-11-09-c17dff60`, Valhalla 3.9.1; eram 4.242 km no 3.6.3). A validação roda assim, e o README da raiz manda quem usa fazer o mesmo.
 
-**Pacotes reproduzíveis.** Ordem fixa e datas zeradas no `.tar` e no gzip: os mesmos tiles geram o mesmo arquivo,
-byte a byte, e o mesmo sha256.
+**Pacotes reproduzíveis.** Ordem fixa e datas zeradas no `.tar` (o zstd não guarda nome nem data): os mesmos tiles
+geram o mesmo arquivo, byte a byte, e o mesmo sha256.
 
 **GitHub Releases, não git.** Os pacotes são binários de centenas de MB que mudam por inteiro a cada geração.
-No git, o histórico incharia a cada mês. Cada geração vira uma release (`build_id` = data), e o repositório guarda
+No git, o histórico incharia a cada geração. Cada geração vira uma release (`build_id` = data + md5 do extrato), e o repositório guarda
 só o gerador e o `catalogo.json`. Limites do GitHub Releases: cada arquivo abaixo de 2 GiB, sem limite de tamanho
 total nem de banda.
 
@@ -152,7 +154,7 @@ login não é confundido com "a release não existe". `--commit` sem `--release`
 
 **Idioma**
 
-- Nomes de arquivos e pastas de dados e documentos: português, sem acento, sem espaço (`andorinha-GO.tar.gz`,
+- Nomes de arquivos e pastas de dados e documentos: português, sem acento, sem espaço (`andorinha-GO.tar.zst`,
   `catalogo.json`, `geracao.json`, `pacotes.json`, `PENDENCIAS.md`, `gerar.yml`). Exceção: os nomes que o
   ecossistema espera (`README.md`, `LICENSE`, `requirements.txt`).
 - Código: nomes de variáveis, funções, classes, módulos e arquivos de código em inglês (`packing.py`,

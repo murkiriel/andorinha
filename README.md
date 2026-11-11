@@ -62,22 +62,23 @@ Os tiles precisam ser lidos pela versão do Valhalla que os gerou: o formato mud
 geração está no campo `valhalla_version` do `catalogo.json`: confira antes de baixar e recuse uma geração de
 versão diferente da do seu motor.
 
-Os pacotes passaram da série 3.6 para a 3.9 junto com o `valhalla-mobile` 0.6.4 (2026-10-06), o primeiro a embutir
-a série 3.9. O formato do tile mudou nessa troca: os pacotes novos não servem para um motor da série 3.6 (como o
+Os pacotes passaram da série 3.6 para a 3.9 na geração `2026-11-09-c17dff60`, para acompanhar o `valhalla-mobile`
+0.6.4 (de 2026-10-06), o primeiro a embutir a série 3.9. O formato do tile mudou nessa troca: os pacotes novos não servem para um motor da série 3.6 (como o
 `valhalla-mobile` 0.6.3), nem os anteriores para um motor 3.9. Quem tem pacotes de antes da troca precisa baixar
 todos de novo, com o motor novo (o que falta e o histórico estão em [`gerador/PENDENCIAS.md`](gerador/PENDENCIAS.md)).
 
 ## Como usar
 
-1. Leia o `catalogo.json` e escolha os pacotes: **sempre o `base`**, mais os estados por onde você vai rodar.
+1. Leia o `catalogo.json` e escolha os pacotes: **sempre o `base`**, mais os estados por onde você vai rodar,
+   inclusive os de origem, destino e paradas (ver "Viagens longas").
 2. Baixe cada arquivo de `release_url` + `file` e confira o `sha256`.
 3. Extraia **todos na mesma pasta**. Tiles de divisa vêm nos dois estados vizinhos: são o mesmo arquivo e podem
    ser sobrescritos.
 4. Aponte o Valhalla para a pasta (`mjolnir.tile_dir`) e roteie.
 
 ```
-curl -LO https://github.com/Murkiriel/andorinha/releases/download/<build_id>/andorinha-base.tar.gz
-curl -LO https://github.com/Murkiriel/andorinha/releases/download/<build_id>/andorinha-GO.tar.gz
+curl -LO https://github.com/Murkiriel/andorinha/releases/download/<build_id>/andorinha-base.tar.zst
+curl -LO https://github.com/Murkiriel/andorinha/releases/download/<build_id>/andorinha-GO.tar.zst
 mkdir tiles && tar --zstd -xf andorinha-base.tar.zst -C tiles && tar --zstd -xf andorinha-GO.tar.zst -C tiles
 ```
 
@@ -110,7 +111,14 @@ precisam ter o mesmo `build_id`; ao atualizar, baixe de novo todos os que estive
 estados funciona com a base e os pacotes da origem e do destino, **desde que a config tenha
 `loki.use_connectivity: false`**. Essa checagem prévia olha só as vias locais: sem os estados do meio, ela declara
 as pontas "em regiões desconectadas" e nem tenta a rota. Desligada, Porto Alegre → Fortaleza só com base + RS + CE
-dá a mesma rota do Brasil inteiro (4.242 km).
+dá a mesma rota do Brasil inteiro (4.278,5 km na validação da geração `2026-11-09-c17dff60`, Valhalla 3.9.1).
+
+**O pacote base sozinho não roteia.** Ele é a ligação entre os trechos do meio da viagem; **origem, destino e
+paradas precisam estar numa UF instalada**. Com a base e o DF, um destino em Goiânia (sem o pacote de GO) não gera
+rota: o Valhalla responde "No suitable edges near location", porque as rodovias da base não servem para ancorar o
+ponto. Aumentar o raio de busca (`search_cutoff`) não resolve: a rota sai, mas ancora no lugar errado sem avisar
+(no teste, com 100 km, terminou na GO-139, com 144 km, em vez dos 213,9 km da rota real). Antes de pedir a rota,
+confira se cada ponto cai numa UF instalada e, se não cair, peça o pacote dela.
 
 ## O que tem em cada pacote
 
@@ -199,7 +207,8 @@ A divisão por estado usa a malha das UFs do IBGE, guardada em
 split into a base pack (the country's highways) plus one pack per state. Download the base and the states you
 need, extract them into one folder and point Valhalla's `mjolnir.tile_dir` at it. Tiles are built with Valhalla
 **3.9.1** and must be read by that version (e.g. `valhalla-mobile` 0.6.4 on Android/iOS; 0.6.3 ships Valhalla 3.6 and cannot read them). All packs in a folder
-must share the same `build_id`. Data under the ODbL 1.0 (© OpenStreetMap contributors); generator code under MIT.
+must share the same `build_id`. The base pack only links the middle of a trip: origin, destination and stops need
+their state pack installed. Data under the ODbL 1.0 (© OpenStreetMap contributors); generator code under MIT.
 
 <sub>Palavras-chave: Valhalla Brasil, tiles Valhalla, roteamento offline, navegação offline, rotas offline Brasil,
 OpenStreetMap Brasil, grafo de rotas, moto, carro, bicicleta, pyvalhalla, valhalla-mobile.</sub>

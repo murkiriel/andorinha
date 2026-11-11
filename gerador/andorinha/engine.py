@@ -26,7 +26,7 @@ MAX_MOTORCYCLE_DISTANCE_M = 5_000_000
 # `routing_config` aplica exatamente isto, e o catálogo publica isto em `required_config` para quem usa os pacotes.
 # - loki.use_connectivity: a checagem prévia de conectividade olha só as vias locais (nível 2); sem os estados do
 #   meio do caminho, declara origem e destino "em regiões desconectadas" e nem tenta a rota. Desligada, base + RS + CE
-#   dá exatamente a rota de Porto Alegre a Fortaleza do Brasil inteiro (4.242 km).
+#   dá exatamente a rota de Porto Alegre a Fortaleza do Brasil inteiro (4.278,5 km no Valhalla 3.9.1).
 # - service_limits.motorcycle.max_distance: viagem de moto passa de 500 km.
 REQUIRED_CONFIG = {
     "loki.use_connectivity": False,

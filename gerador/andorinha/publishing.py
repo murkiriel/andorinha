@@ -231,7 +231,8 @@ def allowed_drop(published: Optional[dict], updated: dict) -> float:
 
 
 def package_files(cat: dict) -> List[str]:
-    """Os arquivos que sobem na release: o .tar.gz de cada pacote e, quando o catálogo traz, o .tar.zst."""
+    """Os pacotes que sobem na release: o `file` de cada um (hoje o .tar.zst) e, numa geração que trazia os dois
+    formatos (a chave `zstd`, só em 2026-10-05), também o .tar.zst ao lado do .tar.gz."""
     out = []
     for e in entries(cat).values():
         out.append(e["file"])

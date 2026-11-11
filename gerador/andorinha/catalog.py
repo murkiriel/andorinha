@@ -4,7 +4,7 @@
       "schema": 1,
       "build_id": "2026-09-30-cb859dc3",    data + 8 primeiros do md5 do extrato; ids diferentes não se misturam
       "built_at": "2026-09-30T12:00:00Z",
-      "valhalla_version": "3.6.3",          o motor que lê estes tiles tem de ser desta versão
+      "valhalla_version": "3.9.1",          o motor que lê estes tiles tem de ser desta versão
       "generator_commit": "2d3c2f6",        commit do gerador que produziu a geração
       "required_config": {"loki.use_connectivity": false, ...},    ajustes obrigatórios na config de quem usa
       "osm": {"timestamp": ..., "md5": ..., "url": ...},

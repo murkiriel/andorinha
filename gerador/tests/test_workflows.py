@@ -26,7 +26,7 @@ class RunnerTest(unittest.TestCase):
 
 
 class PinnedDependenciesTest(unittest.TestCase):
-    """D-12: só a geração corrente precisa ser reproduzível, mas ela inteira: dependências travadas com hashes."""
+    """Só a geração corrente precisa ser reproduzível, mas ela inteira: dependências travadas com hashes."""
 
     def test_every_pip_install_requires_hashes(self):
         """Todo `pip install` instala de um requirements travado, com --require-hashes: nada de pacote solto, que o

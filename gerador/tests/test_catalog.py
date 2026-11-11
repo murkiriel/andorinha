@@ -122,7 +122,7 @@ class BboxTest(unittest.TestCase):
         self.assertEqual([-16.06, -48.29, -15.49, -47.3], polygon_bbox(box(-48.2861, -16.0502, -47.3079, -15.4999)))
 
     def test_published_catalog_is_latitude_first(self):
-        """D-05: `[lat_min, lon_min, lat_max, lon_max]`, ao contrário do GeoJSON. Conferido no catálogo publicado: no
+        """`[lat_min, lon_min, lat_max, lon_max]`, ao contrário do GeoJSON. Conferido no catálogo publicado: no
         Brasil, a latitude vai de ~-34 a ~6 e a longitude de ~-74 a ~-28, então as duas ordens não se confundem."""
         cat = json.loads((GENERATOR_DIR.parent / "catalogo.json").read_text(encoding="utf-8"))
         for name, entry in [("base", cat["base"]), *cat["states"].items()]:

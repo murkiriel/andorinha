@@ -1,4 +1,4 @@
-"""Dependências travadas (D-12): o requirements.txt e o requirements-testes.txt fixam todas as dependências, transitivas
+"""Dependências travadas: o requirements.txt e o requirements-testes.txt fixam todas as dependências, transitivas
 inclusive, com o sha256 de cada arquivo, e são gerados pelo `uv` a partir dos .in. Lidos como texto: nada é instalado."""
 import re
 import sys

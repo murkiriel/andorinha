@@ -18,7 +18,7 @@
 # disco temporário em /mnt, quando a máquina tem um) e usa as threads da máquina (2 num repositório privado, 4 num
 # público). Memória, swap e disco são registrados a cada 30 s e vão, com os logs, para os artefatos do job.
 #
-# Reprodutível só a geração corrente (D-12): as actions vão fixadas pelo SHA do commit, com a tag em comentário (uma
+# Reprodutível só a geração corrente: as actions vão fixadas pelo SHA do commit, com a tag em comentário (uma
 # tag pode ser movida), e as dependências Python saem do gerador/requirements.txt, travado com hashes.
 name: gerar
 

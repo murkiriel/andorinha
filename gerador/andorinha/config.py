@@ -17,6 +17,23 @@ DIST = DATA / "dist"      # pacotes .tar.zst e o catalogo.json desta geração
 # Trocar aqui = gerar tudo de novo e publicar como geração nova, com a versão nova no catálogo.
 VALHALLA_VERSION = "3.9.1"
 
+# Quem lê estes tiles, para o bloco `compatibility.andorinha` do contrato de catálogo (docs/CATALOGO.md). Mudam junto
+# com VALHALLA_VERSION, e os testes (tests/test_catalog_contract.py) não deixam um ir sem o outro.
+# - VALHALLA_COMMIT: o commit da tag 3.9.1 em github.com/valhalla/valhalla (conferido em 2026-11-11 pela API do GitHub:
+#   refs/tags/3.9.1 -> bafb699...).
+# - TILE_FORMAT_VERSION: o texto que o Valhalla grava no cabeçalho de cada tile (deslocamento 0x10, 16 bytes) e que o
+#   motor confere ao abrir: é a versão do Valhalla que gerou o tile ("3.9.1" em 0/002/012.gph da geração
+#   2026-11-09-c17dff60).
+# - VALHALLA_MOBILE_*: a biblioteca Android/iOS que embute esse mesmo commit. Na tag 0.6.4 de
+#   github.com/Rallista/valhalla-mobile, o submódulo src/valhalla aponta para bafb699... (conferido em 2026-11-11). O
+#   sha256 é o do AAR do Maven Central, baixado em 2026-11-11; as ABIs são as pastas jni/ dele.
+VALHALLA_COMMIT = "bafb69902220615a48307d5c790fb6c943802ba4"
+TILE_FORMAT_VERSION = VALHALLA_VERSION
+VALHALLA_MOBILE_VERSION = "0.6.4"
+VALHALLA_MOBILE_ARTIFACT = "io.github.rallista:valhalla-mobile:" + VALHALLA_MOBILE_VERSION
+VALHALLA_MOBILE_AAR_SHA256 = "5c3118b51ff4b17655d6239a5e3f2ebdb0c36c0da3ba34a771bd7078f247dd00"
+VALHALLA_MOBILE_ABIS = ("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+
 # Extrato do Brasil, de uma destas fontes, na ordem de OSM_SOURCES: a primeira que entregar um extrato conferido pelo
 # md5 vale; se uma falha (fora do ar, tempo esgotado, md5 que não confere), a geração tenta a seguinte e avisa no log.
 # As duas recortam o país inteiro, ilhas oceânicas inclusive (conferido contra a malha do IBGE em 2026-11-08); a
@@ -42,6 +59,7 @@ IBGE_MESH_URL = ("https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR"
                  "?formato=application/vnd.geo%2Bjson&intrarregiao=UF&qualidade=maxima")
 IBGE_MESH_COPY = GENERATOR_DIR / "ibge_malha_uf.json"
 IBGE_MESH_COPY_SHA256 = "4435b2e0e62de6d68f5c5387e01efc31655242948ae9434b78a3b5b05582e497"
+IBGE_MESH_COPY_DATE = "2026-11-08"  # o dia em que a cópia foi baixada (vai para `sources` no catálogo)
 
 USER_AGENT = "andorinha-gerador/1 (+https://github.com/Murkiriel/andorinha)"
 
@@ -86,6 +104,10 @@ GITHUB_REPO = os.environ.get("ANDORINHA_REPO") or os.environ.get("GITHUB_REPOSIT
 RELEASE_URL = "https://github.com/" + GITHUB_REPO + "/releases/download/{tag}/"
 
 ATTRIBUTION = "© colaboradores do OpenStreetMap (ODbL 1.0); limites das UFs: IBGE"
+# As licenças em SPDX, para o contrato de catálogo: os pacotes (LICENSE da raiz) e o código (gerador/LICENSE).
+DATA_LICENSE = "ODbL-1.0"
+CODE_LICENSE = "MIT"
+REPOSITORY_URL = "https://github.com/" + GITHUB_REPO
 
 # Marca que o gerador cria em DIST ao começar e apaga ao terminar: se ela existe, a geração caiu no meio.
 IN_PROGRESS_MARKER = "GERACAO_EM_ANDAMENTO"

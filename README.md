@@ -169,6 +169,7 @@ attribution        crédito obrigatório dos dados
 timezones          fusos horários dentro dos tiles: release do timezone-boundary-builder e as zonas (as 16 do Brasil)
 base               o pacote base (campos abaixo)
 states             {UF: pacote}, um por estado (campos abaixo)
+contract           o mesmo catálogo no contrato comum aos quatro geradores (v1): ver docs/CATALOGO.md#andorinha
   name             nome do estado (só em states)
   file             nome do arquivo na release
   bytes            tamanho do arquivo compactado

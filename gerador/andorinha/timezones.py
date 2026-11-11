@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Iterable, List, Tuple, Union
 
 from . import config, net
+from .util import file_hash
 
 BRAZIL_TZIDS = frozenset({
     "America/Araguaina", "America/Bahia", "America/Belem", "America/Boa_Vista", "America/Campo_Grande",
@@ -76,19 +77,33 @@ def write_db(features: Iterable[Tuple[str, Union[str, dict]]], dest: Path) -> Pa
     return dest
 
 
-def build(dest: Path) -> Path:
-    """Baixa (uma vez por release) as zonas do timezone-boundary-builder e grava o banco só do Brasil em `dest`."""
+def archive() -> Path:
+    """O zip das zonas da release fixada, baixado uma vez por release e conferido pelo config.TIMEZONE_SHA256 a cada
+    uso (o baixado agora e o que já estava em data/raw/). Se não bate, o arquivo é apagado e a geração para: um zip
+    trocado na release, corrompido ou de outra release mudaria os fusos dos tiles sem ninguém ver."""
     url = config.TIMEZONE_URL.format(release=config.TIMEZONE_RELEASE)
-    archive = config.RAW / f"timezones-with-oceans-{config.TIMEZONE_RELEASE}.geojson.zip"
-    if not archive.exists():
+    path = config.RAW / f"timezones-with-oceans-{config.TIMEZONE_RELEASE}.geojson.zip"
+    if not path.exists():
         config.RAW.mkdir(parents=True, exist_ok=True)
-        net.download(url, archive)
-    with zipfile.ZipFile(archive) as z:
+        net.download(url, path)
+    sha256 = file_hash(path, "sha256")
+    if sha256 != config.TIMEZONE_SHA256:
+        path.unlink()
+        raise RuntimeError(f"o zip de fusos {path.name} ({url}) tem sha256 {sha256}, o config espera "
+                           f"{config.TIMEZONE_SHA256}: arquivo apagado, nada foi gerado com ele")
+    return path
+
+
+def build(dest: Path) -> Path:
+    """Baixa (uma vez por release) as zonas do timezone-boundary-builder, confere o sha256 e grava o banco só do
+    Brasil em `dest`."""
+    url = config.TIMEZONE_URL.format(release=config.TIMEZONE_RELEASE)
+    with zipfile.ZipFile(archive()) as z:
         name = next(n for n in z.namelist() if n.endswith((".json", ".geojson")))
         features = brazil_features(json.loads(z.read(name)))
     if {tzid for tzid, _ in features} != BRAZIL_TZIDS:
         raise RuntimeError(f"zonas do Brasil faltando em {url}: {sorted(BRAZIL_TZIDS - {t for t, _ in features})}")
     write_db(features, dest)
-    print(f"[fusos] {len(features)} zonas do Brasil ({config.TIMEZONE_RELEASE}) -> {dest.name}, "
+    print(f"[fusos] {len(features)} zonas do Brasil ({config.TIMEZONE_RELEASE}, sha256 confere) -> {dest.name}, "
           f"{dest.stat().st_size / 1e6:.1f} MB")
     return dest

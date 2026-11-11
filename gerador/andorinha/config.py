@@ -71,8 +71,12 @@ MAX_ASSET_BYTES = 1_900_000_000
 # e janelas maiores quase não ganham (medido em 2026-10-05) e pedem mais memória para descompactar no celular.
 ZSTD_LEVEL = 19
 # Fusos horários dos tiles (andorinha/timezones.py): release fixada do timezone-boundary-builder, a fonte do
-# valhalla_build_timezones. Trocar de release muda os tiles só onde uma fronteira de fuso mudou.
+# valhalla_build_timezones. Trocar de release muda os tiles só onde uma fronteira de fuso mudou. O zip é conferido
+# pelo sha256 antes do uso: 55.874.703 bytes, baixado em 2026-11-11; o mesmo sha256 que o GitHub mostra no `digest`
+# do arquivo da release (publicada em 2026-09-16). Para trocar de release: mudar as duas linhas juntas, com o sha256
+# do arquivo novo, conferido também no `digest` (gh api repos/evansiroky/timezone-boundary-builder/releases/tags/<release>).
 TIMEZONE_RELEASE = "2026d"
+TIMEZONE_SHA256 = "e391c92c7b90339c3afe8558082b4532b8d9afc9daad68da31f4569a1ca61034"
 TIMEZONE_URL = ("https://github.com/evansiroky/timezone-boundary-builder/releases/download/{release}/"
                 "timezones-with-oceans.geojson.zip")
 

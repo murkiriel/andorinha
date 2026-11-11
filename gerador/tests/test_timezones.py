@@ -54,6 +54,73 @@ class ZonesTest(unittest.TestCase):
         self.assertIn("libsqlite3-mod-spatialite", text)
 
 
+class ArchiveTest(unittest.TestCase):
+    """O zip de fusos é conferido pelo sha256 fixado no config, como a malha do IBGE: o baixado agora e o que já estava
+    em data/raw/. Nenhum teste aqui usa a rede: o download é trocado por uma função que grava bytes conhecidos."""
+
+    GOOD = b"zip de fusos de mentira"
+
+    def setUp(self):
+        from unittest import mock
+        import hashlib
+        self._tmp = tempfile.TemporaryDirectory()
+        self.raw = Path(self._tmp.name) / "raw"
+        self.downloads = []
+        self.served = self.GOOD
+
+        def download(url, dest, *args, **kwargs):
+            self.downloads.append(url)
+            dest.write_bytes(self.served)
+
+        self._patches = [mock.patch.object(config, "RAW", self.raw),
+                         mock.patch.object(config, "TIMEZONE_SHA256", hashlib.sha256(self.GOOD).hexdigest()),
+                         mock.patch.object(timezones.net, "download", download)]
+        for p in self._patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self._patches:
+            p.stop()
+        self._tmp.cleanup()
+
+    def test_downloads_once_and_accepts_the_right_file(self):
+        path = timezones.archive()
+        self.assertEqual(self.GOOD, path.read_bytes())
+        self.assertEqual(1, len(self.downloads))
+        self.assertIn(config.TIMEZONE_RELEASE, self.downloads[0])
+        timezones.archive()  # já baixado: confere de novo, sem baixar
+        self.assertEqual(1, len(self.downloads))
+
+    def test_refuses_and_deletes_a_downloaded_file_with_another_hash(self):
+        self.served = b"outro conteudo"
+        with self.assertRaises(RuntimeError) as ctx:
+            timezones.archive()
+        self.assertIn("sha256", str(ctx.exception))
+        self.assertEqual([], list(self.raw.iterdir()))  # nada fica para a próxima geração usar
+
+    def test_refuses_a_file_already_on_disk_with_another_hash(self):
+        """Um zip deixado em data/raw/ (outra release com o mesmo nome, arquivo mexido) não passa sem conferir."""
+        self.raw.mkdir(parents=True)
+        (self.raw / f"timezones-with-oceans-{config.TIMEZONE_RELEASE}.geojson.zip").write_bytes(b"velho")
+        with self.assertRaises(RuntimeError):
+            timezones.archive()
+        self.assertEqual([], self.downloads)
+
+    def test_build_stops_before_reading_a_wrong_file(self):
+        self.served = b"outro conteudo"
+        with self.assertRaises(RuntimeError):
+            timezones.build(Path(self._tmp.name) / "timezones.sqlite")
+        self.assertFalse((Path(self._tmp.name) / "timezones.sqlite").exists())
+
+
+class PinnedArchiveTest(unittest.TestCase):
+    def test_the_pinned_release_and_hash(self):
+        """Release 2026d: o sha256 do arquivo baixado em 2026-11-11, igual ao `digest` do GitHub para o arquivo da
+        release. Trocar a release sem trocar o sha256 (ou o contrário) faz a geração parar no zip de fusos."""
+        self.assertEqual("2026d", config.TIMEZONE_RELEASE)
+        self.assertEqual("e391c92c7b90339c3afe8558082b4532b8d9afc9daad68da31f4569a1ca61034", config.TIMEZONE_SHA256)
+
+
 def _ready():
     """Valhalla, pyosmium e o mod_spatialite presentes? (no CI de testes, não: o teste de ponta a ponta é pulado)"""
     try:

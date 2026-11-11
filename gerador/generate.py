@@ -18,7 +18,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 # Pythons sem venv (ex.: a distribuição "embeddable" do Windows) podem instalar as dependências com
-# `pip install --target .pylib -r requirements.txt`; esta pasta entra no caminho de import se existir.
+# `pip install --require-hashes --target .pylib -r requirements.txt`; esta pasta entra no caminho de import se existir.
 if (HERE / ".pylib").exists():
     sys.path.insert(0, str(HERE / ".pylib"))
 

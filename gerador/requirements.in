@@ -1,0 +1,9 @@
+# Dependências diretas do gerador, com versão fixa. O requirements.txt é gerado daqui, com todas as dependências
+# (inclusive as transitivas) fixadas e com o sha256 de cada arquivo; instale sempre por ele:
+#     pip install --require-hashes -r requirements.txt
+# Para mudar uma versão, edite este arquivo e gere o requirements.txt de novo, desta pasta:
+#     uv pip compile requirements.in --generate-hashes --python-version 3.12 -o requirements.txt
+# pyvalhalla TEM de ser a versão do Valhalla que vai ler os tiles (andorinha/config.py, VALHALLA_VERSION).
+pyvalhalla==3.9.1
+zstandard==0.25.0  # o .tar.zst de cada pacote
+shapely==2.1.2     # em que UF cai cada tile, pela malha do IBGE

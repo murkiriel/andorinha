@@ -1,0 +1,8 @@
+# Dependências dos testes no GitHub Actions (workflow testes): as do gerador sem o pyvalhalla, nas mesmas versões do
+# requirements.in (os testes que precisam do Valhalla são pulados lá). O requirements-testes.txt é gerado daqui, com
+# as transitivas fixadas e com hashes; instale por ele:
+#     pip install --require-hashes -r requirements-testes.txt
+# Para gerar de novo, desta pasta (tests/test_requirements.py confere que as versões batem com as do gerador):
+#     uv pip compile requirements-testes.in --generate-hashes --python-version 3.12 -o requirements-testes.txt
+zstandard==0.25.0
+shapely==2.1.2

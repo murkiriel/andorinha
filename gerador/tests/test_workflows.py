@@ -3,7 +3,8 @@ import re
 import unittest
 from pathlib import Path
 
-WORKFLOWS = Path(__file__).resolve().parent.parent.parent / ".github" / "workflows"
+REPO = Path(__file__).resolve().parent.parent.parent
+WORKFLOWS = REPO / ".github" / "workflows"
 
 
 def workflows():
@@ -22,6 +23,26 @@ class RunnerTest(unittest.TestCase):
             self.assertTrue(images, f"{name}: nenhum runs-on")
             for image in images:
                 self.assertRegex(image, r"^ubuntu-\d+\.\d+$", f"{name}: runs-on {image}")
+
+
+class PinnedDependenciesTest(unittest.TestCase):
+    """D-12: só a geração corrente precisa ser reproduzível, mas ela inteira: dependências travadas com hashes."""
+
+    def test_every_pip_install_requires_hashes(self):
+        """Todo `pip install` instala de um requirements travado, com --require-hashes: nada de pacote solto, que o
+        pip resolveria na hora para a versão (e o arquivo) do dia."""
+        seen = 0
+        for name, text in workflows().items():
+            for line in text.splitlines():
+                command = line.split("#", 1)[0]
+                if "pip install" not in command:
+                    continue
+                seen += 1
+                m = re.search(r"pip install --require-hashes -r (\S+)\s*$", command)
+                self.assertTrue(m, f"{name}: {line.strip()}")
+                folder = REPO / "gerador" if name == "testes.yml" else REPO  # o testes roda de dentro de gerador/
+                self.assertTrue((folder / m.group(1)).is_file(), f"{name}: {m.group(1)} não existe")
+        self.assertEqual(2, seen)
 
 
 def job(text: str, name: str) -> str:

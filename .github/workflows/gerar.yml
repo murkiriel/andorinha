@@ -110,7 +110,7 @@ jobs:
         run: |
           # SpatiaLite para o banco de fusos horários dos tiles (gerador/andorinha/timezones.py)
           sudo apt-get update -q && sudo apt-get install -y -q libsqlite3-mod-spatialite
-          pip install -r gerador/requirements.txt
+          pip install --require-hashes -r gerador/requirements.txt
 
       - name: Gerar
         working-directory: gerador

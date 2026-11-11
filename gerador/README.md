@@ -5,9 +5,13 @@ Código que gera os pacotes de tiles e o `catalogo.json` a partir do extrato do 
 ## Requisitos
 
 - Python 3.10+ (testado com 3.12)
-- `pip install -r requirements.txt`: `pyvalhalla` (o Valhalla, com os executáveis nativos, inclusive para Windows)
-  e `shapely`. Num Python sem venv (a distribuição "embeddable" do Windows), use
-  `pip install --target .pylib -r requirements.txt`; o `generate.py` põe `.pylib/` no caminho de import.
+- `pip install --require-hashes -r requirements.txt`: `pyvalhalla` (o Valhalla, com os executáveis nativos, inclusive
+  para Windows), `shapely` e `zstandard`. Num Python sem venv (a distribuição "embeddable" do Windows), use
+  `pip install --require-hashes --target .pylib -r requirements.txt`; o `generate.py` põe `.pylib/` no caminho de
+  import. As dependências diretas ficam em `requirements.in`; o `requirements.txt` é gerado dele pelo `uv` (o comando
+  está no topo dos dois arquivos), com todas as dependências, transitivas inclusive, em versão fixa e com o sha256 de
+  cada arquivo: o `pip` recusa um arquivo que não bata. Os testes do Actions usam `requirements-testes.txt`, gerado do
+  mesmo jeito, sem o `pyvalhalla` e nas mesmas versões (`tests/test_requirements.py` confere).
 - ~25 GB de disco livre (o build confere antes de começar e para na hora se faltar; o pico medido em `data/` foi
   17,5 GB) e memória conforme as threads: pico medido de **20,3 GB com 8 threads** e **13,4 GB com 2** (a leitura
   do extrato sozinha passa de 7 GB). O build usa as threads da máquina, no máximo 8 (`ANDORINHA_THREADS` muda)
@@ -88,7 +92,8 @@ Módulos de apoio:
 **Versão do Valhalla fixada em 3.9.1.** O formato do tile muda entre versões (o cabeçalho mudou na 3.8), e os
 tiles precisam ser lidos pelo mesmo Valhalla que os gerou. 3.9.1 é a versão embutida no `valhalla-mobile` 0.6.4,
 a biblioteca Android e iOS (de 2026-10-06; até a troca, os pacotes eram da 3.6.3, a do `valhalla-mobile` 0.6.3). O `builder.py` recusa rodar com outra versão do pyvalhalla instalada. Para trocar:
-mude `VALHALLA_VERSION` e `requirements.txt` juntos, gere tudo de novo e publique como geração nova.
+mude `VALHALLA_VERSION` e o `requirements.in` juntos, gere o `requirements.txt` de novo (o comando está no topo
+dele), gere tudo de novo e publique como geração nova.
 
 **8 threads, não todas.** Numa máquina Windows de 16 threads, o `valhalla_build_tiles` com todas caiu duas vezes
 sem escrever nada no log (código `0xC0000409`), com o Brasil e com o DF, no Valhalla 3.6.3 e no 3.8.3. Com 8
@@ -158,7 +163,8 @@ login não é confundido com "a release não existe". `--commit` sem `--release`
 
 - Nomes de arquivos e pastas de dados e documentos: português, sem acento, sem espaço (`andorinha-GO.tar.zst`,
   `catalogo.json`, `geracao.json`, `pacotes.json`, `PENDENCIAS.md`, `gerar.yml`). Exceção: os nomes que o
-  ecossistema espera (`README.md`, `LICENSE`, `requirements.txt`).
+  ecossistema espera (`README.md`, `LICENSE`, `requirements.in` e `requirements.txt`; `requirements-testes` segue o
+  padrão do ecossistema com o sufixo em português).
 - Código: nomes de variáveis, funções, classes, módulos e arquivos de código em inglês (`packing.py`,
   `publish_release`, `RunRecorder`); siglas como são (`osm`, `ibge`). Opções de linha de comando (`--from`,
   `--accept-drop`), variáveis de ambiente (`ANDORINHA_THREADS`), nomes de etapas (`packages`, `validate`) e

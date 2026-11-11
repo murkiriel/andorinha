@@ -4,7 +4,8 @@ Código que gera os pacotes de tiles e o `catalogo.json` a partir do extrato do 
 
 ## Requisitos
 
-- Python 3.10+ (testado com 3.12)
+- Python 3.12 ou mais novo (testado com 3.12): as rodas do `pyvalhalla` 3.9.1 são `cp312-abi3`, e o `numpy` travado
+  no `requirements.txt` também pede 3.12
 - `pip install --require-hashes -r requirements.txt`: `pyvalhalla` (o Valhalla, com os executáveis nativos, inclusive
   para Windows), `shapely` e `zstandard`. Num Python sem venv (a distribuição "embeddable" do Windows), use
   `pip install --require-hashes --target .pylib -r requirements.txt`; o `generate.py` põe `.pylib/` no caminho de

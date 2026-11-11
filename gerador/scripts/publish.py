@@ -18,7 +18,8 @@ Não publica se:
 - a geração ainda roda ou caiu no meio (marca GERACAO_EM_ANDAMENTO em data/dist/),
 - a versão do Valhalla do catálogo não é a do gerador (config.VALHALLA_VERSION),
 - algum pacote falta, não bate o sha256 ou passa do limite do GitHub Releases,
-- algum pacote perdeu mais de 5% dos tiles em relação ao catalogo.json publicado (--accept-drop),
+- algum pacote perdeu mais de 5% dos tiles em relação ao catalogo.json publicado, ou mais de 10% quando o extrato vem
+  de outra fonte que o da publicada (--accept-drop),
 - a geração usa um OpenStreetMap mais antigo que o da publicada (--accept-older),
 - já existe uma release PUBLICADA com o mesmo build_id (um rascunho é retomado),
 - com --commit, o git do repositório não está com o e-mail anônimo do GitHub.

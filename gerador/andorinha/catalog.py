@@ -17,7 +17,8 @@
 
 `bbox` = [lat mín, lon mín, lat máx, lon máx] da área que o pacote atende (polígono da UF no IBGE; o Brasil, na
 base), a mesma ordem do catálogo do Pardal; `bbox_tiles` = o dos tiles do pacote (em geral maior; menor onde a
-UF não tem via, como ilhas oceânicas).
+UF não tem via, como ilhas oceânicas). Coordenadas em WGS84, latitude primeiro: o contrário do GeoJSON. A ordem é
+declarada no README da raiz e não muda no `schema` 1 (decisão D-05 da ETD do navegador).
 """
 from __future__ import annotations
 

@@ -121,6 +121,23 @@ class BboxTest(unittest.TestCase):
         # FORA: o retângulo nunca fica menor que o polígono, então um ponto na borda da UF nunca fica fora do bbox dela.
         self.assertEqual([-16.06, -48.29, -15.49, -47.3], polygon_bbox(box(-48.2861, -16.0502, -47.3079, -15.4999)))
 
+    def test_published_catalog_is_latitude_first(self):
+        """D-05: `[lat_min, lon_min, lat_max, lon_max]`, ao contrário do GeoJSON. Conferido no catálogo publicado: no
+        Brasil, a latitude vai de ~-34 a ~6 e a longitude de ~-74 a ~-28, então as duas ordens não se confundem."""
+        cat = json.loads((GENERATOR_DIR.parent / "catalogo.json").read_text(encoding="utf-8"))
+        for name, entry in [("base", cat["base"]), *cat["states"].items()]:
+            for key in ("bbox", "bbox_tiles"):
+                lat0, lon0, lat1, lon1 = entry[key]
+                self.assertTrue(-35 <= lat0 < lat1 <= 7, (name, key, entry[key]))
+                self.assertTrue(-77 <= lon0 < lon1 <= -28, (name, key, entry[key]))
+
+    def test_readme_declares_order_and_datum(self):
+        section = (GENERATOR_DIR.parent / "README.md").read_text(encoding="utf-8").split("## `catalogo.json`", 1)[1]
+        section = section.split("\n## ", 1)[0]
+        self.assertIn("`[lat_min, lon_min, lat_max, lon_max]`", section)
+        self.assertIn("WGS84", section)
+        self.assertIn("GeoJSON", section)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -156,6 +156,12 @@ states             {UF: pacote}, um por estado (campos abaixo)
                    divisa), mas menor onde a UF não tem via (ilhas oceânicas, extremo norte da Amazônia)
 ```
 
+**Coordenadas e ordem do `bbox`.** As coordenadas são WGS84 (EPSG:4326), em graus decimais. `bbox` e `bbox_tiles`
+vêm com a **latitude primeiro**: `[lat_min, lon_min, lat_max, lon_max]` (no DF, `[-16.05, -48.29, -15.5, -47.3]`).
+É o contrário do GeoJSON, que usa `[lon_min, lat_min, lon_max, lat_max]`: não passe o `bbox` direto para uma
+biblioteca de GeoJSON. A ordem fica assim no `schema` 1; se um dia mudar, será num campo de nome novo, para que um
+leitor antigo não leia a ordem errada sem perceber.
+
 Os pacotes são **`.tar.zst`** (zstd nível 19, janela de 8 MB): cerca de 15% menores que o `.tar.gz` de antes e mais
 rápidos de descompactar, com pouca memória (num celular, o pacote do DF abriu em 0,27 s). Até 2026-10-05 eram
 `.tar.gz`; a geração `2026-10-05-93a54bc6` saiu com os dois formatos e a chave `zstd` em cada pacote do catálogo.

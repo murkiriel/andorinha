@@ -96,6 +96,21 @@ class ReleaseTest(unittest.TestCase):
         reupload = [c for c in self.gh.commands if c[1] == "upload" and c[3].endswith("andorinha-base.tar.gz")]
         self.assertIn("--clobber", reupload[0])
 
+    def test_catalog_is_an_asset_and_is_always_uploaded_again(self):
+        """O catalogo.json sobe na release com os pacotes. Numa retomada, os pacotes que já estão lá com o tamanho
+        certo não sobem de novo, mas o catálogo sim: refeita com o mesmo build_id, a geração tem outro built_at no
+        mesmo tamanho."""
+        catalog = Path(self._tmp.name) / "catalogo.json"
+        catalog.write_text('{"built_at": "2026-11-15T03:30:00Z"}', encoding="utf-8")
+        self.files.append(catalog)
+        tag = "2026-09-30-cb859dc3"
+        self.gh.releases[tag] = {"draft": True, "assets": {p.name: p.stat().st_size for p in self.files}}
+        self.publish()
+        self.assertEqual(["catalogo.json"], self.gh.uploads())
+        self.assertIn("--clobber", [c for c in self.gh.commands if c[1] == "upload"][0])
+        self.assertIn("catalogo.json", self.gh.releases[tag]["assets"])
+        self.assertFalse(self.gh.releases[tag]["draft"])
+
     def test_already_published_release_is_blocked(self):
         self.gh.releases["2026-09-30-cb859dc3"] = {"draft": False, "assets": {}}
         with self.assertRaises(publishing.ReleaseAlreadyPublished):

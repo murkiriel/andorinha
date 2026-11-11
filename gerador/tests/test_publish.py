@@ -49,11 +49,21 @@ class LicenseFileTest(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
-    def test_release_takes_the_packages_and_the_license(self):
+    def test_release_takes_the_packages_the_license_and_the_catalog(self):
+        (self.dist / "catalogo.json").write_text("{}", encoding="utf-8")
         files = publishing.release_files(self.CAT, self.dist)
-        self.assertEqual(["andorinha-base.tar.zst", "andorinha-GO.tar.zst", publishing.LICENSE_FILE],
+        self.assertEqual(["andorinha-base.tar.zst", "andorinha-GO.tar.zst", publishing.LICENSE_FILE, "catalogo.json"],
                          [f.name for f in files])
         self.assertTrue((self.dist / publishing.LICENSE_FILE).exists())
+        self.assertEqual(self.dist / "catalogo.json", files[-1])  # o da geração, o mesmo que vai para a raiz
+
+    def test_release_without_the_catalog_is_refused(self):
+        """Sem o catálogo da geração não há release: ele é o índice dela depois que a raiz passa para outra."""
+        with self.assertRaises(FileNotFoundError):
+            publishing.release_files(self.CAT, self.dist)
+
+    def test_catalog_is_not_a_package(self):
+        self.assertNotIn(publishing.CATALOG_FILE, publishing.package_files(self.CAT))
 
     def test_license_says_who_to_credit_and_where_the_data_came_from(self):
         text = publishing.license_text(self.CAT)

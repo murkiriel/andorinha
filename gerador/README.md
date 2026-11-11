@@ -117,7 +117,7 @@ geram o mesmo arquivo, byte a byte, e o mesmo sha256.
 
 **GitHub Releases, não git.** Os pacotes são binários de centenas de MB que mudam por inteiro a cada geração.
 No git, o histórico incharia a cada geração. Cada geração vira uma release (`build_id` = data + md5 do extrato), e o repositório guarda
-só o gerador e o `catalogo.json`. Limites do GitHub Releases: cada arquivo abaixo de 2 GiB, sem limite de tamanho
+só o gerador e o `catalogo.json` da geração mais recente (o de cada geração vai também na release dela). Limites do GitHub Releases: cada arquivo abaixo de 2 GiB, sem limite de tamanho
 total nem de banda.
 
 **Ficam 12 gerações** (~3 meses de gerações semanais, ~16 GB). No fim de cada publicação, depois do push do
@@ -143,8 +143,10 @@ O `scripts/publish.py` não publica se:
 - já existe uma release PUBLICADA com o mesmo `build_id`,
 - com `--commit`, o git do repositório não está com o e-mail anônimo do GitHub (`…@users.noreply.github.com`).
 
-A release sobe como rascunho, sem arquivos; cada pacote que ainda não está lá (ou está com outro tamanho) sobe; só
-com todos presentes e do tamanho certo ela é publicada. Se a subida cair no meio, fica um rascunho que ninguém vê, e
+A release sobe como rascunho, sem arquivos; cada arquivo que ainda não está lá (ou está com outro tamanho) sobe — os
+pacotes, o `LICENCA-DADOS.txt` e o `catalogo.json` da geração, que sobe sempre de novo numa retomada (refeita com o
+mesmo `build_id`, a geração tem outro `built_at` no mesmo tamanho); só com todos presentes e do tamanho certo ela é
+publicada. Se a subida cair no meio, fica um rascunho que ninguém vê, e
 rodar o mesmo comando de novo retoma do que falta. Só depois disso o `catalogo.json` e a tabela "Baixar por estado"
 do README da raiz (gerada a partir do catálogo, com o link de cada pacote) mudam, no mesmo commit: o catálogo publicado
 nunca aponta para arquivos que ainda não existem. Um erro do `gh` mostra o comando e a mensagem dele; sem rede ou sem

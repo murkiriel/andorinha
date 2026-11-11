@@ -4,8 +4,9 @@ catálogo, e a própria release.
 A linha de comando fica em scripts/publish.py; aqui só a lógica, testável sem o GitHub: o `gh` entra como uma função
 `gh(args) -> (código, stdout, stderr)`, e os testes passam uma falsa.
 
-A release é criada como RASCUNHO, sem arquivos; cada pacote que ainda não está lá (ou está com outro tamanho) sobe;
-só com todos presentes e do tamanho certo ela é publicada. Uma queda no meio deixa um rascunho que ninguém vê, e
+A release é criada como RASCUNHO, sem arquivos; cada arquivo (os pacotes, o LICENCA-DADOS.txt e o catalogo.json da
+geração) que ainda não está lá (ou está com outro tamanho) sobe; só com todos presentes e do tamanho certo ela é
+publicada. Uma queda no meio deixa um rascunho que ninguém vê, e
 rodar de novo retoma do que falta. Release já publicada com o mesmo tag não é mexida.
 
 Depois que o catálogo novo está publicado, as releases antigas são apagadas (`prune_releases`): ficam a do catálogo
@@ -27,6 +28,10 @@ from .util import file_hash
 Gh = Callable[[Sequence[str]], Tuple[int, str, str]]
 
 ANONYMOUS_SUFFIX = "@users.noreply.github.com"
+
+# O catálogo da geração também sobe na release: o da raiz do repositório sempre aponta para a mais recente, e o de uma
+# geração anterior só ficaria no histórico do git.
+CATALOG_FILE = "catalogo.json"
 
 
 class GhError(RuntimeError):
@@ -75,8 +80,10 @@ def publish_release(gh: Gh, tag: str, files: List[Path], title: str, notes: str)
         assets = {}
     for file in files:
         size = file.stat().st_size
-        if assets.get(file.name) == size:
-            continue  # já subiu inteiro numa tentativa anterior
+        # Já subiu inteiro numa tentativa anterior. O catálogo sobe sempre de novo: uma geração refeita com o mesmo
+        # build_id (mesmo extrato) dá pacotes idênticos, mas outro built_at, com o mesmo tamanho.
+        if assets.get(file.name) == size and file.name != CATALOG_FILE:
+            continue
         extra = ["--clobber"] if file.name in assets else []
         print(f"[release] subindo {file.name} ({size / 1e6:.1f} MB)...")
         _run(gh, ["release", "upload", tag, str(file), *extra])
@@ -265,11 +272,15 @@ def license_text(cat: dict) -> str:
 
 
 def release_files(cat: dict, dist: Path) -> List[Path]:
-    """Os arquivos da release, na ordem de subida: os pacotes e, por último, o LICENCA-DADOS.txt (gravado em `dist`).
-    Ele fica fora dos pacotes: quem lê os .tar.zst recusa um caminho que não seja de tile."""
+    """Os arquivos da release, na ordem de subida: os pacotes, o LICENCA-DADOS.txt (gravado em `dist`) e, por último,
+    o catalogo.json da geração (o de `dist`, o mesmo que vai para a raiz do repositório). Os dois ficam fora dos
+    pacotes: quem lê os .tar.zst recusa um caminho que não seja de tile. Levanta FileNotFoundError sem o catálogo."""
+    catalog_path = dist / CATALOG_FILE
+    if not catalog_path.is_file():
+        raise FileNotFoundError(f"falta {catalog_path}: o catálogo da geração sobe na release")
     license_path = dist / LICENSE_FILE
     license_path.write_text(license_text(cat), encoding="utf-8", newline="\n")
-    return [dist / name for name in package_files(cat)] + [license_path]
+    return [dist / name for name in package_files(cat)] + [license_path, catalog_path]
 
 
 def entries(cat: dict) -> dict:

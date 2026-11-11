@@ -177,7 +177,9 @@ Hoje, `required_config` é `{"loki.use_connectivity": false, "service_limits.mot
 
 O conjunto é gerado de novo **toda semana, no domingo** (se falhar, nos dias seguintes, até sair), com o extrato do
 OpenStreetMap mais recente, pelo GitHub Actions (workflow [`gerar`](.github/workflows/gerar.yml)). Cada geração é uma release nova; o `catalogo.json` da raiz
-sempre aponta para a mais recente, e a data do OpenStreetMap usado está no campo `osm.timestamp`.
+sempre aponta para a mais recente, e a data do OpenStreetMap usado está no campo `osm.timestamp`. Cada release
+leva também o `catalogo.json` da sua geração (a partir das gerações seguintes a 2026-11-11), para quem precisa do
+índice de uma geração que já não é a da raiz.
 
 Ficam no ar as **12 gerações mais recentes** (~3 meses); as anteriores são apagadas a cada publicação, e os links
 delas deixam de funcionar. Quem instalou uma geração consegue baixar mais estados dela enquanto ela estiver entre as 12; depois

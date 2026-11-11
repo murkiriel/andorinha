@@ -8,8 +8,8 @@
     python scripts/publish.py --prune --dry-run   # só lista as releases antigas que a limpeza apagaria
     python scripts/publish.py --prune          # apaga as releases antigas (a publicação com --push já faz isso)
 
-A ordem importa: primeiro os pacotes sobem para a release, só depois o catalogo.json e a tabela "Baixar por estado"
-do README mudam (os dois no mesmo commit). Assim ninguém
+A ordem importa: primeiro os pacotes sobem para a release (com o LICENCA-DADOS.txt e uma cópia do catalogo.json da
+geração), só depois o catalogo.json da raiz e a tabela "Baixar por estado" do README mudam (os dois no mesmo commit). Assim ninguém
 lê um catálogo que aponta para arquivos que ainda não existem. A release sobe como rascunho e só é publicada
 com todos os pacotes presentes e do tamanho certo; se a subida cair no meio, rodar de novo retoma do que falta.
 Usa o `gh` (GitHub CLI) já logado.
@@ -113,14 +113,16 @@ def main() -> None:
         return
 
     tag = cat["build_id"]
-    files = publishing.release_files(cat, config.DIST)  # os pacotes e o LICENCA-DADOS.txt
+    files = publishing.release_files(cat, config.DIST)  # os pacotes, o LICENCA-DADOS.txt e o catalogo.json
     notes = (f"Tiles de roteamento do Valhalla {cat['valhalla_version']} para o Brasil, OpenStreetMap de "
-             f"{cat['osm']['timestamp']}. Índice: catalogo.json na raiz do repositório.\n\n{config.ATTRIBUTION}")
+             f"{cat['osm']['timestamp']}. Índice desta geração: {publishing.CATALOG_FILE}, nesta release; o da raiz "
+             f"do repositório aponta sempre para a geração mais recente.\n\n{config.ATTRIBUTION}")
     try:
         publishing.publish_release(publishing.gh_real, tag, files, f"Andorinha {tag}", notes)
     except (publishing.GhError, publishing.ReleaseAlreadyPublished) as e:
         sys.exit(f"Release não publicada: {e}")
-    print(f"Release {tag} publicada com {len(files) - 1} pacotes e o {publishing.LICENSE_FILE}.")
+    print(f"Release {tag} publicada com {len(publishing.package_files(cat))} pacotes, o {publishing.LICENSE_FILE} "
+          f"e o {publishing.CATALOG_FILE}.")
 
     shutil.copyfile(config.DIST / "catalogo.json", root_catalog)
     readme = config.REPO / "README.md"

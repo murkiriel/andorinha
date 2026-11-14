@@ -61,6 +61,37 @@ IBGE_MESH_COPY = GENERATOR_DIR / "ibge_malha_uf.json"
 IBGE_MESH_COPY_SHA256 = "4435b2e0e62de6d68f5c5387e01efc31655242948ae9434b78a3b5b05582e497"
 IBGE_MESH_COPY_DATE = "2026-11-08"  # o dia em que a cópia foi baixada (vai para `sources` no catálogo)
 
+# Malha municipal (a mesma API, qualidade intermediária): o contorno de cada município, para os arquivos de apoio por
+# UF (andorinha/municipalities.py). Não decide em que pacote um tile entra. A geração usa só a cópia no repositório
+# (gzip -9 -n), baixada desta URL em 2026-11-14: 12.307.459 bytes abertos, 5.570 municípios, código em `codarea`. O
+# sha256 é o do conteúdo descompactado, o que a API devolveu. Para trocar a cópia (município novo, limite mudado):
+# baixar desta URL, conferir com `municipalities.mesh_problem`, gravar com `gzip -9 -n` e atualizar o sha256, a data e,
+# se mudou, a contagem; um município novo fica sem peso até a tabela abaixo ser refeita.
+IBGE_MUNICIPAL_MESH_URL = ("https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR"
+                           "?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=intermediaria")
+IBGE_MUNICIPAL_MESH_COPY = GENERATOR_DIR / "ibge_malha_municipios.json.gz"
+IBGE_MUNICIPAL_MESH_COPY_SHA256 = "4bae3d8d9c8dd5ec520c94a35dadf0d273f5f661a63cf0b5e95e9efdb3047588"
+IBGE_MUNICIPAL_MESH_COPY_DATE = "2026-11-14"
+MUNICIPALITY_COUNT = 5570
+
+# Pesos do perfil de moto por município, para a viagem que começa e termina no mesmo município: valem para o costing
+# `motorcycle` com `use_tolls` 1,0. A tabela é o resultado de um estudo feito fora da geração (~7 h numa máquina de 12
+# núcleos para o país inteiro); a geração só a confere e a empacota. O método, resumido (inteiro no README do gerador):
+# em cada município, 32 origens x 32 destinos sorteados a até 150 m de uma via; a grade use_highways 0,2 a 0,8 x
+# use_trails 0,2 a 0,8 (degrau 0,2) e depois as vizinhas a 0,1 da melhor, com use_trails até
+# MOTORCYCLE_WEIGHTS_MAX_USE_TRAILS; vence o menor tempo médio (empate: a menor distância média, depois a mais perto
+# de 0,6/0,4). Os municípios sem amostra ficam fora da tabela, e o leitor usa o peso padrão dele.
+# Cada linha diz com o que AQUELE município foi calculado (`geracao_tiles`, `versao_valhalla`, `data_calculo`): a
+# tabela pode ser refeita aos pedaços, e o catálogo diz, por UF, de que gerações vieram os pesos. Trocar a tabela, ou
+# uma parte dela = trocar as linhas e atualizar o sha256 e a contagem (gerador/PENDENCIAS.md, "Atualizar a tabela de
+# pesos"). Pesos de outra geração de tiles não param a geração: fica dito no catálogo e no geracao.json.
+MOTORCYCLE_WEIGHTS_COPY = GENERATOR_DIR / "pesos_moto_municipios.csv"
+MOTORCYCLE_WEIGHTS_SHA256 = "66cc4078eef4f9fee1bce2ef3074aebb79e97765cc2524db6c77b5a1984be434"
+MOTORCYCLE_WEIGHTS_ROWS = 5564
+MOTORCYCLE_WEIGHTS_COSTING = "motorcycle"
+MOTORCYCLE_WEIGHTS_USE_TOLLS = 1.0
+MOTORCYCLE_WEIGHTS_MAX_USE_TRAILS = 0.4
+
 USER_AGENT = "andorinha-gerador/1 (+https://github.com/Murkiriel/andorinha)"
 
 # Threads do valhalla_build_tiles: as da máquina, no máximo 8 (ANDORINHA_THREADS muda). Com todas as 16 de uma
@@ -103,7 +134,7 @@ TIMEZONE_URL = ("https://github.com/evansiroky/timezone-boundary-builder/release
 GITHUB_REPO = os.environ.get("ANDORINHA_REPO") or os.environ.get("GITHUB_REPOSITORY") or "Murkiriel/andorinha"
 RELEASE_URL = "https://github.com/" + GITHUB_REPO + "/releases/download/{tag}/"
 
-ATTRIBUTION = "© colaboradores do OpenStreetMap (ODbL 1.0); limites das UFs: IBGE"
+ATTRIBUTION = "© colaboradores do OpenStreetMap (ODbL 1.0); limites das UFs e dos municípios: IBGE"
 # As licenças em SPDX, para o contrato de catálogo: os pacotes (LICENSE da raiz) e o código (gerador/LICENSE).
 DATA_LICENSE = "ODbL-1.0"
 CODE_LICENSE = "MIT"

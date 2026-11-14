@@ -2,7 +2,7 @@
 
 Os números do README (tempo, disco) vêm deste arquivo, não de memória. O pico de disco é amostrado numa thread a cada
 `interval` segundos, somando os arquivos de data/: pega os intermediários do Valhalla (~12 GB) que são apagados no
-fim do build e não apareceriam numa medição só no final.
+fim do build e não apareceriam numa medição só no final. `notes` guarda os avisos de uma geração que não falhou.
 """
 from __future__ import annotations
 
@@ -41,6 +41,7 @@ class RunRecorder:
     def __init__(self, folder: Path, interval: float = 20.0) -> None:
         self.folder = folder
         self.stages: List[dict] = []
+        self.notes: List[str] = []  # o que a geração tem a dizer sem ter falhado (ex.: pesos de outra geração de tiles)
         self.peak = folder_size(folder)
         self.start = datetime.now(timezone.utc)
         self._stop = threading.Event()
@@ -73,6 +74,7 @@ class RunRecorder:
             "stages": self.stages,
             "total_minutes": round(sum(e["minutes"] for e in self.stages), 2),
             "peak_disk_gb": round(self.peak / GB, 6),
+            "notes": self.notes,
         }
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

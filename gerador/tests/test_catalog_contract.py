@@ -16,7 +16,7 @@ REPO = GENERATOR_DIR.parent
 sys.path.insert(0, str(GENERATOR_DIR))
 from andorinha import catalog, config, engine  # noqa: E402
 from tests import contract_check  # noqa: E402
-from tests.test_catalog import OSM, package  # noqa: E402
+from tests.test_catalog import OSM, WEIGHTS_BUILD_ID, municipality_files, package  # noqa: E402
 
 DOCS = REPO / "docs"
 FULL = "0123456789abcdef0123456789abcdef01234567"
@@ -32,6 +32,7 @@ def built(**kwargs):
                 "GO": package("GO", [-19.5, -53.25, -12.39, -45.9], [-20.0, -54.0, -12.0, -45.0])}
     kwargs.setdefault("generator_commit", FULL[:7])
     kwargs.setdefault("generator_commit_full", FULL)
+    kwargs.setdefault("municipality_files", municipality_files())
     return catalog.build_catalog(catalog.build_id("2026-09-30", OSM["md5"]), OSM, packages, **kwargs)
 
 
@@ -90,6 +91,19 @@ class ContractShapeTest(unittest.TestCase):
         self.assertEqual(config.TIMEZONE_RELEASE, sources["timezone-boundary-builder"]["version"])
         self.assertEqual({"date": OSM["timestamp"], "md5": OSM["md5"]}, self.block["osm_snapshot"])
 
+    def test_sources_of_the_municipality_files(self):
+        sources = {s["id"]: s for s in self.block["sources"]}
+        mesh = sources["ibge-malha-municipios"]
+        self.assertEqual((config.IBGE_MUNICIPAL_MESH_URL, config.IBGE_MUNICIPAL_MESH_COPY_DATE,
+                          {"sha256": config.IBGE_MUNICIPAL_MESH_COPY_SHA256}), (mesh["url"], mesh["date"], mesh["checksums"]))
+        weights = sources["pesos-moto-municipios"]
+        self.assertEqual(("2026-11-14", {"sha256": config.MOTORCYCLE_WEIGHTS_SHA256}), (weights["date"], weights["checksums"]))
+
+    def test_a_catalog_without_municipalities_has_no_such_sources(self):
+        block = built(municipality_files={})["contract"]
+        self.assertEqual(["openstreetmap", "ibge-malha-uf", "timezone-boundary-builder"], [s["id"] for s in block["sources"]])
+        self.assertEqual(["base", "DF", "GO"], [f["id"] for f in block["files"]])
+
     def test_a_timezone_release_other_than_the_config_one_has_no_checksum(self):
         cat = built()
         cat["timezones"]["release"] = "2020a"
@@ -101,13 +115,41 @@ class ContractShapeTest(unittest.TestCase):
 class ContractFilesTest(unittest.TestCase):
     def setUp(self):
         self.cat = built()
-        self.files = {f["id"]: f for f in self.cat["contract"]["files"]}
+        every = {f["id"]: f for f in self.cat["contract"]["files"]}
+        self.files = {i: f for i, f in every.items() if f["kind"] != "auxiliary"}  # os pacotes de tiles
+        self.auxiliary = {i: f for i, f in every.items() if f["kind"] == "auxiliary"}
 
     def legacy(self, file_id):
         return self.cat["base"] if file_id == "base" else self.cat["states"][file_id]
 
     def test_one_file_per_package(self):
         self.assertEqual({"base", *self.cat["states"]}, set(self.files))
+
+    def test_one_auxiliary_file_per_state_after_the_packages(self):
+        ids = [f["id"] for f in self.cat["contract"]["files"]]
+        self.assertEqual(["base", "DF", "GO", "municipios-DF", "municipios-GO"], ids)
+
+    def test_auxiliary_file_is_downloaded_and_checked_on_its_own(self):
+        f = self.auxiliary["municipios-GO"]
+        old = self.cat["municipalities"]["states"]["GO"]
+        self.assertEqual(self.cat["release_url"] + "andorinha-municipios-GO.geojson.zst", f["url"])
+        self.assertEqual((old["sha256"], old["bytes"], old["bytes_unpacked"]), (f["sha256"], f["bytes"], f["bytes_unpacked"]))
+        self.assertEqual(("auxiliary", "GO", "geojson", "application/zstd", ["zstd"], None, []),
+                         (f["kind"], f["region"], f["format"], f["media_type"], f["unpack"], f["coverage_level"],
+                          f["requires"]))
+        self.assertEqual(self.files["GO"]["bbox"], f["bbox"])  # a área da UF, latitude primeiro
+
+    def test_auxiliary_file_says_what_it_has_and_which_tiles_the_weights_came_from(self):
+        f = self.auxiliary["municipios-GO"]
+        self.assertEqual(("municipalities", 1, 3), (f["content"], f["format_version"], f["municipalities"]))
+        self.assertEqual({"count": 2, "costing": "motorcycle", "use_tolls": 1.0, "same_generation": False,
+                          "generations": [{"tiles_build_id": WEIGHTS_BUILD_ID, "valhalla_version": "3.9.1",
+                                           "date": "2026-11-14", "count": 2}]}, f["weights"])
+
+    def test_tile_packages_are_described_as_before(self):
+        """Só acrescentar: os arquivos de tiles do contrato não ganham nem perdem chave com os arquivos de apoio."""
+        without = {f["id"]: f for f in built(municipality_files={})["contract"]["files"]}
+        self.assertEqual(without, self.files)
 
     def test_absolute_urls_are_release_url_plus_file(self):
         for file_id, f in self.files.items():
@@ -198,9 +240,23 @@ class OnlyAddsTest(unittest.TestCase):
         cat = built()
         old = {k: v for k, v in cat.items() if k != "contract"}
         self.assertEqual({"schema", "build_id", "built_at", "valhalla_version", "generator_commit", "required_config",
-                          "osm", "release_url", "attribution", "timezones", "base", "states"}, set(old))
+                          "osm", "release_url", "attribution", "timezones", "base", "states", "municipalities"},
+                         set(old))
         self.assertEqual(1, cat["schema"])
         self.assertEqual(engine.REQUIRED_CONFIG, cat["required_config"])
+
+    def test_municipalities_only_add(self):
+        """Com os arquivos de apoio, as chaves de antes saem iguais e o contrato segue na versão 1, leitor 1."""
+        with_files, without = built(), built(municipality_files={})
+        for key in without:
+            if key not in ("built_at", "contract"):
+                self.assertEqual(without[key], with_files[key], key)
+        self.assertEqual({"municipalities"}, set(with_files) - set(without))
+        block, before = with_files["contract"], without["contract"]
+        self.assertEqual((1, 1), (block["version"], block["min_reader_version"]))
+        self.assertEqual(set(before), set(block))
+        self.assertEqual(before["compatibility"], block["compatibility"])
+        self.assertEqual(before["files"], block["files"][:len(before["files"])])
 
 
 class SharedDocumentsTest(unittest.TestCase):
@@ -225,7 +281,8 @@ class RecatalogTest(unittest.TestCase):
                          {k: v for k, v in out.items() if k != "contract"})
         self.assertEqual(list(published), [k for k in out if k != "contract"])
         self.assertEqual([], contract_check.problems(out, DOCS))
-        self.assertEqual(len(published["states"]) + 1, len(out["contract"]["files"]))
+        municipal = len((published.get("municipalities") or {}).get("states") or {})
+        self.assertEqual(len(published["states"]) + 1 + municipal, len(out["contract"]["files"]))
 
     def test_constants_are_read_without_running_the_file(self):
         sys.path.insert(0, str(GENERATOR_DIR / "scripts"))

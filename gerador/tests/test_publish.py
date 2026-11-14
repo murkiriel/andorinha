@@ -178,3 +178,74 @@ class ZstdFilesTest(unittest.TestCase):
                 (folder / "andorinha-base.tar.zst").unlink()
                 self.assertEqual(["base: falta andorinha-base.tar.zst"],
                                  publishing.check(cat, None, accept_drop=True, accept_older=True))
+
+
+class MunicipalityFilesTest(unittest.TestCase):
+    """Os arquivos de apoio dos municípios sobem na release ao lado dos pacotes e são conferidos como eles: existem e
+    o sha256 bate com o catálogo. Um catálogo de antes deles segue publicável."""
+
+    def setUp(self):
+        import tempfile
+        from unittest import mock
+        from andorinha.util import file_hash
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.dist = Path(self._tmp.name)
+        patcher = mock.patch.object(config, "DIST", self.dist)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        entries = {}
+        for name in ("andorinha-base.tar.zst", "andorinha-DF.tar.zst", "andorinha-GO.tar.zst",
+                     "andorinha-municipios-DF.geojson.zst", "andorinha-municipios-GO.geojson.zst"):
+            (self.dist / name).write_bytes(name.encode())
+            entries[name] = {"file": name, "sha256": file_hash(self.dist / name), "tiles": 1}
+        self.cat = {"build_id": "2026-11-15-0e2e0e2e", "valhalla_version": config.VALHALLA_VERSION,
+                    "osm": {"timestamp": "2026-11-15T00:33:49Z", "md5": "0" * 32, "url": FR},
+                    "base": entries["andorinha-base.tar.zst"],
+                    "states": {"DF": entries["andorinha-DF.tar.zst"], "GO": entries["andorinha-GO.tar.zst"]},
+                    "municipalities": {"states": {"GO": entries["andorinha-municipios-GO.geojson.zst"],
+                                                  "DF": entries["andorinha-municipios-DF.geojson.zst"]}}}
+
+    def check(self, cat=None, published=None):
+        return publishing.check(cat or self.cat, published, accept_drop=True, accept_older=True)
+
+    def test_they_go_to_the_release_after_the_packages(self):
+        (self.dist / "catalogo.json").write_text("{}", encoding="utf-8")
+        self.assertEqual(["andorinha-base.tar.zst", "andorinha-DF.tar.zst", "andorinha-GO.tar.zst",
+                          "andorinha-municipios-DF.geojson.zst", "andorinha-municipios-GO.geojson.zst",
+                          publishing.LICENSE_FILE, "catalogo.json"],
+                         [f.name for f in publishing.release_files(self.cat, self.dist)])
+
+    def test_they_are_not_tile_packages(self):
+        """A trava de queda de tiles e a tabela do README continuam só com os pacotes."""
+        self.assertEqual(["andorinha-base.tar.zst", "andorinha-DF.tar.zst", "andorinha-GO.tar.zst"],
+                         publishing.package_files(self.cat))
+        self.assertEqual({"base", "DF", "GO"}, set(publishing.entries(self.cat)))
+        self.assertNotIn("municipios", publishing.downloads_table({**self.cat, "release_url": "https://x/",
+                                                                   "base": {**self.cat["base"], "bytes": 1},
+                                                                   "states": {}}))
+
+    def test_a_good_generation_passes(self):
+        self.assertEqual([], self.check())
+
+    def test_missing_or_changed_file_blocks(self):
+        (self.dist / "andorinha-municipios-GO.geojson.zst").write_bytes(b"outro")
+        self.assertEqual(["municípios de GO: sha256 de andorinha-municipios-GO.geojson.zst não bate com o catálogo"],
+                         self.check())
+        (self.dist / "andorinha-municipios-GO.geojson.zst").unlink()
+        self.assertEqual(["municípios de GO: falta andorinha-municipios-GO.geojson.zst"], self.check())
+
+    def test_a_catalog_from_before_them_is_still_publishable(self):
+        old = {k: v for k, v in self.cat.items() if k != "municipalities"}
+        self.assertEqual([], self.check(old))
+        self.assertEqual([], publishing.municipality_files(old))
+
+    def test_losing_them_after_they_were_published_blocks(self):
+        new = {**self.cat, "municipalities": {"states": {"DF": self.cat["municipalities"]["states"]["DF"]}}}
+        published = {**self.cat, "osm": {**self.cat["osm"], "timestamp": "2026-11-08T00:00:00Z"}}
+        self.assertEqual(["municípios de GO: o arquivo de apoio sumiu do catálogo"], self.check(new, published))
+
+    def test_license_names_the_municipal_data(self):
+        text = publishing.license_text(self.cat)
+        self.assertIn("andorinha-municipios-<UF>.geojson.zst", text)
+        self.assertIn("municípios", config.ATTRIBUTION)

@@ -22,7 +22,7 @@ Em 2026-11-11:
 |---|---|
 | Geração publicada | `2026-11-09-c17dff60`: OpenStreetMap de 2026-11-09, Valhalla 3.9.1. A mais recente está sempre em [Baixar e usar](#baixar-e-usar) e no `built_at` do [`catalogo.json`](catalogo.json) |
 | Próxima geração | Domingo, 2026-11-15: uma por semana ([Geração e reprodutibilidade](#geração-e-reprodutibilidade)) |
-| Pacotes | 29 arquivos por geração: a base, os 27 estados e o `LICENCA-DADOS.txt`; cerca de 1,4 GB ao todo, o maior (SP) 198 MB. A partir da próxima geração, também o `catalogo.json` dela |
+| Pacotes | 29 arquivos por geração: a base, os 27 estados e o `LICENCA-DADOS.txt`; cerca de 1,4 GB ao todo, o maior (SP) 198 MB. A partir da próxima geração, também o `catalogo.json` dela e 27 arquivos de apoio com os contornos dos municípios e os pesos do perfil de moto (2 MB ao todo; ver [Municípios e pesos da moto](#municípios-e-pesos-da-moto)) |
 | Gerações no ar | As 12 mais recentes (cerca de 3 meses); hoje são 5 |
 | Formato | `.tar.zst` com os tiles do Valhalla 3.9.1; catálogo no `schema` 1 |
 | Repositório | Público |
@@ -144,6 +144,8 @@ todos de novo, com o motor novo (o que falta e o histórico estão em [`gerador/
 | `andorinha-base.tar.zst` | Nível 0 do Valhalla: motorway, trunk e primary do Brasil inteiro (quadrados de 4°) |
 | `andorinha-<UF>.tar.zst` | Níveis 1 (secondary e tertiary, quadrados de 1°) e 2 (demais vias, quadrados de 0,25°) que tocam a UF, pela malha oficial do IBGE com ~5 km de margem |
 
+| `andorinha-municipios-<UF>.geojson.zst` | Arquivo de apoio, fora dos pacotes: o contorno de cada município da UF e o peso do perfil de moto que serve a ele (ver [Municípios e pesos da moto](#municípios-e-pesos-da-moto)) |
+
 Tamanho, sha256, número de tiles e retângulo de cada pacote estão no `catalogo.json`.
 
 Os pacotes são **`.tar.zst`** (zstd nível 19, janela de 8 MB): cerca de 15% menores que o `.tar.gz` de antes e mais
@@ -153,6 +155,43 @@ rápidos de descompactar, com pouca memória (num celular, o pacote do DF abriu 
 Desde as gerações seguintes a 2026-10-05, os tiles levam o **fuso horário** de cada cruzamento (as 16 zonas do
 Brasil): uma rota pedida com `date_time` (hora de partida ou de chegada) responde com a hora de cada ponto e o
 fuso (`time_zone_name`, `time_zone_offset`). Não há arquivo a mais para baixar.
+
+### Municípios e pesos da moto
+
+A partir das gerações seguintes a 2026-11-14, cada UF tem um arquivo de apoio,
+`andorinha-municipios-<UF>.geojson.zst` (de 1 kB no DF a 287 kB em MG; 2 MB no país), para um leitor escolher o peso
+do perfil de moto **quando a viagem começa e termina no mesmo município**. É opcional: os pacotes de tiles roteiam
+sem ele. Ele fica **fora** do `.tar.zst` da UF, que continua só com tiles (um leitor que confere os tiles do pacote
+recusaria um arquivo a mais), e é baixado e conferido à parte, pelo `sha256` do catálogo.
+
+É um GeoJSON comprimido com zstd (um quadro só, sem tar), com os municípios da UF em ordem de código:
+
+```
+{"type": "FeatureCollection",
+ "andorinha": {"format_version": 1, "state": "GO",
+               "weights": {"costing": "motorcycle", "use_tolls": 1.0, "count": 246,
+                           "generations": [{"tiles_build_id": "2026-11-09-c17dff60", "valhalla_version": "3.9.1",
+                                            "date": "2026-11-14", "count": 246}]}},
+ "features": [{"type": "Feature",
+               "properties": {"codarea": "5208707", "use_highways": 0.6, "use_trails": 0.4,
+                              "tiles_build_id": "2026-11-09-c17dff60", "valhalla_version": "3.9.1",
+                              "date": "2026-11-14"},
+               "geometry": {"type": "Polygon", "coordinates": [...]}}, ...]}
+```
+
+- `codarea` é o código de 7 dígitos do município no IBGE; a geometria é a da malha municipal do IBGE (qualidade
+  intermediária), sem simplificar, em WGS84 e na ordem do GeoJSON (**longitude primeiro**, ao contrário do `bbox` do
+  catálogo).
+- `use_highways` e `use_trails` são as opções do costing `motorcycle` do Valhalla que deram o menor tempo médio de
+  viagem dentro daquele município, com `use_tolls` 1,0 (o método está em
+  [`gerador/README.md`](gerador/README.md#pesos-da-moto-por-município)). Use-os só quando a origem e o destino caem no
+  mesmo município; fora disso, o leitor usa o peso padrão dele.
+- Seis municípios não têm peso (o estudo não achou amostra de rotas neles): as cinco chaves do peso vêm `null`, e o
+  leitor usa o peso padrão.
+- `tiles_build_id`, `valhalla_version` e `date` dizem com que tiles, com que Valhalla e em que dia o peso **daquele
+  município** foi calculado. Os pesos não são refeitos a cada geração: quase sempre são de tiles de uma geração
+  anterior à dos pacotes. O catálogo repete isso por UF (`municipalities.states.<UF>.generations` e
+  `same_generation`), e um leitor decide se aceita um peso mais velho que os tiles.
 
 ### `catalogo.json`
 
@@ -169,6 +208,7 @@ attribution        crédito obrigatório dos dados
 timezones          fusos horários dentro dos tiles: release do timezone-boundary-builder e as zonas (as 16 do Brasil)
 base               o pacote base (campos abaixo)
 states             {UF: pacote}, um por estado (campos abaixo)
+municipalities     os arquivos de apoio por UF, com os contornos dos municípios e os pesos da moto (chaves abaixo do bloco)
 contract           o mesmo catálogo no contrato comum aos quatro geradores (v1): ver docs/CATALOGO.md#andorinha
   name             nome do estado (só em states)
   file             nome do arquivo na release
@@ -180,6 +220,24 @@ contract           o mesmo catálogo no contrato comum aos quatro geradores (v1)
                    [lat mín, lon mín, lat máx, lon máx], arredondado para fora; use para escolher o que baixar
   bbox_tiles       área coberta pelos tiles do pacote: em geral maior que o bbox (os tiles de 1° e 4° passam da
                    divisa), mas menor onde a UF não tem via (ilhas oceânicas, extremo norte da Amazônia)
+```
+
+`municipalities` (nas gerações que têm os arquivos de apoio):
+
+```
+format_version     versão do formato do arquivo de apoio (1)
+mesh               a malha municipal do IBGE usada: url, date (o dia da cópia), sha256 (do conteúdo aberto) e count
+weights            a tabela de pesos: costing (motorcycle), use_tolls (1.0), sha256, count (municípios com peso),
+                   generations e same_generation, como em cada UF, para o país
+states             {UF: arquivo}, um por estado
+  file             nome do arquivo na release (andorinha-municipios-<UF>.geojson.zst)
+  bytes            tamanho do arquivo compactado
+  sha256           para conferir o download
+  bytes_unpacked   tamanho do GeoJSON aberto
+  municipalities   quantos municípios o arquivo tem
+  weights          quantos deles têm peso
+  generations      com que tiles os pesos da UF foram calculados: [{tiles_build_id, valhalla_version, date, count}]
+  same_generation  true só se todos os pesos da UF foram calculados com os tiles desta geração (build_id)
 ```
 
 **Coordenadas e ordem do `bbox`.** As coordenadas são WGS84 (EPSG:4326), em graus decimais. `bbox` e `bbox_tiles`
@@ -230,8 +288,9 @@ não um link fixo de release.
 **Só a geração corrente é reproduzível.** Enquanto o extrato do OpenStreetMap usado ainda está na fonte, o gerador do
 commit `generator_commit` refaz a geração com as mesmas entradas: o Python 3.12, o Valhalla e as dependências Python
 travados com hashes ([`gerador/requirements.in`](gerador/requirements.in) → [`gerador/requirements.txt`](gerador/requirements.txt),
-instalados com `pip install --require-hashes`), as actions do GitHub fixadas pelo SHA do commit, a malha do IBGE
-versionada no repositório e o zip de fusos conferido pelo sha256. O extrato, não: ele vem do arquivo "latest" do dia,
+instalados com `pip install --require-hashes`), as actions do GitHub fixadas pelo SHA do commit, as malhas do IBGE
+(UFs e municípios) e a tabela de pesos da moto versionadas no repositório e o zip de fusos conferido pelo sha256. O
+extrato, não: ele vem do arquivo "latest" do dia,
 que a fonte troca e que o Andorinha não arquiva. O catálogo registra o md5 (`osm.md5`), a data e o endereço do extrato
 usado; com isso dá para conferir um extrato, não recuperá-lo. Uma geração antiga não pode ser refeita depois que a
 fonte troca o arquivo; os pacotes dela continuam nas releases enquanto ela estiver entre as 12. O SpatiaLite do build
@@ -246,6 +305,10 @@ Os **pacotes** são uma base derivada do OpenStreetMap, distribuída sob a **Ope
 - Se você publicar uma base derivada destes pacotes, ela precisa manter a ODbL.
 - Recorte por estado: malha das UFs do IBGE, guardada em [`gerador/ibge_malha_uf.json`](gerador/ibge_malha_uf.json)
   (dado do IBGE, não parte do código).
+- Contornos dos municípios (arquivos de apoio): malha municipal do IBGE, guardada em
+  [`gerador/ibge_malha_municipios.json.gz`](gerador/ibge_malha_municipios.json.gz) (dado do IBGE, não parte do
+  código). Os pesos da moto ([`gerador/pesos_moto_municipios.csv`](gerador/pesos_moto_municipios.csv)) foram
+  calculados sobre os tiles, que derivam do OpenStreetMap.
 
 O texto do crédito está no `attribution` do `catalogo.json`, e cada release leva também um `LICENCA-DADOS.txt`, com a
 atribuição, as fontes daquela geração e o texto inteiro da ODbL, para quem baixar só os pacotes. Ele fica fora dos
@@ -278,7 +341,9 @@ states you need, extract them into one folder and point Valhalla's `mjolnir.tile
 Valhalla **3.9.1** and must be read by that version (e.g. `valhalla-mobile` 0.6.4 on Android/iOS; 0.6.3 ships Valhalla 3.6 and cannot read them). All packs in a folder
 must share the same `build_id`. The base pack only links the middle of a trip: origin, destination and stops need
 their state pack installed. The catalogue `bbox` is WGS84, latitude first (`[lat_min, lon_min, lat_max, lon_max]`,
-unlike GeoJSON). Only the current generation is reproducible: dependencies are locked with hashes and actions pinned
+unlike GeoJSON). Each state also has an optional support file (`andorinha-municipios-<UF>.geojson.zst`, outside the
+tile packs) with the municipality outlines and the motorcycle costing weights (`use_highways`, `use_trails`) to use
+when a trip starts and ends in the same municipality. Only the current generation is reproducible: dependencies are locked with hashes and actions pinned
 by commit SHA, but the "latest" OpenStreetMap extract is not archived. Data under the ODbL 1.0 (© OpenStreetMap
 contributors); generator code under MIT. Sister projects: basemap ([Carcará](https://github.com/Murkiriel/carcara)),
 search ([Sabiá](https://github.com/Murkiriel/sabia)) and speed cameras and limits

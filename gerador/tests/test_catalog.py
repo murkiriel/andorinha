@@ -9,10 +9,15 @@ from pathlib import Path
 GENERATOR_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(GENERATOR_DIR))
 from andorinha import catalog, config, engine  # noqa: E402
+from andorinha.municipalities import MunicipalityFile  # noqa: E402
 from andorinha.packing import Package, polygon_bbox  # noqa: E402
 
 TOP_LEVEL_KEYS = {"schema", "build_id", "built_at", "valhalla_version", "generator_commit", "required_config", "osm",
-                  "release_url", "attribution", "timezones", "base", "states", "contract"}
+                  "release_url", "attribution", "timezones", "base", "states", "municipalities", "contract"}
+MUNICIPALITIES_KEYS = {"format_version", "mesh", "weights", "states"}
+MUNICIPALITY_FILE_KEYS = {"file", "bytes", "sha256", "bytes_unpacked", "municipalities", "weights", "generations",
+                          "same_generation"}
+WEIGHTS_BUILD_ID = "2026-11-09-c17dff60"  # a geração dos tiles com que os pesos do exemplo foram calculados
 PACKAGE_KEYS = {"file", "bytes", "sha256", "tiles", "bytes_tiles", "bbox", "bbox_tiles"}
 MD5 = "cb859dc31c5fb8459735f0cd273d2c4f"
 OSM = {"path": "brazil-latest.osm.pbf", "url": "https://exemplo/brazil-latest.osm.pbf",
@@ -24,12 +29,25 @@ def package(name, bbox, bbox_tiles):
                    bytes_tiles=3000, bbox=bbox, bbox_tiles=bbox_tiles)
 
 
+def municipality_file(state, municipalities=3, weights=2, tiles_build_id=WEIGHTS_BUILD_ID):
+    generations = [{"tiles_build_id": tiles_build_id, "valhalla_version": "3.9.1", "date": "2026-11-14",
+                    "count": weights}]
+    return MunicipalityFile(state=state, file=f"andorinha-municipios-{state}.geojson.zst", size=500, sha256="b" * 64,
+                            bytes_unpacked=2000, municipalities=municipalities, weights=weights, generations=generations)
+
+
+def municipality_files(**kwargs):
+    """DF e GO, que têm pacote nos catálogos de exemplo, e SP, que não tem."""
+    return {state: municipality_file(state, **kwargs) for state in ("DF", "GO", "SP")}
+
+
 def fake_catalog():
     packages = {"base": package("base", [-33.75, -73.99, 5.27, -34.79], [-36.0, -76.0, 8.0, -32.0]),
                 "DF": package("DF", [-16.05, -48.29, -15.5, -47.31], [-17.0, -49.0, -15.0, -47.0]),
                 "GO": package("GO", [-19.5, -53.25, -12.4, -45.91], [-20.0, -54.0, -12.0, -45.0])}
     build_id = catalog.build_id("2026-09-30", MD5)
-    return catalog.build_catalog(build_id, OSM, packages, generator_commit="abc1234")
+    return catalog.build_catalog(build_id, OSM, packages, generator_commit="abc1234",
+                                 municipality_files=municipality_files())
 
 
 def readme_keys():
@@ -104,6 +122,49 @@ class ContractTest(unittest.TestCase):
             dest = Path(tmp) / "catalogo.json"
             catalog.save(cat, dest)
             self.assertEqual(cat, json.loads(dest.read_text(encoding="utf-8")))
+
+    def test_municipalities_describe_one_file_per_state_with_a_package(self):
+        municipal = fake_catalog()["municipalities"]
+        self.assertEqual(MUNICIPALITIES_KEYS, set(municipal))
+        self.assertEqual(1, municipal["format_version"])
+        self.assertEqual(["DF", "GO"], list(municipal["states"]))  # SP não tem pacote neste catálogo
+        for state, entry in municipal["states"].items():
+            self.assertEqual(MUNICIPALITY_FILE_KEYS, set(entry), state)
+            self.assertEqual(f"andorinha-municipios-{state}.geojson.zst", entry["file"])
+            self.assertEqual((500, "b" * 64, 2000, 3, 2), (entry["bytes"], entry["sha256"], entry["bytes_unpacked"],
+                                                           entry["municipalities"], entry["weights"]))
+
+    def test_municipalities_say_the_mesh_and_the_table_they_came_from(self):
+        municipal = fake_catalog()["municipalities"]
+        self.assertEqual({"url": config.IBGE_MUNICIPAL_MESH_URL, "date": config.IBGE_MUNICIPAL_MESH_COPY_DATE,
+                          "sha256": config.IBGE_MUNICIPAL_MESH_COPY_SHA256, "count": 6}, municipal["mesh"])
+        self.assertEqual({"costing": "motorcycle", "use_tolls": 1.0, "sha256": config.MOTORCYCLE_WEIGHTS_SHA256,
+                          "count": 4, "same_generation": False, "generations": [
+                              {"tiles_build_id": WEIGHTS_BUILD_ID, "valhalla_version": "3.9.1", "date": "2026-11-14",
+                               "count": 4}]}, municipal["weights"])
+
+    def test_weights_of_an_earlier_generation_are_declared_per_state(self):
+        """O catálogo diz, em cada UF, com que tiles os pesos foram calculados: o leitor vê que não são os desta."""
+        cat = fake_catalog()
+        self.assertNotEqual(WEIGHTS_BUILD_ID, cat["build_id"])
+        for entry in cat["municipalities"]["states"].values():
+            self.assertIs(False, entry["same_generation"])
+            self.assertEqual([WEIGHTS_BUILD_ID], [g["tiles_build_id"] for g in entry["generations"]])
+
+    def test_weights_of_this_generation_are_declared_too(self):
+        packages = {"base": package("base", [-33.75, -73.99, 5.27, -34.79], [-36.0, -76.0, 8.0, -32.0]),
+                    "DF": package("DF", [-16.05, -48.29, -15.5, -47.31], [-17.0, -49.0, -15.0, -47.0])}
+        build_id = catalog.build_id("2026-09-30", MD5)
+        files = {"DF": municipality_file("DF", tiles_build_id=build_id)}
+        municipal = catalog.build_catalog(build_id, OSM, packages, generator_commit="abc1234",
+                                          municipality_files=files)["municipalities"]
+        self.assertIs(True, municipal["states"]["DF"]["same_generation"])
+        self.assertIs(True, municipal["weights"]["same_generation"])
+
+    def test_a_catalog_without_the_files_has_no_municipalities_key(self):
+        packages = {"base": package("base", [-33.75, -73.99, 5.27, -34.79], [-36.0, -76.0, 8.0, -32.0])}
+        cat = catalog.build_catalog(catalog.build_id("2026-09-30", MD5), OSM, packages, generator_commit="abc1234")
+        self.assertEqual(TOP_LEVEL_KEYS - {"municipalities"}, set(cat))
 
     def test_readme_documents_all_keys(self):
         top_level, package_keys_ = readme_keys()

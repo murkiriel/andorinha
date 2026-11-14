@@ -4,8 +4,8 @@ catálogo, e a própria release.
 A linha de comando fica em scripts/publish.py; aqui só a lógica, testável sem o GitHub: o `gh` entra como uma função
 `gh(args) -> (código, stdout, stderr)`, e os testes passam uma falsa.
 
-A release é criada como RASCUNHO, sem arquivos; cada arquivo (os pacotes, o LICENCA-DADOS.txt e o catalogo.json da
-geração) que ainda não está lá (ou está com outro tamanho) sobe; só com todos presentes e do tamanho certo ela é
+A release é criada como RASCUNHO, sem arquivos; cada arquivo (os pacotes, os arquivos de apoio dos municípios, o
+LICENCA-DADOS.txt e o catalogo.json da geração) que ainda não está lá (ou está com outro tamanho) sobe; só com todos presentes e do tamanho certo ela é
 publicada. Uma queda no meio deixa um rascunho que ninguém vê, e
 rodar de novo retoma do que falta. Release já publicada com o mesmo tag não é mexida.
 
@@ -248,6 +248,16 @@ def package_files(cat: dict) -> List[str]:
     return out
 
 
+def municipality_entries(cat: dict) -> dict:
+    """{UF: {...}}: os arquivos de apoio dos municípios do catálogo (vazio num catálogo de antes deles)."""
+    return dict((cat.get("municipalities") or {}).get("states") or {})
+
+
+def municipality_files(cat: dict) -> List[str]:
+    """Os arquivos de apoio que sobem na release, em ordem de UF."""
+    return [e["file"] for _, e in sorted(municipality_entries(cat).items())]
+
+
 LICENSE_FILE = "LICENCA-DADOS.txt"
 
 
@@ -265,22 +275,26 @@ def license_text(cat: dict) -> str:
             "pacotes precisa mantê-la sob a ODbL.\n\n"
             f"Dados de origem:\n"
             f"- OpenStreetMap, extrato de {osm['timestamp']}: {osm['url']}\n"
-            f"- Limites das UFs (que pacote leva cada tile): malha de UFs do IBGE, "
-            f"https://servicodados.ibge.gov.br/api/docs/malhas\n\n"
+            f"- Limites das UFs (que pacote leva cada tile) e contornos dos municípios (arquivos "
+            f"andorinha-municipios-<UF>.geojson.zst): malhas do IBGE, "
+            f"https://servicodados.ibge.gov.br/api/docs/malhas\n"
+            f"- Pesos do perfil de moto por município (nos mesmos arquivos): calculados pelo gerador sobre os tiles "
+            f"das gerações que o catalogo.json indica\n\n"
             f"Gerador (código sob MIT): https://github.com/{config.GITHUB_REPO}\n\n"
             f"{'=' * 78}\n\n{odbl}\n")
 
 
 def release_files(cat: dict, dist: Path) -> List[Path]:
-    """Os arquivos da release, na ordem de subida: os pacotes, o LICENCA-DADOS.txt (gravado em `dist`) e, por último,
-    o catalogo.json da geração (o de `dist`, o mesmo que vai para a raiz do repositório). Os dois ficam fora dos
-    pacotes: quem lê os .tar.zst recusa um caminho que não seja de tile. Levanta FileNotFoundError sem o catálogo."""
+    """Os arquivos da release, na ordem de subida: os pacotes, os arquivos de apoio dos municípios, o
+    LICENCA-DADOS.txt (gravado em `dist`) e, por último, o catalogo.json da geração (o de `dist`, o mesmo que vai para
+    a raiz do repositório). Todos ficam fora dos pacotes: quem lê os .tar.zst recusa um caminho que não seja de tile.
+    Levanta FileNotFoundError sem o catálogo."""
     catalog_path = dist / CATALOG_FILE
     if not catalog_path.is_file():
         raise FileNotFoundError(f"falta {catalog_path}: o catálogo da geração sobe na release")
     license_path = dist / LICENSE_FILE
     license_path.write_text(license_text(cat), encoding="utf-8", newline="\n")
-    return [dist / name for name in package_files(cat)] + [license_path, catalog_path]
+    return [dist / name for name in package_files(cat) + municipality_files(cat)] + [license_path, catalog_path]
 
 
 def entries(cat: dict) -> dict:
@@ -318,6 +332,17 @@ def check(cat: dict, published: Optional[dict], accept_drop: bool, accept_older:
                 problems.append(f"{name}: {file.stat().st_size / 1e9:.2f} GB, acima do limite do GitHub Releases")
             elif file_hash(file) != item["sha256"]:
                 problems.append(f"{name}: sha256 de {item['file']} não bate com o catálogo")
+    municipal = municipality_entries(cat)
+    for state, e in sorted(municipal.items()):
+        file = config.DIST / e["file"]
+        if not file.exists():
+            problems.append(f"municípios de {state}: falta {e['file']}")
+        elif file_hash(file) != e["sha256"]:
+            problems.append(f"municípios de {state}: sha256 de {e['file']} não bate com o catálogo")
+    # Um leitor que já usa os arquivos de apoio não pode ficar sem eles numa geração seguinte.
+    problems += [f"municípios de {state}: o arquivo de apoio sumiu do catálogo"
+                 for state in sorted(municipality_entries(published or {}))
+                 if state in cat["states"] and state not in municipal]
     if published and not accept_drop:
         problems += drops(published, cat, allowed_drop(published, cat))
     if not accept_older:

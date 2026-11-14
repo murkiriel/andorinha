@@ -144,5 +144,87 @@ class RunRecorderTest(unittest.TestCase):
         self.assertEqual("failed: caiu", data["result"])
 
 
+    def test_notes_are_saved_and_empty_by_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            recorder = run_record.RunRecorder(Path(tmp), interval=3600)
+            recorder.save(Path(tmp) / "a.json", "ok")
+            self.assertEqual([], json.loads((Path(tmp) / "a.json").read_text(encoding="utf-8"))["notes"])
+            recorder = run_record.RunRecorder(Path(tmp), interval=3600)
+            recorder.notes.append("pesos de outra geração")
+            recorder.save(Path(tmp) / "b.json", "ok")
+            self.assertEqual(["pesos de outra geração"],
+                             json.loads((Path(tmp) / "b.json").read_text(encoding="utf-8"))["notes"])
+
+
+class MunicipalitiesInTheGenerationTest(unittest.TestCase):
+    """O generate.py com os arquivos de apoio: as cópias são conferidas antes de tudo, e pesos calculados com tiles de
+    outra geração não param a geração; ficam ditos no catálogo, no log e no geracao.json."""
+
+    def setUp(self):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("generate", GENERATOR_DIR / "generate.py")
+        self.script = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.script)
+
+    def test_copies_are_checked_before_the_extract(self):
+        calls = []
+
+        class Stop(Exception):
+            pass
+
+        def refuse():
+            calls.append("municipalities")
+            raise Stop
+
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(self.script.sources, "ibge_mesh", side_effect=lambda: calls.append("mesh")), \
+                mock.patch.object(self.script.municipalities, "check", side_effect=refuse), \
+                mock.patch.object(self.script.sources, "osm_extract", side_effect=lambda: calls.append("osm")):
+            recorder = run_record.RunRecorder(Path(tmp), interval=3600)
+            try:
+                with self.assertRaises(Stop):
+                    self.script._generate("osm", recorder)
+            finally:
+                recorder.save(Path(tmp) / "geracao.json", "teste")
+        self.assertEqual(["mesh", "municipalities"], calls)
+
+    def test_weights_of_an_earlier_generation_do_not_stop_the_generation(self):
+        import contextlib
+        import io
+        from tests.test_catalog import MD5, OSM, WEIGHTS_BUILD_ID, municipality_files, package
+        from andorinha import municipalities
+        packages = {"base": package("base", [-33.75, -73.99, 5.27, -34.79], [-36.0, -76.0, 8.0, -32.0]),
+                    "DF": package("DF", [-16.05, -48.29, -15.5, -47.31], [-17.0, -49.0, -15.0, -47.0]),
+                    "GO": package("GO", [-19.5, -53.25, -12.4, -45.91], [-20.0, -54.0, -12.0, -45.0])}
+        with tempfile.TemporaryDirectory() as tmp:
+            raw, dist = Path(tmp) / "raw", Path(tmp) / "dist"
+            raw.mkdir()
+            dist.mkdir()
+            (raw / "brazil-latest.meta.json").write_text(json.dumps(OSM), encoding="utf-8")
+            (dist / "pacotes.json").write_text(json.dumps({k: vars(v) for k, v in packages.items()}), encoding="utf-8")
+            municipalities.save_index(municipality_files(), dist)
+            log = io.StringIO()
+            with mock.patch.object(config, "RAW", raw), mock.patch.object(config, "DIST", dist), \
+                    contextlib.redirect_stdout(log):
+                recorder = run_record.RunRecorder(Path(tmp), interval=3600)
+                summary = self.script._generate("catalog", recorder)
+                recorder.save(dist / "geracao.json", "ok")
+            cat = json.loads((dist / "catalogo.json").read_text(encoding="utf-8"))
+            record = json.loads((dist / "geracao.json").read_text(encoding="utf-8"))
+        self.assertIn(f"geração {cat['build_id']}", summary)
+        self.assertTrue(cat["build_id"].endswith(MD5[:8]))
+        self.assertNotEqual(WEIGHTS_BUILD_ID, cat["build_id"])
+        # no catálogo
+        self.assertIs(False, cat["municipalities"]["weights"]["same_generation"])
+        self.assertEqual([WEIGHTS_BUILD_ID],
+                         [g["tiles_build_id"] for g in cat["municipalities"]["states"]["GO"]["generations"]])
+        # no registro da execução e no log
+        self.assertEqual("ok", record["result"])
+        self.assertEqual(1, len(record["notes"]))
+        self.assertIn(WEIGHTS_BUILD_ID, record["notes"][0])
+        self.assertIn("AVISO: pesos de 4 municípios (2 UFs)", log.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -13,6 +13,7 @@
       "timezones": {"release": "2026d", "tzids": [...]},   fusos dentro dos tiles (as zonas do Brasil)
       "base": {"file", "bytes", "sha256", "tiles", "bytes_tiles", "bbox", "bbox_tiles"},
       "states": {"GO": {"name": "Goiás", ...os mesmos campos}, ...},
+      "municipalities": {...},              os arquivos de apoio por UF: contornos dos municípios e pesos da moto
       "contract": {...}                     o contrato de catálogo comum v1 (docs/CATALOGO.md; `contract` abaixo)
     }
 
@@ -20,6 +21,17 @@
 base), a mesma ordem do catálogo do Pardal; `bbox_tiles` = o dos tiles do pacote (em geral maior; menor onde a
 UF não tem via, como ilhas oceânicas). Coordenadas em WGS84, latitude primeiro: o contrário do GeoJSON. A ordem é
 declarada no README da raiz e não muda no `schema` 1.
+
+`municipalities` (desde 2026-11-14; andorinha/municipalities.py) descreve um arquivo por UF, fora dos pacotes de tiles:
+
+    {"format_version": 1,
+     "mesh": {"url", "date", "sha256", "count"},          a cópia da malha municipal do IBGE (sha256 do conteúdo aberto)
+     "weights": {"costing", "use_tolls", "sha256", "count", "generations", "same_generation"},   a tabela de pesos
+     "states": {"GO": {"file", "bytes", "sha256", "bytes_unpacked", "municipalities", "weights", "generations",
+                       "same_generation"}, ...}}
+
+`generations` diz com que tiles os pesos foram calculados: [{"tiles_build_id", "valhalla_version", "date", "count"}],
+no país (`weights`) e em cada UF. `same_generation` é true só quando todos são dos tiles desta geração (`build_id`).
 
 `contract` é o mesmo catálogo no formato comum aos quatro geradores irmãos (docs/CATALOGO.md, esquema em
 docs/catalogo-v1.schema.json): só acrescenta, nenhuma chave acima muda. Sai inteiro das chaves acima e do config, então
@@ -34,7 +46,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Mapping, Optional
 
-from . import config, engine, timezones
+from . import config, engine, municipalities, timezones
+from .municipalities import MunicipalityFile
 from .packing import Package
 
 SCHEMA = 1
@@ -80,10 +93,34 @@ def git_commit_hash() -> str:
     return r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else "desconhecido"
 
 
+def municipalities_entry(files: Dict[str, MunicipalityFile], build_id: str) -> dict:
+    """A chave `municipalities`: os arquivos de apoio por UF, a malha e a tabela de que saíram e, no país e em cada
+    UF, com que gerações de tiles os pesos foram calculados."""
+    country = municipalities.all_generations(files)
+    states = {}
+    for state, f in sorted(files.items()):
+        states[state] = {"file": f.file, "bytes": f.size, "sha256": f.sha256, "bytes_unpacked": f.bytes_unpacked,
+                         "municipalities": f.municipalities, "weights": f.weights,
+                         "generations": [dict(g) for g in f.generations],
+                         "same_generation": municipalities.same_generation(f.generations, build_id)}
+    return {
+        "format_version": municipalities.FORMAT_VERSION,
+        "mesh": {"url": config.IBGE_MUNICIPAL_MESH_URL, "date": config.IBGE_MUNICIPAL_MESH_COPY_DATE,
+                 "sha256": config.IBGE_MUNICIPAL_MESH_COPY_SHA256,
+                 "count": sum(f.municipalities for f in files.values())},
+        "weights": {"costing": config.MOTORCYCLE_WEIGHTS_COSTING, "use_tolls": config.MOTORCYCLE_WEIGHTS_USE_TOLLS,
+                    "sha256": config.MOTORCYCLE_WEIGHTS_SHA256, "count": sum(f.weights for f in files.values()),
+                    "generations": country, "same_generation": municipalities.same_generation(country, build_id)},
+        "states": states,
+    }
+
+
 def build_catalog(build_id: str, osm: Dict[str, object], packages: Dict[str, Package],
-                  generator_commit: Optional[str] = None, generator_commit_full: Optional[str] = None) -> dict:
+                  generator_commit: Optional[str] = None, generator_commit_full: Optional[str] = None,
+                  municipality_files: Optional[Dict[str, MunicipalityFile]] = None) -> dict:
     """O catálogo de uma geração. `generator_commit` (curto) e `generator_commit_full` (40 dígitos) vêm do git quando
-    não são dados; um SHA completo em `generator_commit` vale para os dois."""
+    não são dados; um SHA completo em `generator_commit` vale para os dois. `municipality_files`: os arquivos de apoio
+    por UF; só entram os das UFs que têm pacote, e sem eles o catálogo sai sem a chave `municipalities`."""
     if generator_commit_full is None:
         if generator_commit and len(generator_commit) == 40:
             generator_commit_full = generator_commit
@@ -104,6 +141,9 @@ def build_catalog(build_id: str, osm: Dict[str, object], packages: Dict[str, Pac
         "states": {state: {"name": config.STATES[state], **_entry(packages[state])}
                    for state in sorted(packages) if state != "base"},
     }
+    if municipality_files:
+        cat["municipalities"] = municipalities_entry(
+            {state: f for state, f in municipality_files.items() if state in cat["states"]}, build_id)
     cat["contract"] = contract(cat, generator_commit_full)
     return cat
 
@@ -118,6 +158,12 @@ TILES_FORMAT = "valhalla-tiles"
 # Os pacotes são .tar.zst: zstd por fora, tar por dentro (packing.write_package).
 PACKAGE_MEDIA_TYPE = "application/zstd"
 PACKAGE_UNPACK = ["zstd", "tar"]
+# Os arquivos de apoio por UF (andorinha/municipalities.py): um GeoJSON comprimido com zstd, sem tar.
+MUNICIPALITIES_KIND = "auxiliary"
+MUNICIPALITIES_FORMAT = "geojson"
+MUNICIPALITIES_UNPACK = ["zstd"]
+MUNICIPALITIES_CONTENT = "municipalities"
+MUNICIPALITIES_ID = "municipios-{state}"
 
 # As constantes do config que descrevem as entradas da geração (`sources`). O scripts/recatalog.py troca pelas do config
 # no commit que gerou a geração, para não atribuir a ela um checksum que veio depois.
@@ -144,7 +190,38 @@ def _sources(cat: dict, constants: Mapping[str, str]) -> list:
         sources.append({"id": "timezone-boundary-builder", "name": "timezone-boundary-builder (fusos horários)",
                         "url": url.format(release=release) if url else None, "date": None, "version": release,
                         "license": "ODbL-1.0", "checksums": {"sha256": constants["TIMEZONE_SHA256"]} if same else {}})
+    municipal = cat.get("municipalities")
+    if municipal:
+        mesh, weights = municipal["mesh"], municipal["weights"]
+        sources.append({"id": "ibge-malha-municipios",
+                        "name": "IBGE, malha municipal (cópia versionada no repositório)", "url": mesh["url"],
+                        "date": mesh["date"], "license": None, "checksums": {"sha256": mesh["sha256"]},
+                        "note": "sha256 do conteúdo descompactado"})
+        dates = [g["date"] for g in weights["generations"]]
+        sources.append({"id": "pesos-moto-municipios",
+                        "name": "Pesos do perfil de moto por município (tabela versionada no repositório)",
+                        "url": None, "date": max(dates) if dates else None, "license": None,
+                        "checksums": {"sha256": weights["sha256"]},
+                        "note": "a geração dos tiles de cada peso está em municipalities.weights.generations"})
     return sources
+
+
+def _municipality_file(state: str, entry: dict, municipal: dict, cat: dict) -> dict:
+    """O arquivo de apoio de uma UF no contrato: `auxiliary`, com a área da UF e sem nível de cobertura. As chaves
+    próprias: `content`, `municipalities` e `weights` (quantos têm peso, o costing e de que gerações de tiles)."""
+    weights = municipal["weights"]
+    return {
+        "id": MUNICIPALITIES_ID.format(state=state), "kind": MUNICIPALITIES_KIND, "region": state,
+        "url": cat["release_url"] + entry["file"], "sha256": entry["sha256"], "bytes": entry["bytes"],
+        "bytes_unpacked": entry["bytes_unpacked"], "media_type": PACKAGE_MEDIA_TYPE,
+        "unpack": list(MUNICIPALITIES_UNPACK), "format": MUNICIPALITIES_FORMAT,
+        "bbox": list(cat["states"][state]["bbox"]), "coverage_level": None, "requires": [],
+        "content": MUNICIPALITIES_CONTENT, "format_version": municipal["format_version"],
+        "municipalities": entry["municipalities"],
+        "weights": {"count": entry["weights"], "costing": weights["costing"], "use_tolls": weights["use_tolls"],
+                    "generations": [dict(g) for g in entry["generations"]],
+                    "same_generation": entry["same_generation"]},
+    }
 
 
 def _file(file_id: str, kind: str, region: str, entry: dict, release_url: str) -> dict:
@@ -188,6 +265,10 @@ def contract(cat: dict, generator_commit_full: Optional[str],
     release_url = cat["release_url"]
     files = [_file("base", "base", "BR", cat["base"], release_url)]
     files += [_file(state, "uf", state, entry, release_url) for state, entry in sorted(cat["states"].items())]
+    municipal = cat.get("municipalities")
+    if municipal:
+        files += [_municipality_file(state, entry, municipal, cat)
+                  for state, entry in sorted(municipal["states"].items()) if state in cat["states"]]
     return {
         "name": CONTRACT_NAME,
         "version": CONTRACT_VERSION,

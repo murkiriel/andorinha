@@ -278,7 +278,7 @@ def license_text(cat: dict) -> str:
             f"- Limites das UFs (que pacote leva cada tile) e contornos dos municípios (arquivos "
             f"andorinha-municipios-<UF>.geojson.zst): malhas do IBGE, "
             f"https://servicodados.ibge.gov.br/api/docs/malhas\n"
-            f"- Pesos do perfil de moto por município (nos mesmos arquivos): calculados pelo gerador sobre os tiles "
+            f"- Pesos do perfil de moto por município e por estado (nos mesmos arquivos): calculados pelo gerador sobre os tiles "
             f"das gerações que o catalogo.json indica\n\n"
             f"Gerador (código sob MIT): https://github.com/{config.GITHUB_REPO}\n\n"
             f"{'=' * 78}\n\n{odbl}\n")

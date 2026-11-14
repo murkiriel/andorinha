@@ -14,9 +14,10 @@ from andorinha.packing import Package, polygon_bbox  # noqa: E402
 
 TOP_LEVEL_KEYS = {"schema", "build_id", "built_at", "valhalla_version", "generator_commit", "required_config", "osm",
                   "release_url", "attribution", "timezones", "base", "states", "municipalities", "contract"}
-MUNICIPALITIES_KEYS = {"format_version", "mesh", "weights", "states"}
+MUNICIPALITIES_KEYS = {"format_version", "mesh", "weights", "state_weights", "states"}
 MUNICIPALITY_FILE_KEYS = {"file", "bytes", "sha256", "bytes_unpacked", "municipalities", "weights", "generations",
-                          "same_generation"}
+                          "same_generation", "state_weights"}
+STATE_WEIGHTS_KEYS = {"use_highways", "use_trails", "tiles_build_id", "valhalla_version", "date", "same_generation"}
 WEIGHTS_BUILD_ID = "2026-11-09-c17dff60"  # a geração dos tiles com que os pesos do exemplo foram calculados
 PACKAGE_KEYS = {"file", "bytes", "sha256", "tiles", "bytes_tiles", "bbox", "bbox_tiles"}
 MD5 = "cb859dc31c5fb8459735f0cd273d2c4f"
@@ -33,7 +34,9 @@ def municipality_file(state, municipalities=3, weights=2, tiles_build_id=WEIGHTS
     generations = [{"tiles_build_id": tiles_build_id, "valhalla_version": "3.9.1", "date": "2026-11-14",
                     "count": weights}]
     return MunicipalityFile(state=state, file=f"andorinha-municipios-{state}.geojson.zst", size=500, sha256="b" * 64,
-                            bytes_unpacked=2000, municipalities=municipalities, weights=weights, generations=generations)
+                            bytes_unpacked=2000, municipalities=municipalities, weights=weights, generations=generations,
+                            state_weights={"use_highways": 0.8, "use_trails": 0.4, "tiles_build_id": tiles_build_id,
+                                           "valhalla_version": "3.9.1", "date": "2026-11-14"})
 
 
 def municipality_files(**kwargs):
@@ -151,6 +154,31 @@ class ContractTest(unittest.TestCase):
             self.assertIs(False, entry["same_generation"])
             self.assertEqual([WEIGHTS_BUILD_ID], [g["tiles_build_id"] for g in entry["generations"]])
 
+    def test_each_state_has_its_state_weight_with_the_origin(self):
+        cat = fake_catalog()
+        for state, entry in cat["municipalities"]["states"].items():
+            self.assertEqual(STATE_WEIGHTS_KEYS, set(entry["state_weights"]), state)
+            self.assertEqual({"use_highways": 0.8, "use_trails": 0.4, "tiles_build_id": WEIGHTS_BUILD_ID,
+                              "valhalla_version": "3.9.1", "date": "2026-11-14", "same_generation": False},
+                             entry["state_weights"])
+
+    def test_state_weights_table_is_summarized(self):
+        self.assertEqual({"costing": "motorcycle", "use_tolls": 1.0, "sha256": config.MOTORCYCLE_STATE_WEIGHTS_SHA256,
+                          "count": 2, "same_generation": False, "generations": [
+                              {"tiles_build_id": WEIGHTS_BUILD_ID, "valhalla_version": "3.9.1", "date": "2026-11-14",
+                               "count": 2}]}, fake_catalog()["municipalities"]["state_weights"])
+
+    def test_files_without_state_weights_keep_the_catalog_of_before(self):
+        """Só acrescenta: sem peso de estado, `municipalities` sai com as chaves de antes."""
+        packages = {"base": package("base", [-33.75, -73.99, 5.27, -34.79], [-36.0, -76.0, 8.0, -32.0]),
+                    "DF": package("DF", [-16.05, -48.29, -15.5, -47.31], [-17.0, -49.0, -15.0, -47.0])}
+        files = {"DF": municipality_file("DF")}
+        files["DF"].state_weights = None
+        municipal = catalog.build_catalog(catalog.build_id("2026-09-30", MD5), OSM, packages, generator_commit="abc1234",
+                                          municipality_files=files)["municipalities"]
+        self.assertEqual(MUNICIPALITIES_KEYS - {"state_weights"}, set(municipal))
+        self.assertEqual(MUNICIPALITY_FILE_KEYS - {"state_weights"}, set(municipal["states"]["DF"]))
+
     def test_weights_of_this_generation_are_declared_too(self):
         packages = {"base": package("base", [-33.75, -73.99, 5.27, -34.79], [-36.0, -76.0, 8.0, -32.0]),
                     "DF": package("DF", [-16.05, -48.29, -15.5, -47.31], [-17.0, -49.0, -15.0, -47.0])}
@@ -160,6 +188,8 @@ class ContractTest(unittest.TestCase):
                                           municipality_files=files)["municipalities"]
         self.assertIs(True, municipal["states"]["DF"]["same_generation"])
         self.assertIs(True, municipal["weights"]["same_generation"])
+        self.assertIs(True, municipal["states"]["DF"]["state_weights"]["same_generation"])
+        self.assertIs(True, municipal["state_weights"]["same_generation"])
 
     def test_a_catalog_without_the_files_has_no_municipalities_key(self):
         packages = {"base": package("base", [-33.75, -73.99, 5.27, -34.79], [-36.0, -76.0, 8.0, -32.0])}

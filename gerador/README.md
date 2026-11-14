@@ -68,11 +68,11 @@ novo, somar o download de 2,3 GB (25 min numa conexão de ~1,5 MB/s).
 | Etapa | Módulo | O que faz |
 |---|---|---|
 | (antes de tudo) | `andorinha/sources.py` | Confere a malha das UFs do IBGE, a cópia versionada `ibge_malha_uf.json`: as 27 UFs e o sha256 de `config.py`. Nada é baixado (a API do IBGE deixou de responder ao Actions em 2026-11-03), e a mesma malha dá sempre a mesma divisão dos pacotes. Vem primeiro para uma falha aparecer em segundos, não depois dos tiles. Para trocar a cópia, ver `IBGE_MESH_URL` em `config.py` |
-| (antes de tudo) | `andorinha/municipalities.py` | Confere as outras duas cópias versionadas, pelo mesmo motivo: a malha municipal do IBGE, `ibge_malha_municipios.json.gz` (sha256 do conteúdo e os 5.570 municípios), e a tabela de pesos da moto, `pesos_moto_municipios.csv` (sha256, contagem, pesos de 0 a 1, códigos que existem na malha). Nada é baixado |
+| (antes de tudo) | `andorinha/municipalities.py` | Confere as outras duas cópias versionadas, pelo mesmo motivo: a malha municipal do IBGE, `ibge_malha_municipios.json.gz` (sha256 do conteúdo e os 5.570 municípios), a tabela de pesos da moto, `pesos_moto_municipios.csv` (sha256, contagem, pesos de 0 a 1, códigos que existem na malha), e a de pesos por estado, `pesos_moto_estados.csv` (sha256 e uma linha para cada uma das 27 UFs da malha). Nada é baixado |
 | osm | `andorinha/sources.py` | Baixa o extrato do Brasil quando há versão nova e confere o md5 publicado. Fonte principal: openstreetmap.fr (se ele troca o extrato durante o download, uma vez por dia, lê o md5 de novo e baixa a versão nova uma vez). Se ele falha, a Geofabrik, pelo arquivo datado do dia (`brazil-AAMMDD.osm.pbf`, que não muda); o log avisa e o `url` do catálogo diz de onde veio. `ANDORINHA_OSM_SOURCES` muda a ordem (no Actions, a entrada `osm_sources` do disparo manual) |
 | tiles | `andorinha/builder.py` | Roda `valhalla_build_admins` e `valhalla_build_tiles` do pyvalhalla, com 8 threads (config e executáveis vêm do `engine.py`), com o banco de fusos só do Brasil de `andorinha/timezones.py` (desde 2026-10-05; o zip da release fixada do timezone-boundary-builder é conferido pelo sha256 de `config.py` e recusado se não bater; precisa do SpatiaLite, `mod_spatialite`) |
 | packages | `andorinha/packing.py` | Divide os tiles em base (nível 0) e um pacote por UF (níveis 1 e 2), pela malha do IBGE, e grava os `.tar.zst` (zstd 19; até 2026-10-05, `.tar.gz`) |
-| packages | `andorinha/municipalities.py` | Grava o arquivo de apoio de cada UF, `andorinha-municipios-<UF>.geojson.zst`: o contorno de cada município (malha municipal do IBGE) e o peso do perfil de moto dele (a tabela versionada). Não roda o estudo dos pesos; ver [Pesos da moto por município](#pesos-da-moto-por-município) |
+| packages | `andorinha/municipalities.py` | Grava o arquivo de apoio de cada UF, `andorinha-municipios-<UF>.geojson.zst`: o contorno de cada município (malha municipal do IBGE), o peso do perfil de moto dele e, no cabeçalho, o peso do estado (as tabelas versionadas). Não roda os estudos dos pesos; ver [Pesos da moto por município](#pesos-da-moto-por-município) |
 | validate | `andorinha/validation.py` | 33 rotas, cada uma só com a base e as UFs dela instaladas, comparadas com a rota do Brasil inteiro. O foco é a moto, com 30: uma dentro de cada UF (capital -> cidade de 25 a 140 km), duas entre UFs vizinhas e Porto Alegre -> Fortaleza só com os pacotes das pontas. Carro, bicicleta e a pé têm uma rota curta cada, dentro de uma UF. Leva ~1 min |
 | catalog | `andorinha/catalog.py` | Monta o `catalogo.json` com tamanho, sha256, bbox e contagem de tiles de cada pacote, e os arquivos de apoio dos municípios (chave `municipalities`), com a geração dos tiles de que vieram os pesos de cada UF |
 
@@ -179,14 +179,37 @@ A tabela de 2026-11-14 (5.564 municípios, todos com os tiles da geração `2026
 Resultado: 3.787 municípios ficam em 0,6/0,4, 520 em 0,4/0,4, 378 em 0,8/0,4 e os demais espalhados de 0,1 a 0,9 em
 `use_highways` e de 0,1 a 0,4 em `use_trails`.
 
+### Pesos por estado
+
+`pesos_moto_estados.csv` tem uma linha por UF, com o peso para a viagem que tem **todos os pontos no mesmo estado, em
+municípios diferentes** (no mesmo município vale o peso do município; entre estados, o leitor usa o padrão dele).
+Colunas: `codigo_ibge` (2 dígitos), `uf`, `use_highways`, `use_trails` e as mesmas três de origem (`geracao_tiles`,
+`versao_valhalla`, `data_calculo`). O peso vai no cabeçalho do arquivo de apoio da UF (`andorinha.state_weights`) e
+no catálogo (`municipalities.states.<UF>.state_weights`). A geração confere o sha256 e que há uma linha, e só uma,
+para cada UF da malha.
+
+A tabela de 2026-11-14 (as 27 UFs, tiles da geração `2026-11-09-c17dff60`, `pyvalhalla` 3.9.1) saiu de outro estudo
+feito fora da geração, com o mesmo costing e `use_tolls` 1,0:
+
+1. **Amostra.** Em cada UF, pelo menos 10.000 viagens, com origem e destino sorteados de modo uniforme no polígono da
+   UF (malha do IBGE), cada ponto a até 150 m de uma via.
+2. **Grade e refino.** A mesma grade (`use_highways` e `use_trails` em 0,2, 0,4, 0,6 e 0,8) e as vizinhas a 0,1 da
+   melhor, com `use_trails` limitado a 0,4.
+3. **Escolha.** Vence o menor tempo médio; no empate, fica o centro do refino.
+4. **Config.** `service_limits.motorcycle.max_distance` em 5.000 km, como em `required_config`: num estado grande, a
+   viagem passa do limite padrão do Valhalla.
+
+Resultado: `use_trails` 0,4 em todas; `use_highways` de 0,4 (AP) a 0,9 (DF, MT, PR, RS e TO).
+
 **Uma tabela mais velha que os tiles não para a geração.** Quase toda semana os pesos são de tiles de uma geração
 anterior. A geração segue, o catálogo diz de qual geração são os pesos de cada UF (`generations`, e
-`same_generation` falso) e o aviso vai para o log e para as `notes` do `geracao.json`. Para trocar a tabela, ver
+`same_generation` falso; o mesmo dentro de `state_weights`) e os avisos, um para os municípios e um para os estados,
+vão para o log e para as `notes` do `geracao.json`. Para trocar a tabela, ver
 "Atualizar a tabela de pesos" no [`PENDENCIAS.md`](PENDENCIAS.md).
 
-Tamanhos dos arquivos de apoio, medidos em 2026-11-14 (kB compactados): AC 17, AL 14, AM 115, AP 22, BA 139, CE 51,
-DF 1, ES 24, GO 115, MA 76, MG 287, MS 60, MT 135, PA 127, PB 35, PE 36, PI 47, PR 114, RJ 24, RN 21, RO 37, RR 24,
-RS 137, SC 70, SE 13, SP 158, TO 75; 1,97 MB no país (11,9 MB abertos). Conferir as duas cópias leva 0,4 s e gravar os
+Tamanhos dos arquivos de apoio, medidos em 2026-11-14, já com o peso do estado (kB compactados): AC 17, AL 14, AM 115,
+AP 22, BA 139, CE 51, DF 1, ES 24, GO 116, MA 76, MG 285, MS 60, MT 135, PA 128, PB 35, PE 36, PI 47, PR 114, RJ 24,
+RN 21, RO 37, RR 24, RS 137, SC 70, SE 13, SP 158, TO 74; 1,97 MB no país (11,9 MB abertos). Conferir as duas cópias leva 0,4 s e gravar os
 27 arquivos, 4 s. Conferido no mesmo dia com os tiles da geração `2026-11-09-c17dff60`: montados de novo com os
 arquivos de apoio ao lado, os pacotes da base e do DF saem com o mesmo sha256 dos publicados (os pacotes de tiles não
 mudam), e o arquivo do DF abre com o zstd e dá o peso de Brasília (0,8/0,4).

@@ -98,6 +98,9 @@ class ContractShapeTest(unittest.TestCase):
                           {"sha256": config.IBGE_MUNICIPAL_MESH_COPY_SHA256}), (mesh["url"], mesh["date"], mesh["checksums"]))
         weights = sources["pesos-moto-municipios"]
         self.assertEqual(("2026-11-14", {"sha256": config.MOTORCYCLE_WEIGHTS_SHA256}), (weights["date"], weights["checksums"]))
+        states = sources["pesos-moto-estados"]
+        self.assertEqual(("2026-11-14", {"sha256": config.MOTORCYCLE_STATE_WEIGHTS_SHA256}),
+                         (states["date"], states["checksums"]))
 
     def test_a_catalog_without_municipalities_has_no_such_sources(self):
         block = built(municipality_files={})["contract"]
@@ -145,6 +148,21 @@ class ContractFilesTest(unittest.TestCase):
         self.assertEqual({"count": 2, "costing": "motorcycle", "use_tolls": 1.0, "same_generation": False,
                           "generations": [{"tiles_build_id": WEIGHTS_BUILD_ID, "valhalla_version": "3.9.1",
                                            "date": "2026-11-14", "count": 2}]}, f["weights"])
+
+    def test_auxiliary_file_has_the_weight_of_the_state(self):
+        f = self.auxiliary["municipios-GO"]
+        self.assertEqual({"costing": "motorcycle", "use_tolls": 1.0, "use_highways": 0.8, "use_trails": 0.4,
+                          "tiles_build_id": WEIGHTS_BUILD_ID, "valhalla_version": "3.9.1", "date": "2026-11-14",
+                          "same_generation": False}, f["state_weights"])
+
+    def test_the_state_weight_only_adds_to_the_auxiliary_file(self):
+        files = municipality_files()
+        for f in files.values():
+            f.state_weights = None
+        before = {f["id"]: f for f in built(municipality_files=files)["contract"]["files"]}
+        for file_id, f in self.auxiliary.items():
+            self.assertEqual({"state_weights"}, set(f) - set(before[file_id]))
+            self.assertEqual(before[file_id], {k: v for k, v in f.items() if k != "state_weights"})
 
     def test_tile_packages_are_described_as_before(self):
         """Só acrescentar: os arquivos de tiles do contrato não ganham nem perdem chave com os arquivos de apoio."""

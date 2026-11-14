@@ -89,6 +89,14 @@ MOTORCYCLE_WEIGHTS_COPY = GENERATOR_DIR / "pesos_moto_municipios.csv"
 MOTORCYCLE_WEIGHTS_SHA256 = "66cc4078eef4f9fee1bce2ef3074aebb79e97765cc2524db6c77b5a1984be434"
 MOTORCYCLE_WEIGHTS_ROWS = 5564
 MOTORCYCLE_WEIGHTS_COSTING = "motorcycle"
+# Pesos do mesmo perfil por estado (`codigo_ibge;uf;use_highways;use_trails` e as mesmas três colunas de origem), para
+# a viagem com todos os pontos no mesmo estado, mas em municípios diferentes; entre estados, o leitor usa o padrão
+# dele. Outro estudo feito fora da geração, com o mesmo costing, o mesmo `use_tolls` e o mesmo teto de use_trails: por
+# UF, pelo menos 10.000 viagens com origem e destino uniformes no polígono da UF, a até 150 m de uma via, a mesma grade
+# e o mesmo refino (empate: fica o centro do refino). Uma linha por UF; trocar = trocar as linhas e o sha256.
+MOTORCYCLE_STATE_WEIGHTS_COPY = GENERATOR_DIR / "pesos_moto_estados.csv"
+MOTORCYCLE_STATE_WEIGHTS_SHA256 = "fd306ff04a7b0d67d72ca693ae0c06523ce015e60baf8db7a75e121095dbe685"
+MOTORCYCLE_STATE_WEIGHTS_ROWS = 27
 MOTORCYCLE_WEIGHTS_USE_TOLLS = 1.0
 MOTORCYCLE_WEIGHTS_MAX_USE_TRAILS = 0.4
 

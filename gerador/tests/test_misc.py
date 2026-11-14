@@ -221,8 +221,11 @@ class MunicipalitiesInTheGenerationTest(unittest.TestCase):
                          [g["tiles_build_id"] for g in cat["municipalities"]["states"]["GO"]["generations"]])
         # no registro da execução e no log
         self.assertEqual("ok", record["result"])
-        self.assertEqual(1, len(record["notes"]))
+        self.assertEqual(2, len(record["notes"]))  # os pesos dos municípios e os dos estados
         self.assertIn(WEIGHTS_BUILD_ID, record["notes"][0])
+        self.assertIn("pesos de 2 estados", record["notes"][1])
+        self.assertIs(False, cat["municipalities"]["states"]["GO"]["state_weights"]["same_generation"])
+        self.assertIn("AVISO: pesos de 2 estados", log.getvalue())
         self.assertIn("AVISO: pesos de 4 municípios (2 UFs)", log.getvalue())
 
 

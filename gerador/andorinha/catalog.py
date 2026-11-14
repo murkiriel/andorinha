@@ -27,8 +27,12 @@ declarada no README da raiz e não muda no `schema` 1.
     {"format_version": 1,
      "mesh": {"url", "date", "sha256", "count"},          a cópia da malha municipal do IBGE (sha256 do conteúdo aberto)
      "weights": {"costing", "use_tolls", "sha256", "count", "generations", "same_generation"},   a tabela de pesos
+     "state_weights": {...as mesmas chaves},              a tabela de pesos por estado (desde os pesos por estado)
      "states": {"GO": {"file", "bytes", "sha256", "bytes_unpacked", "municipalities", "weights", "generations",
-                       "same_generation"}, ...}}
+                       "same_generation", "state_weights"}, ...}}
+
+`states.<UF>.state_weights` é o peso do estado: {"use_highways", "use_trails", "tiles_build_id", "valhalla_version",
+"date", "same_generation"}.
 
 `generations` diz com que tiles os pesos foram calculados: [{"tiles_build_id", "valhalla_version", "date", "count"}],
 no país (`weights`) e em cada UF. `same_generation` é true só quando todos são dos tiles desta geração (`build_id`).
@@ -97,12 +101,23 @@ def municipalities_entry(files: Dict[str, MunicipalityFile], build_id: str) -> d
     """A chave `municipalities`: os arquivos de apoio por UF, a malha e a tabela de que saíram e, no país e em cada
     UF, com que gerações de tiles os pesos foram calculados."""
     country = municipalities.all_generations(files)
+    country_states = municipalities.all_state_generations(files)
     states = {}
     for state, f in sorted(files.items()):
         states[state] = {"file": f.file, "bytes": f.size, "sha256": f.sha256, "bytes_unpacked": f.bytes_unpacked,
                          "municipalities": f.municipalities, "weights": f.weights,
                          "generations": [dict(g) for g in f.generations],
                          "same_generation": municipalities.same_generation(f.generations, build_id)}
+        if f.state_weights:
+            states[state]["state_weights"] = {**f.state_weights,
+                                              "same_generation": f.state_weights["tiles_build_id"] == build_id}
+    with_state_weights = {}
+    if country_states:
+        with_state_weights["state_weights"] = {
+            "costing": config.MOTORCYCLE_WEIGHTS_COSTING, "use_tolls": config.MOTORCYCLE_WEIGHTS_USE_TOLLS,
+            "sha256": config.MOTORCYCLE_STATE_WEIGHTS_SHA256, "count": sum(g["count"] for g in country_states),
+            "generations": country_states,
+            "same_generation": municipalities.same_generation(country_states, build_id)}
     return {
         "format_version": municipalities.FORMAT_VERSION,
         "mesh": {"url": config.IBGE_MUNICIPAL_MESH_URL, "date": config.IBGE_MUNICIPAL_MESH_COPY_DATE,
@@ -111,6 +126,7 @@ def municipalities_entry(files: Dict[str, MunicipalityFile], build_id: str) -> d
         "weights": {"costing": config.MOTORCYCLE_WEIGHTS_COSTING, "use_tolls": config.MOTORCYCLE_WEIGHTS_USE_TOLLS,
                     "sha256": config.MOTORCYCLE_WEIGHTS_SHA256, "count": sum(f.weights for f in files.values()),
                     "generations": country, "same_generation": municipalities.same_generation(country, build_id)},
+        **with_state_weights,
         "states": states,
     }
 
@@ -203,13 +219,26 @@ def _sources(cat: dict, constants: Mapping[str, str]) -> list:
                         "url": None, "date": max(dates) if dates else None, "license": None,
                         "checksums": {"sha256": weights["sha256"]},
                         "note": "a geração dos tiles de cada peso está em municipalities.weights.generations"})
+        by_state = municipal.get("state_weights")
+        if by_state:
+            dates = [g["date"] for g in by_state["generations"]]
+            sources.append({"id": "pesos-moto-estados",
+                            "name": "Pesos do perfil de moto por estado (tabela versionada no repositório)",
+                            "url": None, "date": max(dates) if dates else None, "license": None,
+                            "checksums": {"sha256": by_state["sha256"]},
+                            "note": "a geração dos tiles de cada peso está em municipalities.state_weights.generations"})
     return sources
 
 
 def _municipality_file(state: str, entry: dict, municipal: dict, cat: dict) -> dict:
     """O arquivo de apoio de uma UF no contrato: `auxiliary`, com a área da UF e sem nível de cobertura. As chaves
-    próprias: `content`, `municipalities` e `weights` (quantos têm peso, o costing e de que gerações de tiles)."""
+    próprias: `content`, `municipalities`, `weights` (quantos têm peso, o costing e de que gerações de tiles) e, quando
+    a UF tem, `state_weights` (o peso do estado e a origem dele)."""
     weights = municipal["weights"]
+    extra = {}
+    if entry.get("state_weights"):
+        extra["state_weights"] = {"costing": weights["costing"], "use_tolls": weights["use_tolls"],
+                                  **entry["state_weights"]}
     return {
         "id": MUNICIPALITIES_ID.format(state=state), "kind": MUNICIPALITIES_KIND, "region": state,
         "url": cat["release_url"] + entry["file"], "sha256": entry["sha256"], "bytes": entry["bytes"],
@@ -221,6 +250,7 @@ def _municipality_file(state: str, entry: dict, municipal: dict, cat: dict) -> d
         "weights": {"count": entry["weights"], "costing": weights["costing"], "use_tolls": weights["use_tolls"],
                     "generations": [dict(g) for g in entry["generations"]],
                     "same_generation": entry["same_generation"]},
+        **extra,
     }
 
 

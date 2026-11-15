@@ -297,7 +297,9 @@ class RecatalogTest(unittest.TestCase):
         out = recatalog.rebuild(published)
         self.assertEqual({k: v for k, v in published.items() if k != "contract"},
                          {k: v for k, v in out.items() if k != "contract"})
-        self.assertEqual(list(published), [k for k in out if k != "contract"])
+        # O catálogo publicado pode já trazer `contract` (gerações a partir de 15/11/2026): a ordem
+        # das outras chaves é a que precisa se manter.
+        self.assertEqual([k for k in published if k != "contract"], [k for k in out if k != "contract"])
         self.assertEqual([], contract_check.problems(out, DOCS))
         municipal = len((published.get("municipalities") or {}).get("states") or {})
         self.assertEqual(len(published["states"]) + 1 + municipal, len(out["contract"]["files"]))

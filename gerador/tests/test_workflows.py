@@ -42,7 +42,7 @@ class PinnedDependenciesTest(unittest.TestCase):
                 self.assertTrue(m, f"{name}: {line.strip()}")
                 folder = REPO / "gerador" if name == "testes.yml" else REPO  # o testes roda de dentro de gerador/
                 self.assertTrue((folder / m.group(1)).is_file(), f"{name}: {m.group(1)} não existe")
-        self.assertEqual(2, seen)
+        self.assertEqual(4, seen)  # o estudo dos pesos e a publicação também instalam do requirements.txt
 
     def test_every_action_is_pinned_by_commit_sha(self):
         """Toda `uses:` pelo SHA de 40 caracteres do commit, com a tag exata em comentário: uma tag (`v7`) pode ser
@@ -55,7 +55,7 @@ class PinnedDependenciesTest(unittest.TestCase):
                 seen += 1
                 self.assertRegex(line, r"^\s*(- )?uses: [\w.-]+/[\w./-]+@[0-9a-f]{40}  # v\d+\.\d+\.\d+$",
                                  f"{name}: {line.strip()}")
-        self.assertEqual(7, seen)
+        self.assertEqual(16, seen)
 
 
 def job(text: str, name: str) -> str:
@@ -124,10 +124,12 @@ class ScheduledGenerationTest(unittest.TestCase):
         self.assertIn("if: needs.interval.outputs.run == 'true'\n", self.generate)
 
     def test_scheduled_run_publishes_and_manual_only_if_asked(self):
-        self.assertIn("PUBLISH: ${{ github.event_name == 'schedule' || inputs.publish == true }}", self.generate)
-        publish_step = self.generate[self.generate.index("- name: Publicar"):]
-        self.assertIn("if: env.PUBLISH == 'true'\n", publish_step)
-        self.assertNotIn("inputs.publish }}", publish_step)
+        """Quem publica é o job publish, só no agendamento ou à mão com "publish"; o job generate só gera."""
+        publish = job(self.text, "publish")
+        self.assertIn("(github.event_name == 'schedule' || inputs.publish == true)", publish)
+        self.assertNotIn("scripts/publish.py", self.generate)
+        self.assertNotIn("inputs.publish", self.generate)
+        self.assertIn("python scripts/publish.py --release --commit --push", publish)
 
     def test_manual_run_can_choose_the_extract_source(self):
         """Para testar a Geofabrik no Actions sem esperar o openstreetmap.fr cair; vazio = a ordem padrão."""
@@ -138,18 +140,89 @@ class ScheduledGenerationTest(unittest.TestCase):
         """De 2026-11-03 a 2026-11-08, 11 gerações agendadas falharam sem ninguém saber."""
         report = job(self.text, "alert")
         self.assertTrue(report, "falta o job alert")
-        self.assertIn("needs: [interval, generate]\n", report)
+        self.assertIn("needs: [interval, generate, weights, publish]\n", report)
         self.assertIn("if: always() && github.event_name == 'schedule' && "
                       "github.repository == 'Murkiriel/andorinha'\n", report)
         self.assertIn("scripts/alert.py", report)
-        for value in ("${{ needs.interval.result }}", "${{ needs.generate.result }}", "${{ github.run_id }}"):
+        for value in ("${{ needs.interval.result }}", "needs.generate.result", "needs.publish.result",
+                      "${{ github.run_id }}"):
             self.assertIn(value, report)
+        # O estudo dos pesos não abre a issue "Geração falhando": a geração conta como ok quando foi publicada.
+        self.assertIn("GENERATE_RESULT: ${{ needs.publish.result == 'skipped' && needs.generate.result || "
+                      "needs.publish.result }}", report)
+        self.assertNotIn("needs.weights.result", report)
 
     def test_only_the_alert_job_writes_issues(self):
         top = self.text.split("\njobs:\n", 1)[0]
         self.assertNotIn("issues:", top)
         self.assertIn("      issues: write\n", job(self.text, "alert"))
         self.assertNotIn("issues:", self.generate)
+
+
+
+class WeightsStudyJobTest(unittest.TestCase):
+    """O estudo dos pesos da moto roda num job à parte; falhar ou faltar não impede a publicação."""
+
+    def setUp(self):
+        self.text = workflows()["gerar.yml"].replace("\r\n", "\n")
+        self.generate = job(self.text, "generate")
+        self.weights = job(self.text, "weights")
+        self.publish = job(self.text, "publish")
+
+    def test_the_jobs_run_in_a_line(self):
+        self.assertIn("needs: generate\n", self.weights)
+        self.assertIn("needs: [generate, weights]\n", self.publish)
+
+    def test_study_only_runs_after_a_good_generation_that_will_publish_or_asked_for_a_batch(self):
+        self.assertIn("needs.generate.result == 'success'", self.weights)
+        self.assertIn("(github.event_name == 'schedule' || inputs.publish == true || inputs.weights_batch != '')",
+                      self.weights)
+
+    def test_publication_does_not_wait_for_a_good_study(self):
+        """`always()` com o resultado da geração: o estudo pode ter falhado ou ficado sem rodar."""
+        self.assertIn("always() && needs.generate.result == 'success'", self.publish)
+        self.assertNotIn("needs.weights.result == 'success' &&", self.publish.split("steps:")[0])
+
+    def test_the_new_tables_only_enter_when_the_study_gave_a_result_and_a_failure_to_apply_is_not_fatal(self):
+        step = self.publish[self.publish.index("- name: Pesos novos na geração"):]
+        step = step[:step.index("- name: Aviso")]
+        self.assertIn("if: needs.weights.result == 'success'", step)
+        self.assertIn("scripts/weights.py apply", step)
+        self.assertIn("continue-on-error: true", step)
+
+    def test_the_study_has_its_own_6_hour_limit_and_a_time_budget_inside_it(self):
+        self.assertRegex(self.weights, r"timeout-minutes: 3[0-9]{2}\n")
+        budget = int(re.search(r'ANDORINHA_WEIGHTS_MINUTES: "(\d+)"', self.weights).group(1))
+        limit = int(re.search(r"timeout-minutes: (\d+)", self.weights).group(1))
+        self.assertLessEqual(limit, 360)
+        self.assertGreaterEqual(limit - budget, 30)  # folga para baixar, extrair e subir
+
+    def test_the_generation_travels_as_an_artifact_and_publish_does_not_rebuild_anything(self):
+        self.assertIn("name: geracao", self.generate)
+        for name in ("weights", "publish"):
+            self.assertIn("name: geracao", job(self.text, name))
+        self.assertNotIn("generate.py", self.publish)
+        self.assertNotIn("generate.py", self.weights)
+
+    def test_the_study_result_is_uploaded_even_when_it_fails(self):
+        upload = self.weights[self.weights.index("name: pesos") - 200:]
+        self.assertIn("if: always()", upload)
+
+    def test_only_the_publish_job_pushes(self):
+        for name in ("generate", "weights"):
+            self.assertNotIn("git push", job(self.text, name))
+            self.assertNotIn("--push", job(self.text, name))
+        self.assertIn("--push", self.publish)
+
+    def test_a_manual_run_can_ask_for_a_test_batch(self):
+        self.assertRegex(self.text, r'(?s)weights_batch:\n.*?type: string\n\s+default: ""\n')
+        self.assertIn("ANDORINHA_WEIGHTS_BATCH: ${{ inputs.weights_batch }}", self.weights)
+
+
+class ScheduledGenerationRulesTest(unittest.TestCase):
+    def setUp(self):
+        self.text = workflows()["gerar.yml"].replace("\r\n", "\n")
+        self.generate = job(self.text, "generate")
 
     def test_one_generation_at_a_time(self):
         self.assertRegex(self.text, r"(?m)^concurrency:\n  group: generate\n  cancel-in-progress: false")

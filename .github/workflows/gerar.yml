@@ -18,6 +18,19 @@
 # disco temporário em /mnt, quando a máquina tem um) e usa as threads da máquina (2 num repositório privado, 4 num
 # público). Memória, swap e disco são registrados a cada 30 s e vão, com os logs, para os artefatos do job.
 #
+# Quatro jobs depois do "interval", em fila (a mesma geração passa de um para o outro como o artefato "geracao"):
+#   generate -> weights -> publish   (e alert, no fim de toda execução agendada)
+# - generate: extrato, tiles, pacotes, validação e catálogo, como sempre, mas NÃO publica. Parte da tabela de pesos da
+#   moto da release da geração publicada (a cópia do repositório só se a release não a tem) e deixa em data/dist/ tudo o
+#   que a publicação precisa, inclusive as duas tabelas de pesos de que partiu.
+# - weights: o estudo dos pesos da moto, em lote (600 municípios e 1 estado por geração, ver gerador/README.md), sobre os
+#   tiles desta geração, que ele extrai dos pacotes. Num job à parte para não dividir o limite de 6 h com a geração. Pára
+#   de começar municípios aos 70% do orçamento de tempo (ANDORINHA_WEIGHTS_MINUTES) e devolve as tabelas novas.
+# - publish: põe as tabelas novas na geração (scripts/weights.py apply) e publica (scripts/publish.py). Roda mesmo que o
+#   estudo tenha falhado ou não tenha aplicado: a geração sai com a tabela de que partiu, e o aviso fica no log e no
+#   geracao.json. As tabelas sobem na release, junto com os pacotes; o Actions não escreve nada no repositório além do
+#   catalogo.json e da tabela de downloads do README, como já fazia.
+#
 # Reprodutível só a geração corrente: as actions vão fixadas pelo SHA do commit, com a tag em comentário (uma
 # tag pode ser movida), e as dependências Python saem do gerador/requirements.txt, travado com hashes.
 name: gerar
@@ -34,6 +47,10 @@ on:
         default: false
       osm_sources:
         description: "Fontes do extrato, em ordem (ex.: geofabrik). Vazio: openstreetmap.fr e, se falhar, Geofabrik."
+        type: string
+        default: ""
+      weights_batch:
+        description: "Municípios do lote do estudo dos pesos (ex.: 20 para testar). Vazio: 600 se for publicar; sem publicar e sem número, o estudo não roda."
         type: string
         default: ""
 
@@ -74,7 +91,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     env:
-      PUBLISH: ${{ github.event_name == 'schedule' || inputs.publish == true }}
       SWAP_GB: "12"
       ANDORINHA_MIN_FREE_DISK_GB: "20"
       # Vazio no agendamento (sem entradas): o gerador usa a ordem padrão de config.OSM_SOURCES.
@@ -139,8 +155,114 @@ jobs:
           path: relatorio
           retention-days: 14
 
+      # A geração segue para o estudo dos pesos e para a publicação como um artefato só (os pacotes já são zstd:
+      # compression-level 0). A cópia evita seguir o link simbólico de data/.
+      - name: Preparar a geração para os próximos jobs
+        run: cp -a gerador/data/dist geracao
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: geracao
+          path: geracao
+          retention-days: 2
+          compression-level: 0
+          if-no-files-found: error
+
+  weights:
+    # Só quando a geração vai ser publicada (agendada, ou à mão com "publish"), ou quando o disparo à mão pede um lote de
+    # teste (weights_batch). Falhar aqui não impede a publicação: ver o job publish.
+    needs: generate
+    if: >-
+      needs.generate.result == 'success' &&
+      (github.event_name == 'schedule' || inputs.publish == true || inputs.weights_batch != '')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    env:
+      # Vazio no agendamento: o gerador usa o padrão de config.WEIGHTS_BATCH (600). O orçamento do estudo (300 min)
+      # deixa ~50 min para baixar o artefato, extrair os pacotes e subir o resultado, dentro das 6 h do job.
+      ANDORINHA_WEIGHTS_BATCH: ${{ inputs.weights_batch }}
+      ANDORINHA_WEIGHTS_MINUTES: "300"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Dependências
+        run: pip install --require-hashes -r gerador/requirements.txt
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: geracao
+          path: gerador/data/dist
+
+      - name: Estudar o lote de pesos
+        working-directory: gerador
+        run: |
+          echo "CPUs: $(nproc)"; free -h
+          /usr/bin/time -v -o pesos-tempo.txt python scripts/weights.py study --dist data/dist --work "$RUNNER_TEMP/pesos" --out pesos
+
+      - name: Guardar o resultado e as medições
+        if: always()
+        run: |
+          mkdir -p resultado
+          cp -r gerador/pesos/. resultado/ 2>/dev/null || true
+          cp gerador/pesos-tempo.txt resultado/ 2>/dev/null || true
+          ls -la resultado
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        if: always()
+        with:
+          name: pesos
+          path: resultado
+          retention-days: 14
+          if-no-files-found: ignore
+
+  publish:
+    # Roda mesmo que o estudo tenha falhado ou não tenha rodado: a geração sai do mesmo jeito, com a tabela de que
+    # partiu. Só pára se a geração em si falhou.
+    needs: [generate, weights]
+    if: >-
+      always() && needs.generate.result == 'success' &&
+      (github.event_name == 'schedule' || inputs.publish == true)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Dependências
+        run: pip install --require-hashes -r gerador/requirements.txt
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: geracao
+          path: gerador/data/dist
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        if: needs.weights.result == 'success'
+        with:
+          name: pesos
+          path: gerador/pesos
+
+      # As tabelas novas só entram se passarem pela conferência (formato, contagem, malha). Se não passarem, ou se o
+      # estudo não deu resultado, a geração sai com a tabela de que partiu e o aviso fica no log.
+      - name: Pesos novos na geração
+        id: weights
+        if: needs.weights.result == 'success'
+        working-directory: gerador
+        run: python scripts/weights.py apply --dist data/dist --tables pesos
+        continue-on-error: true
+
+      - name: Aviso se os pesos não entraram
+        if: steps.weights.outcome != 'success'
+        run: echo "::warning::estudo dos pesos sem resultado nesta geração (job weights - ${{ needs.weights.result }}); a geração sai com a tabela anterior"
+
       - name: Publicar
-        if: env.PUBLISH == 'true'
         working-directory: gerador
         env:
           GH_TOKEN: ${{ github.token }}
@@ -153,7 +275,7 @@ jobs:
     # Aviso de falha: numa execução agendada que falhou, abre a issue "Geração falhando" (ou comenta nela); na primeira
     # que gerar e publicar, comenta e fecha (scripts/alert.py). À mão não avisa: quem disparou está olhando. Sem isto,
     # as gerações agendadas de 2026-11-03 a 2026-11-08 falharam sem ninguém saber.
-    needs: [interval, generate]
+    needs: [interval, generate, weights, publish]
     if: always() && github.event_name == 'schedule' && github.repository == 'Murkiriel/andorinha'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -167,6 +289,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           INTERVAL_RESULT: ${{ needs.interval.result }}
-          GENERATE_RESULT: ${{ needs.generate.result }}
+          # A geração só conta como ok depois de publicada; o estudo dos pesos (weights) não entra nesta conta.
+          GENERATE_RESULT: ${{ needs.publish.result == 'skipped' && needs.generate.result || needs.publish.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: python3 gerador/scripts/alert.py --interval "$INTERVAL_RESULT" --generate "$GENERATE_RESULT" --run-url "$RUN_URL"

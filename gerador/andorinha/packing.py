@@ -124,6 +124,16 @@ def write_package(name: str, tiles: List[Tile], tiles_dir: Path, dest: Path,
                    bbox if bbox is not None else tiles_box, tiles_box)
 
 
+def extract_package(package: Path, dest: Path) -> None:
+    """Extrai um pacote .tar.zst em `dest` (só tiles, com os caminhos relativos à pasta de tiles). Pacotes de uma
+    mesma geração extraídos na mesma pasta formam os tiles do Brasil."""
+    import zstandard
+
+    with open(package, "rb") as f, zstandard.ZstdDecompressor().stream_reader(f) as stream:
+        with tarfile.open(fileobj=stream, mode="r|") as tar:
+            tar.extractall(dest, filter="data")
+
+
 def clean_output(output: Path) -> None:
     """Apaga os pacotes, o pacotes.json e o catalogo.json da geração anterior: nada dela fica misturado com a nova."""
     for old in [*output.glob("andorinha-*.tar.gz"), *output.glob("andorinha-*.tar.zst"), output / "pacotes.json",

@@ -228,6 +228,43 @@ class MunicipalityFilesTest(unittest.TestCase):
     def test_a_good_generation_passes(self):
         self.assertEqual([], self.check())
 
+    def add_tables(self):
+        """As tabelas de pesos que a geração usou, na pasta e no catálogo."""
+        from andorinha.util import file_hash
+        for name in ("pesos_moto_municipios.csv", "pesos_moto_estados.csv"):
+            (self.dist / name).write_text(f"tabela {name}\n", encoding="utf-8")
+        self.cat["municipalities"]["weights"] = {"sha256": file_hash(self.dist / "pesos_moto_municipios.csv")}
+        self.cat["municipalities"]["state_weights"] = {"sha256": file_hash(self.dist / "pesos_moto_estados.csv")}
+
+    def test_the_weights_tables_go_to_the_release_before_the_license_and_the_catalog(self):
+        self.add_tables()
+        (self.dist / "catalogo.json").write_text("{}", encoding="utf-8")
+        self.assertEqual(["andorinha-base.tar.zst", "andorinha-DF.tar.zst", "andorinha-GO.tar.zst",
+                          "andorinha-municipios-DF.geojson.zst", "andorinha-municipios-GO.geojson.zst",
+                          "pesos_moto_estados.csv", "pesos_moto_municipios.csv",
+                          publishing.LICENSE_FILE, "catalogo.json"],
+                         [f.name for f in publishing.release_files(self.cat, self.dist)])
+        self.assertEqual({"pesos_moto_estados.csv", "pesos_moto_municipios.csv"},
+                         set(publishing.weights_tables(self.cat)))
+
+    def test_a_good_generation_with_the_tables_passes(self):
+        self.add_tables()
+        self.assertEqual([], self.check())
+
+    def test_a_weights_table_that_is_missing_or_does_not_match_the_catalog_blocks(self):
+        """A geração seguinte parte desses arquivos da release: o sha256 do catálogo tem de ser o deles."""
+        self.add_tables()
+        (self.dist / "pesos_moto_municipios.csv").write_text("outra tabela\n", encoding="utf-8")
+        self.assertEqual(["pesos: sha256 de pesos_moto_municipios.csv não bate com o catálogo"], self.check())
+        (self.dist / "pesos_moto_municipios.csv").unlink()
+        (self.dist / "pesos_moto_estados.csv").unlink()
+        self.assertEqual(["pesos: falta pesos_moto_estados.csv", "pesos: falta pesos_moto_municipios.csv"],
+                         self.check())
+
+    def test_a_catalog_without_weights_needs_no_tables(self):
+        self.assertEqual({}, publishing.weights_tables(self.cat))
+        self.assertEqual({}, publishing.weights_tables({}))
+
     def test_missing_or_changed_file_blocks(self):
         (self.dist / "andorinha-municipios-GO.geojson.zst").write_bytes(b"outro")
         self.assertEqual(["municípios de GO: sha256 de andorinha-municipios-GO.geojson.zst não bate com o catálogo"],

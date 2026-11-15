@@ -179,7 +179,7 @@ class MunicipalitiesInTheGenerationTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp, \
                 mock.patch.object(self.script.sources, "ibge_mesh", side_effect=lambda: calls.append("mesh")), \
-                mock.patch.object(self.script.municipalities, "check", side_effect=refuse), \
+                mock.patch.object(self.script.weights_tables, "check", side_effect=refuse), \
                 mock.patch.object(self.script.sources, "osm_extract", side_effect=lambda: calls.append("osm")):
             recorder = run_record.RunRecorder(Path(tmp), interval=3600)
             try:

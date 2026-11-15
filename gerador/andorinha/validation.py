@@ -17,14 +17,13 @@ from __future__ import annotations
 import gc
 import json
 import shutil
-import tarfile
 import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from . import engine
+from . import engine, packing
 
 # Tolerância entre a rota com os pacotes e a com o Brasil inteiro. A longa, sem as UFs do meio, poderia escolher
 # outro caminho pelas rodovias da base (na primeira geração deu a mesma rota); as demais têm de dar a mesma.
@@ -134,11 +133,7 @@ def _km(tiles_dir: Path, route: RouteCheck) -> float:
 
 
 def _extract(package: Path, dest: Path) -> None:
-    import zstandard
-
-    with open(package, "rb") as f, zstandard.ZstdDecompressor().stream_reader(f) as stream:
-        with tarfile.open(fileobj=stream, mode="r|") as tar:
-            tar.extractall(dest, filter="data")
+    packing.extract_package(package, dest)
 
 
 def _reset_to_base(folder: Path) -> None:

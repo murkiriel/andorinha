@@ -6,11 +6,14 @@ ganha um arquivo, `andorinha-municipios-<UF>.geojson.zst`, publicado ao lado dos
 catálogo. Fica FORA do `.tar.zst` da UF: quem lê os pacotes recusa um caminho que não seja de tile e confere a contagem
 e o tamanho dos tiles, e um arquivo a mais quebraria a instalação de um leitor que já existe.
 
-Três entradas, todas cópias versionadas no repositório, conferidas antes do extrato e dos tiles e sem rede:
-- a malha municipal do IBGE (config.IBGE_MUNICIPAL_MESH_COPY): sha256 do conteúdo e a contagem de municípios;
+Três entradas, conferidas antes do extrato e dos tiles:
+- a malha municipal do IBGE (config.IBGE_MUNICIPAL_MESH_COPY), cópia versionada no repositório: sha256 do conteúdo e a
+  contagem de municípios;
 - a tabela de pesos (config.MOTORCYCLE_WEIGHTS_COPY): sha256, contagem, valores no intervalo e códigos que existem na
-  malha. Ela vem de um estudo feito fora da geração; aqui só é empacotada;
-- a tabela de pesos por estado (config.MOTORCYCLE_STATE_WEIGHTS_COPY): sha256 e uma linha para cada UF da malha.
+  malha. A cópia do repositório é a SEMENTE: o gerador atualiza a tabela aos poucos (andorinha/weights_study.py e
+  andorinha/weights_tables.py), e a de cada geração segue na release dela; a geração seguinte parte dessa, conferida
+  pelo sha256 do catálogo publicado (andorinha/weights_tables.py), e só cai na semente quando a release não tem tabela;
+- a tabela de pesos por estado (config.MOTORCYCLE_STATE_WEIGHTS_COPY): o mesmo, com uma linha para cada UF da malha.
 
 Cada linha das tabelas diz com que geração de tiles, com que Valhalla e em que dia aquele município (ou estado) foi
 calculado: as tabelas podem ser refeitas aos pedaços. O catálogo resume isso por UF (`generations`), e `generation_notes` avisa, sem
@@ -46,7 +49,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from . import config
 from .util import file_hash
@@ -55,6 +58,8 @@ FORMAT_VERSION = 1
 FILE_NAME = "andorinha-municipios-{state}.geojson.zst"
 FILE_GLOB = "andorinha-municipios-*.geojson.zst"
 INDEX_FILE = "municipios.json"  # o que a etapa `packages` gravou, para --from validate e --from catalog
+WEIGHTS_FILE = config.MOTORCYCLE_WEIGHTS_COPY.name              # as tabelas de pesos que a geração usou, na release
+STATE_WEIGHTS_FILE = config.MOTORCYCLE_STATE_WEIGHTS_COPY.name  # ao lado dos arquivos de apoio
 WEIGHTS_HEADER = ["codigo_ibge", "use_highways", "use_trails", "geracao_tiles", "versao_valhalla", "data_calculo"]
 STATE_WEIGHTS_HEADER = ["codigo_ibge", "uf", "use_highways", "use_trails", "geracao_tiles", "versao_valhalla",
                         "data_calculo"]
@@ -76,12 +81,27 @@ class Weight:
     date: str
 
 
+@dataclass(frozen=True)
+class TableTexts:
+    """O texto exato das duas tabelas de pesos que a geração usou e de onde vieram (para o log e o `geracao.json`).
+    O sha256 que o catálogo publica é o destes bytes."""
+    weights: str
+    state_weights: str
+    origin: str
+
+    def digests(self) -> Tuple[str, str]:
+        """(sha256 da tabela dos municípios, sha256 da dos estados)."""
+        return (hashlib.sha256(self.weights.encode("utf-8")).hexdigest(),
+                hashlib.sha256(self.state_weights.encode("utf-8")).hexdigest())
+
+
 @dataclass
 class Inputs:
-    """As duas cópias versionadas, já conferidas."""
+    """As entradas, já conferidas."""
     mesh: Dict[str, dict]        # {código do município: geometria GeoJSON}
     weights: Dict[str, Weight]   # {código do município: peso}; os sem amostra ficam de fora
     state_weights: Dict[str, Weight] = field(default_factory=dict)  # {UF: peso do estado}
+    tables: Optional[TableTexts] = None  # o texto das tabelas; com ele, a geração as grava em data/dist/
 
 
 @dataclass
@@ -339,16 +359,34 @@ def write_state_file(state: str, codes: List[str], inputs: Inputs, output: Path)
 
 
 def clean_output(output: Path) -> None:
-    """Apaga os arquivos de apoio e o índice da geração anterior."""
-    for old in [*output.glob(FILE_GLOB), output / INDEX_FILE]:
+    """Apaga os arquivos de apoio, as tabelas de pesos e o índice da geração anterior."""
+    for old in [*output.glob(FILE_GLOB), output / INDEX_FILE, output / WEIGHTS_FILE, output / STATE_WEIGHTS_FILE]:
         if old.exists():
             old.unlink()
 
 
+def write_tables(tables: TableTexts, output: Path) -> None:
+    """Grava as duas tabelas de pesos em `output`, byte a byte como foram lidas (LF): o sha256 do catálogo é o delas."""
+    (output / WEIGHTS_FILE).write_bytes(tables.weights.encode("utf-8"))
+    (output / STATE_WEIGHTS_FILE).write_bytes(tables.state_weights.encode("utf-8"))
+
+
+def table_digests(output: Path) -> Optional[Tuple[str, str]]:
+    """(sha256 da tabela dos municípios, sha256 da dos estados) das cópias gravadas em `output`, ou None se a geração
+    não as gravou (então valem as da semente, config.MOTORCYCLE_WEIGHTS_SHA256)."""
+    files = (output / WEIGHTS_FILE, output / STATE_WEIGHTS_FILE)
+    if not all(f.is_file() for f in files):
+        return None
+    return file_hash(files[0]), file_hash(files[1])
+
+
 def generate(inputs: Inputs, output: Path) -> Dict[str, MunicipalityFile]:
-    """Grava o arquivo de apoio de cada UF em `output` e o índice deles (INDEX_FILE)."""
+    """Grava o arquivo de apoio de cada UF em `output`, o índice deles (INDEX_FILE) e, quando as entradas trazem o
+    texto delas, as duas tabelas de pesos (vão para a release: a geração seguinte parte delas)."""
     output.mkdir(parents=True, exist_ok=True)
     clean_output(output)
+    if inputs.tables is not None:
+        write_tables(inputs.tables, output)
     out: Dict[str, MunicipalityFile] = {}
     for state, codes in by_state(inputs).items():
         f = write_state_file(state, codes, inputs, output)

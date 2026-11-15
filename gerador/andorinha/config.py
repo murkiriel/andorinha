@@ -75,30 +75,49 @@ IBGE_MUNICIPAL_MESH_COPY_DATE = "2026-11-14"
 MUNICIPALITY_COUNT = 5570
 
 # Pesos do perfil de moto por município, para a viagem que começa e termina no mesmo município: valem para o costing
-# `motorcycle` com `use_tolls` 1,0. A tabela é o resultado de um estudo feito fora da geração (~7 h numa máquina de 12
-# núcleos para o país inteiro); a geração só a confere e a empacota. O método, resumido (inteiro no README do gerador):
-# em cada município, 32 origens x 32 destinos sorteados a até 150 m de uma via; a grade use_highways 0,2 a 0,8 x
-# use_trails 0,2 a 0,8 (degrau 0,2) e depois as vizinhas a 0,1 da melhor, com use_trails até
-# MOTORCYCLE_WEIGHTS_MAX_USE_TRAILS; vence o menor tempo médio (empate: a menor distância média, depois a mais perto
-# de 0,6/0,4). Os municípios sem amostra ficam fora da tabela, e o leitor usa o peso padrão dele.
-# Cada linha diz com o que AQUELE município foi calculado (`geracao_tiles`, `versao_valhalla`, `data_calculo`): a
-# tabela pode ser refeita aos pedaços, e o catálogo diz, por UF, de que gerações vieram os pesos. Trocar a tabela, ou
-# uma parte dela = trocar as linhas e atualizar o sha256 e a contagem (gerador/PENDENCIAS.md, "Atualizar a tabela de
-# pesos"). Pesos de outra geração de tiles não param a geração: fica dito no catálogo e no geracao.json.
+# `motorcycle` com `use_tolls` 1,0. O estudo é do próprio gerador, em lotes semanais (andorinha/weights_study.py,
+# andorinha/weights_tables.py, scripts/weights.py; ver WEIGHTS_BATCH abaixo). O método, resumido (inteiro no README do
+# gerador): em cada município, 32 origens x 32 destinos sorteados a até 150 m de uma via; a grade use_highways 0,2 a 0,8
+# x use_trails 0,2 a MOTORCYCLE_WEIGHTS_MAX_USE_TRAILS e depois as vizinhas a 0,1 do melhor; vence o menor tempo médio
+# (empate: a menor distância média, depois a mais perto de 0,6/0,4).
+# Cada linha diz com o que AQUELE município foi calculado (`geracao_tiles`, `versao_valhalla`, `data_calculo`): o
+# catálogo diz, por UF, de que gerações vieram os pesos. A tabela de cada geração sobe na release dela, e a geração
+# seguinte parte dela, conferida pelo sha256 e pela contagem do catálogo publicado. As cópias abaixo, no repositório, são
+# a SEMENTE: a tabela de 2026-11-14 (estudo feito fora do gerador, ~7 h numa máquina de 12 núcleos), de onde a primeira
+# geração parte e a que vale quando a release anterior não tem tabela. Têm sha256 e contagem fixos aqui; trocar a semente
+# = trocar o arquivo e esses dois valores (gerador/PENDENCIAS.md, "Atualizar a tabela de pesos"). Pesos de outra geração
+# de tiles não param a geração: ficam ditos no catálogo e no geracao.json. Os municípios sem amostra ficam fora da
+# tabela, e o leitor usa o peso padrão dele.
 MOTORCYCLE_WEIGHTS_COPY = GENERATOR_DIR / "pesos_moto_municipios.csv"
 MOTORCYCLE_WEIGHTS_SHA256 = "66cc4078eef4f9fee1bce2ef3074aebb79e97765cc2524db6c77b5a1984be434"
 MOTORCYCLE_WEIGHTS_ROWS = 5564
 MOTORCYCLE_WEIGHTS_COSTING = "motorcycle"
 # Pesos do mesmo perfil por estado (`codigo_ibge;uf;use_highways;use_trails` e as mesmas três colunas de origem), para
 # a viagem com todos os pontos no mesmo estado, mas em municípios diferentes; entre estados, o leitor usa o padrão
-# dele. Outro estudo feito fora da geração, com o mesmo costing, o mesmo `use_tolls` e o mesmo teto de use_trails: por
-# UF, pelo menos 10.000 viagens com origem e destino uniformes no polígono da UF, a até 150 m de uma via, a mesma grade
-# e o mesmo refino (empate: fica o centro do refino). Uma linha por UF; trocar = trocar as linhas e o sha256.
+# dele. Outro estudo, com o mesmo costing, o mesmo `use_tolls` e o mesmo teto de use_trails: por UF, pelo menos 10.000
+# viagens com origem e destino uniformes no polígono da UF, a até 150 m de uma via, a mesma grade e o mesmo refino
+# (empate: fica o centro do refino). Uma linha por UF; o gerador refaz um estado por geração. A cópia é a semente, como
+# a dos municípios.
 MOTORCYCLE_STATE_WEIGHTS_COPY = GENERATOR_DIR / "pesos_moto_estados.csv"
 MOTORCYCLE_STATE_WEIGHTS_SHA256 = "fd306ff04a7b0d67d72ca693ae0c06523ce015e60baf8db7a75e121095dbe685"
 MOTORCYCLE_STATE_WEIGHTS_ROWS = 27
 MOTORCYCLE_WEIGHTS_USE_TOLLS = 1.0
 MOTORCYCLE_WEIGHTS_MAX_USE_TRAILS = 0.4
+
+# O estudo dos pesos em lotes (andorinha/weights_study.py, andorinha/weights_tables.py, scripts/weights.py): a cada
+# geração, num job à parte do workflow, o gerador refaz os pesos dos WEIGHTS_BATCH municípios de linha mais velha e de
+# WEIGHTS_STATES estado(s), sobre os tiles da própria geração. Com 5.570 municípios, 600 por geração dão a volta em 10
+# semanas. O lote cabe no limite de 6 h do job com folga (medições e estimativa em gerador/README.md).
+# - ANDORINHA_WEIGHTS_BATCH e ANDORINHA_WEIGHTS_STATES mudam os tamanhos (0 desliga o estudo dos municípios ou dos
+#   estados);
+# - ANDORINHA_WEIGHTS_MINUTES é o orçamento de tempo do estudo: o lote dos municípios pára de começar municípios novos
+#   aos 70% dele e o estado tem até o fim; o que não deu tempo fica para a geração seguinte (a rotação pega os de linha
+#   mais velha);
+# - ANDORINHA_WEIGHTS_WORKERS: processos do estudo (padrão: um por núcleo).
+WEIGHTS_BATCH = int(os.environ.get("ANDORINHA_WEIGHTS_BATCH") or 600)
+WEIGHTS_STATES = int(os.environ.get("ANDORINHA_WEIGHTS_STATES") or 1)
+WEIGHTS_MINUTES = float(os.environ.get("ANDORINHA_WEIGHTS_MINUTES") or 300)
+WEIGHTS_WORKERS = int(os.environ.get("ANDORINHA_WEIGHTS_WORKERS") or os.cpu_count() or 1)
 
 USER_AGENT = "andorinha-gerador/1 (+https://github.com/Murkiriel/andorinha)"
 

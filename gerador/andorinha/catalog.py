@@ -48,7 +48,7 @@ import subprocess
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping, Optional, Tuple
 
 from . import config, engine, municipalities, timezones
 from .municipalities import MunicipalityFile
@@ -97,9 +97,13 @@ def git_commit_hash() -> str:
     return r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else "desconhecido"
 
 
-def municipalities_entry(files: Dict[str, MunicipalityFile], build_id: str) -> dict:
+def municipalities_entry(files: Dict[str, MunicipalityFile], build_id: str,
+                         digests: Optional[Tuple[str, str]] = None) -> dict:
     """A chave `municipalities`: os arquivos de apoio por UF, a malha e a tabela de que saíram e, no país e em cada
-    UF, com que gerações de tiles os pesos foram calculados."""
+    UF, com que gerações de tiles os pesos foram calculados. `digests`: o sha256 das tabelas de pesos que a geração
+    publica (municípios, estados); sem ele valem os da cópia versionada, a semente."""
+    weights_sha256, state_weights_sha256 = digests or (config.MOTORCYCLE_WEIGHTS_SHA256,
+                                                       config.MOTORCYCLE_STATE_WEIGHTS_SHA256)
     country = municipalities.all_generations(files)
     country_states = municipalities.all_state_generations(files)
     states = {}
@@ -115,7 +119,7 @@ def municipalities_entry(files: Dict[str, MunicipalityFile], build_id: str) -> d
     if country_states:
         with_state_weights["state_weights"] = {
             "costing": config.MOTORCYCLE_WEIGHTS_COSTING, "use_tolls": config.MOTORCYCLE_WEIGHTS_USE_TOLLS,
-            "sha256": config.MOTORCYCLE_STATE_WEIGHTS_SHA256, "count": sum(g["count"] for g in country_states),
+            "sha256": state_weights_sha256, "count": sum(g["count"] for g in country_states),
             "generations": country_states,
             "same_generation": municipalities.same_generation(country_states, build_id)}
     return {
@@ -124,7 +128,7 @@ def municipalities_entry(files: Dict[str, MunicipalityFile], build_id: str) -> d
                  "sha256": config.IBGE_MUNICIPAL_MESH_COPY_SHA256,
                  "count": sum(f.municipalities for f in files.values())},
         "weights": {"costing": config.MOTORCYCLE_WEIGHTS_COSTING, "use_tolls": config.MOTORCYCLE_WEIGHTS_USE_TOLLS,
-                    "sha256": config.MOTORCYCLE_WEIGHTS_SHA256, "count": sum(f.weights for f in files.values()),
+                    "sha256": weights_sha256, "count": sum(f.weights for f in files.values()),
                     "generations": country, "same_generation": municipalities.same_generation(country, build_id)},
         **with_state_weights,
         "states": states,
@@ -133,10 +137,12 @@ def municipalities_entry(files: Dict[str, MunicipalityFile], build_id: str) -> d
 
 def build_catalog(build_id: str, osm: Dict[str, object], packages: Dict[str, Package],
                   generator_commit: Optional[str] = None, generator_commit_full: Optional[str] = None,
-                  municipality_files: Optional[Dict[str, MunicipalityFile]] = None) -> dict:
+                  municipality_files: Optional[Dict[str, MunicipalityFile]] = None,
+                  weights_digests: Optional[Tuple[str, str]] = None) -> dict:
     """O catálogo de uma geração. `generator_commit` (curto) e `generator_commit_full` (40 dígitos) vêm do git quando
     não são dados; um SHA completo em `generator_commit` vale para os dois. `municipality_files`: os arquivos de apoio
-    por UF; só entram os das UFs que têm pacote, e sem eles o catálogo sai sem a chave `municipalities`."""
+    por UF; só entram os das UFs que têm pacote, e sem eles o catálogo sai sem a chave `municipalities`.
+    `weights_digests`: o sha256 das tabelas de pesos publicadas (ver `municipalities_entry`)."""
     if generator_commit_full is None:
         if generator_commit and len(generator_commit) == 40:
             generator_commit_full = generator_commit
@@ -159,7 +165,8 @@ def build_catalog(build_id: str, osm: Dict[str, object], packages: Dict[str, Pac
     }
     if municipality_files:
         cat["municipalities"] = municipalities_entry(
-            {state: f for state, f in municipality_files.items() if state in cat["states"]}, build_id)
+            {state: f for state, f in municipality_files.items() if state in cat["states"]}, build_id,
+            weights_digests)
     cat["contract"] = contract(cat, generator_commit_full)
     return cat
 
@@ -215,18 +222,21 @@ def _sources(cat: dict, constants: Mapping[str, str]) -> list:
                         "note": "sha256 do conteúdo descompactado"})
         dates = [g["date"] for g in weights["generations"]]
         sources.append({"id": "pesos-moto-municipios",
-                        "name": "Pesos do perfil de moto por município (tabela versionada no repositório)",
+                        "name": "Pesos do perfil de moto por município (tabela publicada na release)",
                         "url": None, "date": max(dates) if dates else None, "license": None,
                         "checksums": {"sha256": weights["sha256"]},
-                        "note": "a geração dos tiles de cada peso está em municipalities.weights.generations"})
+                        "note": "a geração dos tiles de cada peso está em municipalities.weights.generations; a tabela é "
+                                "o arquivo pesos_moto_municipios.csv da release, nas gerações que o publicam"})
         by_state = municipal.get("state_weights")
         if by_state:
             dates = [g["date"] for g in by_state["generations"]]
             sources.append({"id": "pesos-moto-estados",
-                            "name": "Pesos do perfil de moto por estado (tabela versionada no repositório)",
+                            "name": "Pesos do perfil de moto por estado (tabela publicada na release)",
                             "url": None, "date": max(dates) if dates else None, "license": None,
                             "checksums": {"sha256": by_state["sha256"]},
-                            "note": "a geração dos tiles de cada peso está em municipalities.state_weights.generations"})
+                            "note": "a geração dos tiles de cada peso está em municipalities.state_weights.generations; "
+                                    "a tabela é o arquivo pesos_moto_estados.csv da release, nas gerações que o "
+                                    "publicam"})
     return sources
 
 

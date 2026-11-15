@@ -19,6 +19,8 @@ Não publica se:
 - a versão do Valhalla do catálogo não é a do gerador (config.VALHALLA_VERSION),
 - algum pacote falta, não bate o sha256 ou passa do limite do GitHub Releases,
 - algum arquivo de apoio dos municípios falta, não bate o sha256 ou sumiu de um catálogo que já os tinha,
+- alguma das duas tabelas de pesos (pesos_moto_municipios.csv e pesos_moto_estados.csv, que sobem na release e de que a
+  geração seguinte parte) falta ou não bate o sha256 do catálogo,
 - algum pacote perdeu mais de 5% dos tiles em relação ao catalogo.json publicado, ou mais de 10% quando o extrato vem
   de outra fonte que o da publicada (--accept-drop),
 - a geração usa um OpenStreetMap mais antigo que o da publicada (--accept-older),
@@ -115,7 +117,7 @@ def main() -> None:
         return
 
     tag = cat["build_id"]
-    files = publishing.release_files(cat, config.DIST)  # os pacotes, o LICENCA-DADOS.txt e o catalogo.json
+    files = publishing.release_files(cat, config.DIST)  # os pacotes, os arquivos de apoio, as tabelas de pesos, o LICENCA-DADOS.txt e o catalogo.json
     notes = (f"Tiles de roteamento do Valhalla {cat['valhalla_version']} para o Brasil, OpenStreetMap de "
              f"{cat['osm']['timestamp']}. Índice desta geração: {publishing.CATALOG_FILE}, nesta release; o da raiz "
              f"do repositório aponta sempre para a geração mais recente.\n\n{config.ATTRIBUTION}")
@@ -124,8 +126,8 @@ def main() -> None:
     except (publishing.GhError, publishing.ReleaseAlreadyPublished) as e:
         sys.exit(f"Release não publicada: {e}")
     print(f"Release {tag} publicada com {len(publishing.package_files(cat))} pacotes, "
-          f"{len(publishing.municipality_files(cat))} arquivos de municípios, o {publishing.LICENSE_FILE} "
-          f"e o {publishing.CATALOG_FILE}.")
+          f"{len(publishing.municipality_files(cat))} arquivos de municípios, {len(publishing.weights_tables(cat))} "
+          f"tabelas de pesos, o {publishing.LICENSE_FILE} e o {publishing.CATALOG_FILE}.")
 
     shutil.copyfile(config.DIST / "catalogo.json", root_catalog)
     readme = config.REPO / "README.md"

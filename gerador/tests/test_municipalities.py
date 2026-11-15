@@ -399,6 +399,23 @@ class StateFilesTest(unittest.TestCase):
         municipalities.clean_output(self.out)
         self.assertEqual(["andorinha-GO.tar.zst"], sorted(p.name for p in self.out.iterdir()))
 
+    def test_the_tables_the_generation_used_are_written_byte_for_byte_next_to_the_files(self):
+        tables = municipalities.TableTexts(HEADER + "5208707;0.8;0.2;" + OLD + ";3.9.1;2026-11-14\n",
+                                           STATE_HEADER + "52;GO;0.8;0.4;" + OLD + ";3.9.1;2026-11-14\n", "teste")
+        self.inputs.tables = tables
+        municipalities.generate(self.inputs, self.out)
+        self.assertEqual(tables.weights.encode(), (self.out / "pesos_moto_municipios.csv").read_bytes())
+        self.assertEqual(tables.state_weights.encode(), (self.out / "pesos_moto_estados.csv").read_bytes())
+        self.assertEqual(tables.digests(), municipalities.table_digests(self.out))
+        self.assertEqual(hashlib.sha256(tables.weights.encode()).hexdigest(), tables.digests()[0])
+        municipalities.clean_output(self.out)  # a próxima geração não herda as tabelas desta
+        self.assertEqual([], sorted(p.name for p in self.out.iterdir()))
+
+    def test_without_the_text_of_the_tables_none_is_written_and_the_seed_digests_apply(self):
+        municipalities.generate(self.inputs, self.out)
+        self.assertFalse((self.out / "pesos_moto_municipios.csv").exists())
+        self.assertIsNone(municipalities.table_digests(self.out))
+
     def test_tile_packages_are_untouched(self):
         """Os contornos e os pesos não entram no .tar.zst da UF: um leitor que só aceita tiles lá dentro segue lendo."""
         from andorinha.packing import write_package

@@ -168,6 +168,20 @@ class ContractTest(unittest.TestCase):
                               {"tiles_build_id": WEIGHTS_BUILD_ID, "valhalla_version": "3.9.1", "date": "2026-11-14",
                                "count": 2}]}, fake_catalog()["municipalities"]["state_weights"])
 
+    def test_the_digests_of_the_tables_the_generation_published_replace_the_seed_ones(self):
+        """O sha256 do catálogo é o da tabela que sobe na release (a que o estudo atualizou), não o da semente."""
+        packages = {"base": package("base", [-33.75, -73.99, 5.27, -34.79], [-36.0, -76.0, 8.0, -32.0]),
+                    "DF": package("DF", [-16.05, -48.29, -15.5, -47.31], [-17.0, -49.0, -15.0, -47.0])}
+        cat = catalog.build_catalog(catalog.build_id("2026-09-30", MD5), OSM, packages, generator_commit="abc1234",
+                                    municipality_files={"DF": municipality_file("DF")},
+                                    weights_digests=("1" * 64, "2" * 64))
+        self.assertEqual(("1" * 64, "2" * 64), (cat["municipalities"]["weights"]["sha256"],
+                                                cat["municipalities"]["state_weights"]["sha256"]))
+        sources = {s["id"]: s for s in cat["contract"]["sources"]}
+        self.assertEqual({"sha256": "1" * 64}, sources["pesos-moto-municipios"]["checksums"])
+        self.assertEqual({"sha256": "2" * 64}, sources["pesos-moto-estados"]["checksums"])
+        self.assertIn("pesos_moto_municipios.csv da release", sources["pesos-moto-municipios"]["note"])
+
     def test_files_without_state_weights_keep_the_catalog_of_before(self):
         """Só acrescenta: sem peso de estado, `municipalities` sai com as chaves de antes."""
         packages = {"base": package("base", [-33.75, -73.99, 5.27, -34.79], [-36.0, -76.0, 8.0, -32.0]),

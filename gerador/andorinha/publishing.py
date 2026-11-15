@@ -4,8 +4,8 @@ catálogo, e a própria release.
 A linha de comando fica em scripts/publish.py; aqui só a lógica, testável sem o GitHub: o `gh` entra como uma função
 `gh(args) -> (código, stdout, stderr)`, e os testes passam uma falsa.
 
-A release é criada como RASCUNHO, sem arquivos; cada arquivo (os pacotes, os arquivos de apoio dos municípios, o
-LICENCA-DADOS.txt e o catalogo.json da geração) que ainda não está lá (ou está com outro tamanho) sobe; só com todos presentes e do tamanho certo ela é
+A release é criada como RASCUNHO, sem arquivos; cada arquivo (os pacotes, os arquivos de apoio dos municípios, as
+tabelas de pesos, o LICENCA-DADOS.txt e o catalogo.json da geração) que ainda não está lá (ou está com outro tamanho) sobe; só com todos presentes e do tamanho certo ela é
 publicada. Uma queda no meio deixa um rascunho que ninguém vê, e
 rodar de novo retoma do que falta. Release já publicada com o mesmo tag não é mexida.
 
@@ -22,7 +22,7 @@ import urllib.parse
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import config
+from . import config, municipalities
 from .util import file_hash
 
 Gh = Callable[[Sequence[str]], Tuple[int, str, str]]
@@ -258,6 +258,18 @@ def municipality_files(cat: dict) -> List[str]:
     return [e["file"] for _, e in sorted(municipality_entries(cat).items())]
 
 
+def weights_tables(cat: dict) -> Dict[str, str]:
+    """{arquivo: sha256} das tabelas de pesos que sobem na release (as que a geração usou; a geração seguinte parte
+    delas): a dos municípios e a dos estados. Vazio num catálogo sem arquivos de apoio dos municípios."""
+    municipal = cat.get("municipalities") or {}
+    out = {}
+    if municipal.get("weights"):
+        out[municipalities.WEIGHTS_FILE] = municipal["weights"]["sha256"]
+    if municipal.get("state_weights"):
+        out[municipalities.STATE_WEIGHTS_FILE] = municipal["state_weights"]["sha256"]
+    return out
+
+
 LICENSE_FILE = "LICENCA-DADOS.txt"
 
 
@@ -278,23 +290,25 @@ def license_text(cat: dict) -> str:
             f"- Limites das UFs (que pacote leva cada tile) e contornos dos municípios (arquivos "
             f"andorinha-municipios-<UF>.geojson.zst): malhas do IBGE, "
             f"https://servicodados.ibge.gov.br/api/docs/malhas\n"
-            f"- Pesos do perfil de moto por município e por estado (nos mesmos arquivos): calculados pelo gerador sobre os tiles "
-            f"das gerações que o catalogo.json indica\n\n"
+            f"- Pesos do perfil de moto por município e por estado (nos mesmos arquivos e nas tabelas "
+            f"{municipalities.WEIGHTS_FILE} e {municipalities.STATE_WEIGHTS_FILE}): calculados pelo gerador sobre os "
+            f"tiles das gerações que o catalogo.json indica\n\n"
             f"Gerador (código sob MIT): https://github.com/{config.GITHUB_REPO}\n\n"
             f"{'=' * 78}\n\n{odbl}\n")
 
 
 def release_files(cat: dict, dist: Path) -> List[Path]:
-    """Os arquivos da release, na ordem de subida: os pacotes, os arquivos de apoio dos municípios, o
-    LICENCA-DADOS.txt (gravado em `dist`) e, por último, o catalogo.json da geração (o de `dist`, o mesmo que vai para
-    a raiz do repositório). Todos ficam fora dos pacotes: quem lê os .tar.zst recusa um caminho que não seja de tile.
-    Levanta FileNotFoundError sem o catálogo."""
+    """Os arquivos da release, na ordem de subida: os pacotes, os arquivos de apoio dos municípios, as tabelas de
+    pesos, o LICENCA-DADOS.txt (gravado em `dist`) e, por último, o catalogo.json da geração (o de `dist`, o mesmo que
+    vai para a raiz do repositório). Todos ficam fora dos pacotes: quem lê os .tar.zst recusa um caminho que não seja
+    de tile. Levanta FileNotFoundError sem o catálogo."""
     catalog_path = dist / CATALOG_FILE
     if not catalog_path.is_file():
         raise FileNotFoundError(f"falta {catalog_path}: o catálogo da geração sobe na release")
     license_path = dist / LICENSE_FILE
     license_path.write_text(license_text(cat), encoding="utf-8", newline="\n")
-    return [dist / name for name in package_files(cat) + municipality_files(cat)] + [license_path, catalog_path]
+    names = package_files(cat) + municipality_files(cat) + sorted(weights_tables(cat))
+    return [dist / name for name in names] + [license_path, catalog_path]
 
 
 def entries(cat: dict) -> dict:
@@ -339,6 +353,13 @@ def check(cat: dict, published: Optional[dict], accept_drop: bool, accept_older:
             problems.append(f"municípios de {state}: falta {e['file']}")
         elif file_hash(file) != e["sha256"]:
             problems.append(f"municípios de {state}: sha256 de {e['file']} não bate com o catálogo")
+    # As tabelas de pesos sobem na release e a geração seguinte parte delas: têm de existir e bater com o catálogo.
+    for name, sha256 in sorted(weights_tables(cat).items()):
+        file = config.DIST / name
+        if not file.exists():
+            problems.append(f"pesos: falta {name}")
+        elif file_hash(file) != sha256:
+            problems.append(f"pesos: sha256 de {name} não bate com o catálogo")
     # Um leitor que já usa os arquivos de apoio não pode ficar sem eles numa geração seguinte.
     problems += [f"municípios de {state}: o arquivo de apoio sumiu do catálogo"
                  for state in sorted(municipality_entries(published or {}))

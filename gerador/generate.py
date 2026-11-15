@@ -5,8 +5,9 @@
     python generate.py --from validate      # só valida e remonta o catálogo sobre os pacotes já gerados
 
 Etapas, em ordem: osm (baixa o extrato se houver versão nova), tiles (Valhalla), packages (divide por UF e grava
-os arquivos de apoio dos municípios), validate (rotas de teste com os pacotes), catalog. Depois,
-`python scripts/publish.py` publica.
+os arquivos de apoio dos municípios e as tabelas de pesos de que a geração parte), validate (rotas de teste com os
+pacotes), catalog. Depois, `python scripts/weights.py study` refaz o lote de pesos da semana sobre estes tiles e
+`python scripts/weights.py apply` o põe na geração; `python scripts/publish.py` publica.
 """
 from __future__ import annotations
 
@@ -23,7 +24,8 @@ sys.path.insert(0, str(HERE))
 if (HERE / ".pylib").exists():
     sys.path.insert(0, str(HERE / ".pylib"))
 
-from andorinha import sources, catalog, config, builder, municipalities, packing, run_record, validation  # noqa: E402
+from andorinha import (sources, catalog, config, builder, municipalities, packing, run_record,  # noqa: E402
+                       validation, weights_tables)
 from andorinha.packing import Package  # noqa: E402
 
 STAGES = ["osm", "tiles", "packages", "validate", "catalog"]
@@ -49,8 +51,11 @@ def _generate(from_stage: str, recorder: run_record.RunRecorder) -> str:
         # A malha vem antes de tudo: se a cópia versionada não serve, a geração para em segundos, não depois do
         # extrato e dos tiles (~25 min no Actions).
         mesh = sources.ibge_mesh()
-        # Pelo mesmo motivo, a malha municipal e a tabela de pesos (os arquivos de apoio por UF) são conferidas aqui.
-        municipal_inputs = municipalities.check()
+        # Pelo mesmo motivo, a malha municipal e a tabela de pesos (os arquivos de apoio por UF) são conferidas aqui. A
+        # tabela é a da release da geração publicada (a semente do repositório só se a release não a tem); o estudo
+        # dos pesos (scripts/weights.py) a atualiza depois dos tiles, num job à parte.
+        municipal_inputs, table_notes = weights_tables.check()
+        recorder.notes.extend(table_notes)
     osm_meta_file = config.RAW / "brazil-latest.meta.json"
     with recorder.stage("osm"):
         osm = sources.osm_extract() if start <= 0 else json.loads(osm_meta_file.read_text(encoding="utf-8"))
@@ -81,7 +86,8 @@ def _generate(from_stage: str, recorder: run_record.RunRecorder) -> str:
 
     with recorder.stage("catalog"):
         build_id = catalog.build_id(datetime.now(timezone.utc).strftime("%Y-%m-%d"), osm["md5"])
-        cat = catalog.build_catalog(build_id, osm, generated, municipality_files=municipal)
+        cat = catalog.build_catalog(build_id, osm, generated, municipality_files=municipal,
+                                    weights_digests=municipalities.table_digests(config.DIST))
         catalog.save(cat, config.DIST / "catalogo.json")
         # Pesos calculados com tiles de outra geração não param a geração: o catálogo diz de qual, por UF, e o aviso
         # fica no log e no geracao.json.

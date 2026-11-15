@@ -1,6 +1,6 @@
 """As tabelas de pesos que o gerador atualiza (andorinha/weights_tables.py): o formato escrito de volta, a rotação dos
-lotes, a mescla dos resultados, a tabela anterior vinda da release (e o que acontece quando ela não serve) e a
-aplicação da tabela nova numa geração."""
+lotes, a mescla dos resultados, a tabela de que a geração parte (proximo > normal > semente, e o que acontece quando
+uma não serve) e a subida do resultado do estudo na release."""
 import hashlib
 import json
 import shutil
@@ -8,14 +8,12 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest import mock
 
 GENERATOR_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(GENERATOR_DIR))
-from andorinha import catalog, config, municipalities, net, publishing, weights_tables  # noqa: E402
+from andorinha import config, municipalities, net, weights_tables  # noqa: E402
 from andorinha.municipalities import Weight  # noqa: E402
 from andorinha.weights_study import Outcome  # noqa: E402
-from tests import contract_check  # noqa: E402
 
 OLD = "2026-11-09-c17dff60"
 RELEASE_ID = "2026-11-16-0a1b2c3d"
@@ -198,8 +196,8 @@ class MergeTest(unittest.TestCase):
         self.assertEqual((1, 1), (len(merged), updated))
 
 
-class PreviousTablesTest(Shared):
-    """De onde a geração parte."""
+class PreviousHelpers(Shared):
+    """Ferramentas dos testes de onde a geração parte."""
 
     def published_catalog(self, weights_text, state_text, build_id=RELEASE_ID, weights=None, states=None):
         w = municipalities.parse_weights(weights_text, self.mesh) if weights is None else weights
@@ -233,7 +231,12 @@ class PreviousTablesTest(Shared):
         with tempfile.TemporaryDirectory() as tmp:
             fetch = self.fetcher(files)
             result = weights_tables.previous_tables(self.mesh, self.states, self.write_catalog(tmp, cat), fetch)
-        return result, fetch.calls
+        # as tentativas de ler o json das tabelas próximo (a maioria das releases não tem) não contam aqui
+        return result, [c for c in fetch.calls if ".proximo." not in c and not c.endswith("pesos_proximo.json")]
+
+
+class PreviousTablesTest(PreviousHelpers):
+    """De onde a geração parte, sem as tabelas próximo."""
 
     def test_the_release_table_is_the_start_when_the_catalog_says_so(self):
         weights_text, state_text = changed_tables(self.seed_weights, self.seed_states)
@@ -339,136 +342,226 @@ class PreviousTablesTest(Shared):
         self.assertEqual([], notes)
 
 
-class ApplyTest(Shared):
-    """A tabela nova entra numa geração já montada (arquivos de apoio, catálogo, geracao.json)."""
+class NextTablesTest(PreviousHelpers):
+    """As tabelas `proximo` da release anterior vencem as normais; sem elas (ou se não servem), valem as normais."""
 
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.template = Path(tempfile.mkdtemp(prefix="andorinha-teste-"))
-        inputs = municipalities.Inputs(cls.mesh, cls.seed_weights, cls.seed_states, cls.seed_texts)
-        files = municipalities.generate(inputs, cls.template)
-        osm = {"path": "x", "url": "https://exemplo/brazil.osm.pbf", "timestamp": "2026-11-15T00:00:00Z",
-               "md5": "0a1b2c3d" * 4, "size": 1}
-        from tests.test_catalog import package
-        packages = {"base": package("base", [-33.75, -73.99, 5.27, -34.79], [-36.0, -76.0, 8.0, -32.0])}
-        for state in config.STATES:
-            packages[state] = package(state, [-30.0, -60.0, -10.0, -40.0], [-31.0, -61.0, -9.0, -39.0])
-        cls.build_id = catalog.build_id("2026-11-15", osm["md5"])
-        cat = catalog.build_catalog(cls.build_id, osm, packages, generator_commit="a" * 40,
-                                    municipality_files=files, weights_digests=cls.seed_texts.digests())
-        catalog.save(cat, cls.template / "catalogo.json")
-        (cls.template / "geracao.json").write_text(json.dumps({"result": "ok", "notes": [
-            "pesos de 5564 municípios (27 UFs) calculados com os tiles da geração antiga", "outro aviso"]}),
-            encoding="utf-8")
+    def next_files(self, value=(0.5, 0.3), build_id=RELEASE_ID, **manifest_changes):
+        weights_text, state_text = changed_tables(self.seed_weights, self.seed_states, value=value, date="2026-11-17",
+                                                  build_id=build_id)
+        manifest = weights_tables.next_manifest(
+            weights_text, state_text, municipalities.parse_weights(weights_text, self.mesh),
+            municipalities.parse_state_weights(state_text), build_id, date="2026-11-17")
+        manifest.update(manifest_changes)
+        return {"pesos_moto_municipios.proximo.csv": weights_text, "pesos_moto_estados.proximo.csv": state_text,
+                "pesos_proximo.json": json.dumps(manifest)}
 
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.template, ignore_errors=True)
+    def normal(self):
+        """A tabela normal da release: a de que a geração dela partiu (valores diferentes dos da próximo)."""
+        weights_text, state_text = changed_tables(self.seed_weights, self.seed_states, value=(0.7, 0.3))
+        return weights_text, state_text, self.published_catalog(weights_text, state_text)
 
+    def start(self, files, cat=None):
+        weights_text, state_text, normal_cat = self.normal()
+        files = {"pesos_moto_municipios.csv": weights_text, "pesos_moto_estados.csv": state_text, **files}
+        return self.previous(cat or normal_cat, files)
+
+    def test_manifest_describes_the_tables(self):
+        files = self.next_files()
+        manifest = json.loads(files["pesos_proximo.json"])
+        self.assertEqual(sha(files["pesos_moto_municipios.proximo.csv"]), manifest["weights"]["sha256"])
+        self.assertEqual(len(municipalities.parse_weights(files["pesos_moto_municipios.proximo.csv"], self.mesh)),
+                         manifest["weights"]["count"])
+        self.assertEqual((RELEASE_ID, config.VALHALLA_VERSION, 27), (manifest["build_id"], manifest["valhalla_version"],
+                                                                    manifest["state_weights"]["count"]))
+        self.assertEqual("2026-11-17", manifest["study"]["date"])
+
+    def test_next_wins_over_the_normal_tables(self):
+        files = self.next_files()
+        (texts, weights, states, notes), calls = self.start(files)
+        self.assertEqual([], notes)
+        self.assertEqual(files["pesos_moto_municipios.proximo.csv"], texts.weights)
+        self.assertEqual(f"as tabelas próximo da release {RELEASE_ID}", texts.origin)
+        self.assertEqual((0.5, 0.3), (weights["5300108"].use_highways, weights["5300108"].use_trails))
+        self.assertEqual("2026-11-17", states["DF"].date)
+        self.assertEqual([], calls)  # as normais nem foram baixadas
+
+    def test_next_wins_even_when_the_normal_tables_are_the_seed(self):
+        cat = self.published_catalog(self.seed_texts.weights, self.seed_texts.state_weights)
+        (texts, *_), _ = self.start(self.next_files(), cat)
+        self.assertEqual(self.next_files()["pesos_moto_municipios.proximo.csv"], texts.weights)
+
+    def test_without_next_the_normal_tables_are_used_and_nothing_is_said(self):
+        weights_text, _, _ = self.normal()
+        (texts, _, _, notes), _ = self.start({})
+        self.assertEqual((weights_text, []), (texts.weights, notes))
+        self.assertEqual(f"a release {RELEASE_ID}", texts.origin)
+
+    def test_without_next_and_with_the_seed_as_normal_the_seed_is_used_quietly(self):
+        cat = self.published_catalog(self.seed_texts.weights, self.seed_texts.state_weights)
+        (texts, _, _, notes), calls = self.start({}, cat)
+        self.assertEqual((self.seed_texts.weights, [], []), (texts.weights, notes, calls))
+
+    def assert_falls_back_to_normal(self, files, fragment):
+        weights_text, _, _ = self.normal()
+        (texts, _, _, notes), _ = self.start(files)
+        self.assertEqual(weights_text, texts.weights)
+        self.assertEqual(1, len(notes), notes)
+        self.assertIn("tabelas próximo", notes[0])
+        self.assertIn(fragment, notes[0])
+
+    def test_a_table_that_does_not_match_the_manifest_sha256_falls_back_to_the_normal_ones(self):
+        files = self.next_files()
+        files["pesos_moto_municipios.proximo.csv"] = files["pesos_moto_municipios.proximo.csv"].replace("0.5;0.3", "0.4;0.3")
+        self.assert_falls_back_to_normal(files, "sha256")
+
+    def test_a_manifest_of_another_generation_falls_back(self):
+        self.assert_falls_back_to_normal(self.next_files(build_id="2026-11-09-c17dff60"), "geração")
+
+    def test_a_manifest_with_another_count_falls_back(self):
+        files = self.next_files()
+        manifest = json.loads(files["pesos_proximo.json"])
+        manifest["weights"]["count"] += 1
+        files["pesos_proximo.json"] = json.dumps(manifest)
+        self.assert_falls_back_to_normal(files, "o pesos_proximo.json diz")
+
+    def test_a_manifest_from_another_valhalla_falls_back(self):
+        self.assert_falls_back_to_normal(self.next_files(valhalla_version="3.8.0"), "Valhalla 3.8.0")
+
+    def test_a_manifest_without_keys_or_that_is_not_json_falls_back(self):
+        files = self.next_files()
+        manifest = json.loads(files["pesos_proximo.json"])
+        del manifest["weights"]
+        files["pesos_proximo.json"] = json.dumps(manifest)
+        self.assert_falls_back_to_normal(files, "sem a chave")
+        files["pesos_proximo.json"] = "<html>erro</html>"
+        weights_text, _, _ = self.normal()
+        (texts, _, _, notes), _ = self.start(files)
+        self.assertEqual((weights_text, 1), (texts.weights, len(notes)))
+
+    def test_next_with_fewer_rows_than_the_seed_falls_back(self):
+        files = self.next_files()
+        short = "".join(files["pesos_moto_municipios.proximo.csv"].splitlines(keepends=True)[:-10])
+        manifest = json.loads(files["pesos_proximo.json"])
+        manifest["weights"] = {"file": "pesos_moto_municipios.proximo.csv", "sha256": sha(short),
+                               "count": len(municipalities.parse_weights(short, self.mesh))}
+        files.update({"pesos_moto_municipios.proximo.csv": short, "pesos_proximo.json": json.dumps(manifest)})
+        self.assert_falls_back_to_normal(files, "não perde linhas")
+
+    def test_next_with_a_weight_over_the_ceiling_falls_back(self):
+        files = self.next_files()
+        bad = files["pesos_moto_municipios.proximo.csv"].replace("0.5;0.3", "0.5;0.9")
+        manifest = json.loads(files["pesos_proximo.json"])
+        manifest["weights"]["sha256"] = sha(bad)
+        files.update({"pesos_moto_municipios.proximo.csv": bad, "pesos_proximo.json": json.dumps(manifest)})
+        self.assert_falls_back_to_normal(files, "teto")
+
+    def test_a_network_failure_on_next_falls_back(self):
+        files = self.next_files()
+        files["pesos_moto_estados.proximo.csv"] = net.DownloadError("5 tentativas falharam")
+        self.assert_falls_back_to_normal(files, "5 tentativas")
+
+    def test_next_and_normal_both_bad_end_at_the_seed_with_two_notes(self):
+        files = self.next_files()
+        files["pesos_proximo.json"] = "lixo"
+        weights_text, state_text, cat = self.normal()
+        files.update({"pesos_moto_municipios.csv": "outra tabela\n", "pesos_moto_estados.csv": state_text})
+        (texts, _, _, notes), _ = self.previous(cat, files)
+        self.assertEqual(self.seed_texts.weights, texts.weights)
+        self.assertEqual(2, len(notes))
+
+    def test_a_catalog_from_before_the_weights_never_looks_for_next(self):
+        (texts, *_), calls = self.previous({"build_id": "2026-10-05-93a54bc6", "release_url": "x/"}, {})
+        self.assertEqual(self.seed_texts.weights, texts.weights)
+        self.assertEqual([], calls)
+
+
+class FakeGh:
+    """Um `gh` falso com uma release: devolve o estado e guarda os `upload`."""
+
+    def __init__(self, state="publicada", assets=None, fail_on=None, drop=()):
+        self.state, self.assets = state, dict(assets or {"andorinha-base.tar.zst": 10, "catalogo.json": 5})
+        self.fail_on, self.drop, self.calls = fail_on, set(drop), []
+
+    def __call__(self, args):
+        self.calls.append(list(args))
+        if args[:2] == ["release", "view"]:
+            if self.state == "inexistente":
+                return 1, "", "release not found"
+            return 0, json.dumps({"isDraft": self.state == "rascunho",
+                                  "assets": [{"name": n, "size": size} for n, size in self.assets.items()]}), ""
+        if args[:2] == ["release", "upload"]:
+            path = Path(args[3])
+            if self.fail_on == path.name:
+                return 1, "", "HTTP 502"
+            if path.name not in self.drop:
+                self.assets[path.name] = path.stat().st_size
+            return 0, "", ""
+        return 1, "", f"comando inesperado: {args}"
+
+    def uploads(self):
+        return [Path(c[3]).name for c in self.calls if c[:2] == ["release", "upload"]]
+
+
+class UploadNextTest(Shared):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="andorinha-teste-"))
         self.addCleanup(shutil.rmtree, self.tmp, True)
-        self.dist = self.tmp / "dist"
-        shutil.copytree(self.template, self.dist)
-        self.tables = self.tmp / "novas"
-        self.tables.mkdir()
+        weights_text, state_text = changed_tables(self.seed_weights, self.seed_states)
+        manifest = weights_tables.next_manifest(
+            weights_text, state_text, municipalities.parse_weights(weights_text, self.mesh),
+            municipalities.parse_state_weights(state_text), RELEASE_ID)
+        (self.tmp / "pesos_moto_municipios.proximo.csv").write_text(weights_text, encoding="utf-8", newline="\n")
+        (self.tmp / "pesos_moto_estados.proximo.csv").write_text(state_text, encoding="utf-8", newline="\n")
+        (self.tmp / "pesos_proximo.json").write_text(json.dumps(manifest), encoding="utf-8")
 
-    def write_tables(self, weights_text, state_text):
-        (self.tables / municipalities.WEIGHTS_FILE).write_text(weights_text, encoding="utf-8", newline="\n")
-        (self.tables / municipalities.STATE_WEIGHTS_FILE).write_text(state_text, encoding="utf-8", newline="\n")
+    def test_only_the_three_extra_assets_go_up_the_json_last_and_nothing_else_is_touched(self):
+        gh = FakeGh()
+        names = weights_tables.upload_next(gh, RELEASE_ID, self.tmp)
+        self.assertEqual(["pesos_moto_municipios.proximo.csv", "pesos_moto_estados.proximo.csv", "pesos_proximo.json"],
+                         names)
+        self.assertEqual(names, gh.uploads())
+        for call in gh.calls:
+            self.assertIn(call[:2], (["release", "view"], ["release", "upload"]), call)  # nada de edit/delete
+            if call[1] == "upload":
+                self.assertEqual(RELEASE_ID, call[2])
+                self.assertEqual("--clobber", call[-1])
+        self.assertEqual({"andorinha-base.tar.zst", "catalogo.json", *names}, set(gh.assets))
 
-    def snapshot(self):
-        return {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(self.dist.iterdir())}
+    def test_a_release_that_is_not_published_gets_nothing(self):
+        for state in ("rascunho", "inexistente"):
+            gh = FakeGh(state=state)
+            with self.assertRaises(weights_tables.UploadError):
+                weights_tables.upload_next(gh, RELEASE_ID, self.tmp)
+            self.assertEqual([], gh.uploads())
 
-    def test_generation_without_the_study_already_carries_the_tables_it_started_from(self):
-        cat = json.loads((self.dist / "catalogo.json").read_text(encoding="utf-8"))
-        self.assertEqual(self.seed_texts.digests(), tuple(
-            hashlib.sha256((self.dist / name).read_bytes()).hexdigest()
-            for name in (municipalities.WEIGHTS_FILE, municipalities.STATE_WEIGHTS_FILE)))
-        self.assertEqual(self.seed_texts.digests()[0], cat["municipalities"]["weights"]["sha256"])
-        self.assertEqual(self.seed_texts.digests()[1], cat["municipalities"]["state_weights"]["sha256"])
+    def test_tables_that_do_not_match_the_manifest_are_not_sent(self):
+        (self.tmp / "pesos_moto_estados.proximo.csv").write_text("outra\n", encoding="utf-8")
+        gh = FakeGh()
+        with self.assertRaisesRegex(weights_tables.UploadError, "sha256"):
+            weights_tables.upload_next(gh, RELEASE_ID, self.tmp)
+        self.assertEqual([], gh.calls)
 
-    def test_new_tables_replace_the_old_and_the_catalog_follows(self):
-        weights_text, state_text = changed_tables(self.seed_weights, self.seed_states, build_id=self.build_id)
-        self.write_tables(weights_text, state_text)
-        before = self.snapshot()
-        notes = weights_tables.apply_to_dist(self.dist, self.tables, "estudo: 1 município")
-        after = self.snapshot()
+    def test_a_manifest_of_another_generation_is_not_sent(self):
+        with self.assertRaisesRegex(weights_tables.UploadError, "geração"):
+            weights_tables.upload_next(FakeGh(), "2026-11-23-4e5f6a7b", self.tmp)
 
-        self.assertEqual(weights_text.encode(), (self.dist / municipalities.WEIGHTS_FILE).read_bytes())
-        self.assertEqual(state_text.encode(), (self.dist / municipalities.STATE_WEIGHTS_FILE).read_bytes())
-        cat = json.loads((self.dist / "catalogo.json").read_text(encoding="utf-8"))
-        self.assertEqual(sha(weights_text), cat["municipalities"]["weights"]["sha256"])
-        self.assertEqual(sha(state_text), cat["municipalities"]["state_weights"]["sha256"])
-        sources = {s["id"]: s for s in cat["contract"]["sources"]}
-        self.assertEqual({"sha256": sha(weights_text)}, sources["pesos-moto-municipios"]["checksums"])
-        self.assertEqual({"sha256": sha(state_text)}, sources["pesos-moto-estados"]["checksums"])
-        self.assertEqual("2026-11-16", sources["pesos-moto-municipios"]["date"])
-        # o arquivo do DF mudou (e só os que tinham linha refeita), e o catálogo tem o sha256 dele
-        self.assertNotEqual(before["andorinha-municipios-DF.geojson.zst"], after["andorinha-municipios-DF.geojson.zst"])
-        self.assertEqual(before["andorinha-municipios-GO.geojson.zst"], after["andorinha-municipios-GO.geojson.zst"])
-        self.assertEqual(after["andorinha-municipios-DF.geojson.zst"], cat["municipalities"]["states"]["DF"]["sha256"])
-        df = next(f for f in cat["contract"]["files"] if f["id"] == "municipios-DF")
-        self.assertEqual(after["andorinha-municipios-DF.geojson.zst"], df["sha256"])
-        self.assertEqual(self.build_id, cat["build_id"])
-        # a geração agora tem pesos de duas gerações de tiles; o aviso diz isso
-        self.assertTrue(any("calculados com os tiles da geração 2026-11-09-c17dff60" in n for n in notes), notes)
-        self.assertEqual(sorted(after), sorted(before))  # os mesmos arquivos, sem sobras
+    def test_missing_files_are_not_sent(self):
+        (self.tmp / "pesos_proximo.json").unlink()
+        gh = FakeGh()
+        with self.assertRaisesRegex(weights_tables.UploadError, "falta"):
+            weights_tables.upload_next(gh, RELEASE_ID, self.tmp)
+        self.assertEqual([], gh.calls)
 
-    def test_the_catalog_still_follows_the_common_contract(self):
-        weights_text, state_text = changed_tables(self.seed_weights, self.seed_states, build_id=self.build_id)
-        self.write_tables(weights_text, state_text)
-        weights_tables.apply_to_dist(self.dist, self.tables)
-        cat = json.loads((self.dist / "catalogo.json").read_text(encoding="utf-8"))
-        self.assertEqual([], contract_check.problems(cat, GENERATOR_DIR.parent / "docs"))
+    def test_a_failed_upload_stops_before_the_manifest_so_the_next_generation_ignores_the_rest(self):
+        gh = FakeGh(fail_on="pesos_moto_estados.proximo.csv")
+        with self.assertRaisesRegex(weights_tables.UploadError, "502"):
+            weights_tables.upload_next(gh, RELEASE_ID, self.tmp)
+        self.assertNotIn("pesos_proximo.json", gh.uploads())
 
-    def test_the_publication_checks_pass_with_the_new_tables(self):
-        weights_text, state_text = changed_tables(self.seed_weights, self.seed_states, build_id=self.build_id)
-        self.write_tables(weights_text, state_text)
-        weights_tables.apply_to_dist(self.dist, self.tables)
-        cat = json.loads((self.dist / "catalogo.json").read_text(encoding="utf-8"))
-        self.assertEqual(["pesos_moto_estados.csv", "pesos_moto_municipios.csv"],
-                         sorted(publishing.weights_tables(cat)))
-        with mock.patch.object(config, "DIST", self.dist):
-            problems = [p for p in publishing.check(cat, None, True, True) if not p.startswith(("base:", "AC:"))
-                        and "falta andorinha-" not in p]
-        self.assertEqual([], [p for p in problems if "pesos" in p or "municípios" in p])
+    def test_an_asset_that_did_not_land_is_an_error(self):
+        with self.assertRaisesRegex(weights_tables.UploadError, "pesos_proximo.json"):
+            weights_tables.upload_next(FakeGh(drop=("pesos_proximo.json",)), RELEASE_ID, self.tmp)
 
-    def test_geracao_json_notes_are_updated(self):
-        weights_text, state_text = changed_tables(self.seed_weights, self.seed_states, build_id=self.build_id)
-        self.write_tables(weights_text, state_text)
-        weights_tables.apply_to_dist(self.dist, self.tables, "estudo: 1 município e 1 estado")
-        notes = json.loads((self.dist / "geracao.json").read_text(encoding="utf-8"))["notes"]
-        self.assertIn("outro aviso", notes)
-        self.assertIn("estudo: 1 município e 1 estado", notes)
-        self.assertFalse(any(n.startswith("pesos de 5564 municípios (27 UFs) calculados com os tiles da geração antiga")
-                             for n in notes))
-
-    def test_a_table_that_loses_rows_leaves_the_generation_untouched(self):
-        lines = self.seed_texts.weights.splitlines(keepends=True)
-        self.write_tables("".join(lines[:-1]), self.seed_texts.state_weights)
-        before = self.snapshot()
-        with self.assertRaises(weights_tables.ApplyError):
-            weights_tables.apply_to_dist(self.dist, self.tables)
-        self.assertEqual(before, self.snapshot())
-
-    def test_a_missing_table_leaves_the_generation_untouched(self):
-        before = self.snapshot()
-        with self.assertRaises(weights_tables.ApplyError):
-            weights_tables.apply_to_dist(self.dist, self.tables)  # a pasta de tabelas está vazia
-        self.assertEqual(before, self.snapshot())
-
-    def test_a_table_with_fewer_rows_than_the_generation_leaves_it_untouched(self):
-        """A geração usou uma tabela maior que a semente (uma linha a mais, de um município novo)."""
-        extra = dict(self.seed_weights)
-        del extra["1100015"]
-        weights_text, state_text = changed_tables(extra, self.seed_states)
-        self.write_tables(weights_text, state_text)
-        before = self.snapshot()
-        with self.assertRaises(weights_tables.ApplyError):
-            weights_tables.apply_to_dist(self.dist, self.tables)
-        self.assertEqual(before, self.snapshot())
 
 
 if __name__ == "__main__":

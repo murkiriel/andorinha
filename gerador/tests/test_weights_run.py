@@ -13,7 +13,7 @@ from pathlib import Path
 
 GENERATOR_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(GENERATOR_DIR))
-from andorinha import config, municipalities, packing, weights_run, weights_tables  # noqa: E402
+from andorinha import config, municipalities, weights_run, weights_tables  # noqa: E402
 from andorinha.weights_study import Outcome  # noqa: E402
 
 try:
@@ -95,7 +95,7 @@ class RunTest(unittest.TestCase):
         self.assertEqual(expected, result.selected_codes)
         self.assertEqual(expected, FakePool.instances[0].asked)
         self.assertTrue(result.changed)
-        table = municipalities.parse_weights((self.out / municipalities.WEIGHTS_FILE).read_text(encoding="utf-8"),
+        table = municipalities.parse_weights((self.out / municipalities.NEXT_WEIGHTS_FILE).read_text(encoding="utf-8"),
                                              self.mesh)
         for code in expected:
             self.assertEqual((0.7, 0.3, BUILD_ID, config.VALHALLA_VERSION, "2026-11-16"),
@@ -107,12 +107,29 @@ class RunTest(unittest.TestCase):
     def test_the_rest_of_the_table_is_untouched(self):
         self.run_plan(self.plan())
         seed = config.MOTORCYCLE_WEIGHTS_COPY.read_text(encoding="utf-8").splitlines()
-        new = (self.out / municipalities.WEIGHTS_FILE).read_text(encoding="utf-8").splitlines()
+        new = (self.out / municipalities.NEXT_WEIGHTS_FILE).read_text(encoding="utf-8").splitlines()
         changed = [line for line in new if line not in set(seed)]
         self.assertEqual(10, len(changed))
         self.assertEqual(len(seed), len(new) - 6)
-        self.assertEqual((self.out / municipalities.STATE_WEIGHTS_FILE).read_text(encoding="utf-8"),
+        self.assertEqual((self.out / municipalities.NEXT_STATE_WEIGHTS_FILE).read_text(encoding="utf-8"),
                          config.MOTORCYCLE_STATE_WEIGHTS_COPY.read_text(encoding="utf-8"))
+
+    def test_the_manifest_describes_the_next_tables(self):
+        self.run_plan(self.plan())
+        manifest = json.loads((self.out / municipalities.NEXT_MANIFEST_FILE).read_text(encoding="utf-8"))
+        weights = (self.out / municipalities.NEXT_WEIGHTS_FILE).read_text(encoding="utf-8")
+        self.assertEqual(weights_tables.sha256_of(weights), manifest["weights"]["sha256"])
+        self.assertEqual(config.MOTORCYCLE_WEIGHTS_ROWS + 6, manifest["weights"]["count"])
+        self.assertEqual((BUILD_ID, config.VALHALLA_VERSION, "2026-11-16"),
+                         (manifest["build_id"], manifest["valhalla_version"], manifest["study"]["date"]))
+        self.assertEqual(10, manifest["study"]["municipalities"]["updated"])
+        # e o que o gerador da próxima geração leria aceita o conjunto
+        self.assertEqual(3, len([n for n in self.out.iterdir() if ".proximo." in n.name or n.name == "pesos_proximo.json"]))
+
+    def test_the_normal_names_are_never_written_by_the_study(self):
+        self.run_plan(self.plan())
+        self.assertFalse((self.out / municipalities.WEIGHTS_FILE).exists())
+        self.assertFalse((self.out / municipalities.STATE_WEIGHTS_FILE).exists())
 
     def test_the_summary_says_what_happened(self):
         FakePool.no_sample = ("1300201",)
@@ -129,7 +146,8 @@ class RunTest(unittest.TestCase):
         FakePool.no_sample = tuple(weights_tables.select_batch(municipalities.load_weights(self.mesh), self.mesh, 3))
         result, _ = self.run_plan(self.plan(batch=3))
         self.assertFalse(result.changed)
-        self.assertFalse((self.out / municipalities.WEIGHTS_FILE).exists())
+        self.assertFalse((self.out / municipalities.NEXT_WEIGHTS_FILE).exists())
+        self.assertFalse((self.out / municipalities.NEXT_MANIFEST_FILE).exists())
         self.assertTrue((self.out / weights_run.SUMMARY_FILE).exists())
 
     def test_by_hand_codes_replace_the_rotation(self):
@@ -156,7 +174,7 @@ class RunTest(unittest.TestCase):
         self.assertEqual({"DF"}, set(result.skipped_states))
         self.assertTrue(result.changed)
         self.assertIn("o estado DF não entrou", log)
-        self.assertEqual((self.out / municipalities.STATE_WEIGHTS_FILE).read_text(encoding="utf-8"),
+        self.assertEqual((self.out / municipalities.NEXT_STATE_WEIGHTS_FILE).read_text(encoding="utf-8"),
                          config.MOTORCYCLE_STATE_WEIGHTS_COPY.read_text(encoding="utf-8"))
 
     def test_start_tables_can_come_from_a_folder(self):
@@ -179,30 +197,81 @@ class RunTest(unittest.TestCase):
             self.run_plan(self.plan(tables_dir=start))
 
 
-@unittest.skipIf(zstandard is None, "sem o zstandard")
-class PrepareTilesTest(unittest.TestCase):
-    def test_every_package_of_the_generation_goes_into_one_folder(self):
+@unittest.skipIf(zstandard is None, "zstandard não instalado")
+class PrepareFromReleaseTest(unittest.TestCase):
+    """O job weights baixa a release recém-publicada pelas URLs públicas: nada de artefato do Actions."""
+
+    def setUp(self):
         import io as _io
         import tarfile
 
-        with tempfile.TemporaryDirectory() as tmp:
-            dist = Path(tmp) / "dist"
-            dist.mkdir()
-            cat = {"base": {"file": "andorinha-base.tar.zst"}, "states": {"DF": {"file": "andorinha-DF.tar.zst"},
-                                                                          "GO": {"file": "andorinha-GO.tar.zst"}}}
-            for name, tiles in (("base", ["0/000/001.gph"]), ("DF", ["1/000/002.gph", "2/000/003.gph"]),
-                                ("GO", ["1/000/004.gph", "2/000/003.gph"])):
-                plain = _io.BytesIO()
-                with tarfile.open(fileobj=plain, mode="w") as tar:
-                    for path in tiles:
-                        info = tarfile.TarInfo(path)
-                        info.size = 3
-                        tar.addfile(info, _io.BytesIO(b"abc"))
-                (dist / f"andorinha-{name}.tar.zst").write_bytes(zstandard.ZstdCompressor().compress(plain.getvalue()))
-            (dist / "catalogo.json").write_text(json.dumps(cat), encoding="utf-8")
-            tiles_dir = weights_run.prepare_tiles(dist, Path(tmp) / "trabalho")
-            found = sorted(str(p.relative_to(tiles_dir)) for p in tiles_dir.rglob("*.gph"))
+        self.tmp = Path(tempfile.mkdtemp(prefix="andorinha-teste-"))
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.url = config.RELEASE_URL.format(tag=BUILD_ID)
+        self.files = {}
+        self.cat = {"build_id": BUILD_ID, "base": {}, "states": {}, "municipalities": {}}
+        for name, tiles in (("base", ["0/000/001.gph"]), ("DF", ["1/000/002.gph", "2/000/003.gph"]),
+                            ("GO", ["1/000/004.gph", "2/000/003.gph"])):
+            plain = _io.BytesIO()
+            with tarfile.open(fileobj=plain, mode="w") as tar:
+                for path in tiles:
+                    info = tarfile.TarInfo(path)
+                    info.size = 3
+                    tar.addfile(info, _io.BytesIO(b"abc"))
+            data = zstandard.ZstdCompressor().compress(plain.getvalue())
+            entry = {"file": f"andorinha-{name}.tar.zst", "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)}
+            self.files[self.url + entry["file"]] = data
+            if name == "base":
+                self.cat["base"] = entry
+            else:
+                self.cat["states"][name] = entry
+        weights = weights_tables.seed_tables(*(lambda m: (m, {municipalities.state_of(c) for c in m}))(
+            municipalities.load_mesh()))[0]
+        self.tables = {municipalities.WEIGHTS_FILE: weights.weights.encode(),
+                       municipalities.STATE_WEIGHTS_FILE: weights.state_weights.encode()}
+        self.cat["municipalities"] = {
+            "weights": {"sha256": hashlib.sha256(weights.weights.encode()).hexdigest()},
+            "state_weights": {"sha256": hashlib.sha256(weights.state_weights.encode()).hexdigest()}}
+        for name, data in self.tables.items():
+            self.files[self.url + name] = data
+        self.downloaded = []
+
+    def fetch(self, url):
+        if url == self.url + "catalogo.json":
+            return json.dumps(self.cat)
+        return self.files[url].decode("utf-8")
+
+    def download(self, url, dest, identity=None, **kwargs):
+        self.downloaded.append(url)
+        dest.write_bytes(self.files[url])
+
+    def prepare(self):
+        return weights_run.prepare_from_release(BUILD_ID, self.tmp / "trabalho", self.fetch, self.download)
+
+    def test_every_package_goes_into_one_folder_and_the_tables_next_to_it(self):
+        tiles, tables, build_id = self.prepare()
+        found = sorted(str(p.relative_to(tiles)) for p in tiles.rglob("*.gph"))
         self.assertEqual(["0/000/001.gph", "1/000/002.gph", "1/000/004.gph", "2/000/003.gph"], found)
+        self.assertEqual(BUILD_ID, build_id)
+        self.assertEqual(sorted(self.tables), sorted(p.name for p in tables.iterdir()))
+        self.assertEqual([self.url + "andorinha-base.tar.zst", self.url + "andorinha-DF.tar.zst",
+                          self.url + "andorinha-GO.tar.zst"], self.downloaded)
+        self.assertEqual([], list((self.tmp / "trabalho" / "pacotes").iterdir()))  # só os tiles ficam no disco
+
+    def test_a_package_that_does_not_match_the_catalog_stops_the_study(self):
+        self.cat["states"]["DF"]["sha256"] = "0" * 64
+        with self.assertRaisesRegex(RuntimeError, "sha256"):
+            self.prepare()
+
+    def test_a_table_that_does_not_match_the_catalog_stops_the_study(self):
+        self.cat["municipalities"]["weights"]["sha256"] = "0" * 64
+        with self.assertRaisesRegex(RuntimeError, "pesos_moto_municipios.csv"):
+            self.prepare()
+
+    def test_a_catalog_of_another_generation_stops_the_study(self):
+        self.cat["build_id"] = "2026-11-09-c17dff60"
+        with self.assertRaisesRegex(RuntimeError, "geração"):
+            self.prepare()
 
 
 def load_script():
@@ -224,7 +293,7 @@ class CommandLineTest(unittest.TestCase):
             code = self.script.main(argv)
         return code, log.getvalue()
 
-    def test_study_without_dist_asks_for_tiles_and_build_id(self):
+    def test_study_without_release_asks_for_tiles_and_build_id(self):
         with self.assertRaises(SystemExit):
             self.run_main(["study", "--out", str(self.tmp)])
 
@@ -265,12 +334,35 @@ class CommandLineTest(unittest.TestCase):
             self.script.weights_run.run = original
         self.assertEqual(1, code)
 
-    def test_apply_with_bad_tables_exits_one_and_says_why(self):
-        (self.tmp / "dist").mkdir()
-        (self.tmp / "tabelas").mkdir()
-        code, log = self.run_main(["apply", "--dist", str(self.tmp / "dist"), "--tables", str(self.tmp / "tabelas")])
+    def test_study_with_a_release_downloads_it_first(self):
+        calls = []
+
+        class Result:
+            changed = True
+
+        original = (self.script.weights_run.prepare_from_release, self.script.weights_run.run)
+        self.script.weights_run.prepare_from_release = lambda tag, work: calls.append((tag, work)) or (
+            self.tmp / "t", self.tmp / "tab", tag)
+        self.script.weights_run.run = lambda plan: calls.append(plan) or Result()
+        try:
+            code, _ = self.run_main(["study", "--release", BUILD_ID, "--work", str(self.tmp / "w"), "--out",
+                                     str(self.tmp / "o")])
+        finally:
+            self.script.weights_run.prepare_from_release, self.script.weights_run.run = original
+        self.assertEqual(0, code)
+        self.assertEqual((BUILD_ID, self.tmp / "w"), calls[0])
+        self.assertEqual((self.tmp / "t", self.tmp / "tab", BUILD_ID), (calls[1].tiles_dir, calls[1].tables_dir,
+                                                                        calls[1].build_id))
+
+    def test_upload_with_a_missing_result_exits_one_and_says_why(self):
+        original = self.script.publishing.gh_real
+        self.script.publishing.gh_real = lambda args: (1, "", "não deveria ser chamado")
+        try:
+            code, log = self.run_main(["upload", "--tag", BUILD_ID, "--out", str(self.tmp)])
+        finally:
+            self.script.publishing.gh_real = original
         self.assertEqual(1, code)
-        self.assertIn("NÃO aplicadas", log)
+        self.assertIn("NÃO subiu", log)
 
 
 if __name__ == "__main__":

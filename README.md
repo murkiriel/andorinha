@@ -197,7 +197,7 @@ recusaria um arquivo a mais), e é baixado e conferido à parte, pelo `sha256` d
   do peso vêm `null`, e o leitor usa o peso padrão.
 - `tiles_build_id`, `valhalla_version` e `date` dizem com que tiles, com que Valhalla e em que dia o peso **daquele
   município** foi calculado. Os pesos são refeitos em lotes, 600 municípios e 1 estado por geração (a volta leva 10
-  semanas nos municípios e 27 nos estados): quase sempre são de tiles de uma geração anterior à dos pacotes. O catálogo repete isso por UF (`municipalities.states.<UF>.generations` e
+  semanas nos municípios e 27 nos estados; o lote calculado numa geração só chega aos arquivos de apoio da seguinte): quase sempre são de tiles de uma geração anterior à dos pacotes. O catálogo repete isso por UF (`municipalities.states.<UF>.generations` e
   `same_generation`; para o peso do estado, `municipalities.states.<UF>.state_weights`), e um leitor decide se aceita
   um peso mais velho que os tiles.
 

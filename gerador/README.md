@@ -28,8 +28,8 @@ python generate.py --from packages   # reaproveita os tiles de data/build/
 python scripts/publish.py            # confere a geração (não publica nada)
 python scripts/publish.py --release  # sobe os pacotes numa release e grava o catalogo.json na raiz
 python scripts/due.py                # está na hora de gerar de novo? (só responde; não gera)
-python scripts/weights.py study --dist data/dist --out data/pesos   # o lote de pesos da semana, sobre a geração (demora horas)
-python scripts/weights.py apply --dist data/dist --tables data/pesos # põe as tabelas novas na geração
+python scripts/weights.py study --release <build_id> --out data/pesos  # o lote de pesos da semana, sobre uma release publicada (demora horas)
+python scripts/weights.py upload --tag <build_id> --out data/pesos     # sobe o resultado como assets extras da mesma release
 python -m unittest discover -s tests -t .
 ```
 
@@ -46,13 +46,14 @@ fecha a issue (job `alert`, `scripts/alert.py`). Quem acompanha o repositório r
 agendados sem avisar: o segundo cobre o primeiro e, se o primeiro já publicou, só confere a data e para. Disparado à
 mão, gera na hora e só publica com `publish` marcado. Num fork, o agendamento não gera.
 
-O workflow tem quatro jobs em fila. O `generate` libera espaço apagando ferramentas pré-instaladas da máquina, põe os
-dados e 12 GB de swap no disco com mais espaço livre, gera, guarda os logs e as medições (memória, swap e disco a cada
-30 s) como artefato e deixa a geração (`data/dist/`) como artefato também, sem publicar. O `weights` refaz o lote de
-pesos da semana sobre os tiles dela (ver [Pesos da moto por município](#pesos-da-moto-por-município)). O `publish` põe as tabelas
-novas na geração e publica pelo `publish.py`, mesmo que o estudo tenha falhado (então com a tabela anterior). O `alert`
-vê o resultado da geração publicada. O repositório das releases é o do próprio Actions (`GITHUB_REPOSITORY`), então o mesmo workflow
-serve num repositório de teste e no público.
+O workflow tem dois jobs depois do `interval`, em fila. O `generate` libera espaço apagando ferramentas pré-instaladas da
+máquina, põe os dados e 12 GB de swap no disco com mais espaço livre, gera, guarda os logs e as medições (memória, swap
+e disco a cada 30 s) como artefato de diagnóstico (se a cota de artefatos da conta acabar, esse upload falha sem derrubar
+o job) e publica pelo `publish.py`, como sempre. **Nada da geração passa por artefato do Actions.** O `weights` roda
+depois, só se o `generate` publicou: baixa os pacotes da release recém-publicada pelas URLs públicas, refaz o lote de
+pesos da semana (ver [Pesos da moto por município](#pesos-da-moto-por-município)) e sobe o resultado como assets extras
+da mesma release. Falhar ou estourar o tempo não muda nada do que foi publicado. O repositório das releases é o do próprio
+Actions (`GITHUB_REPOSITORY`), então o mesmo workflow serve num repositório de teste e no público.
 
 Medido no Actions em 2026-09-30, na máquina de repositório privado (2 CPUs, 7,8 GB de RAM), geração completa com
 publicação: **30,5 min** — extrato 1,8 min, tiles 24,0 min com 2 threads, pacotes 4,1 min, validação 0,5 min — e
@@ -73,12 +74,12 @@ novo, somar o download de 2,3 GB (25 min numa conexão de ~1,5 MB/s).
 | Etapa | Módulo | O que faz |
 |---|---|---|
 | (antes de tudo) | `andorinha/sources.py` | Confere a malha das UFs do IBGE, a cópia versionada `ibge_malha_uf.json`: as 27 UFs e o sha256 de `config.py`. Nada é baixado (a API do IBGE deixou de responder ao Actions em 2026-11-03), e a mesma malha dá sempre a mesma divisão dos pacotes. Vem primeiro para uma falha aparecer em segundos, não depois dos tiles. Para trocar a cópia, ver `IBGE_MESH_URL` em `config.py` |
-| (antes de tudo) | `andorinha/municipalities.py`, `andorinha/weights_tables.py` | Confere a malha municipal do IBGE, `ibge_malha_municipios.json.gz` (cópia versionada: sha256 do conteúdo e os 5.570 municípios), e as duas tabelas de pesos da moto de que a geração parte: as da release da geração publicada (`pesos_moto_municipios.csv` e `pesos_moto_estados.csv`, conferidas pelo sha256 e pela contagem do `catalogo.json` publicado, pelo formato, pela malha e por não perderem linhas) ou, se a release não as tem ou elas não conferem, a semente do repositório (sha256 e contagem do `config.py`). A malha e a semente não vêm da rede; a tabela da release, sim (uma tentativa de download e, se falhar, a semente com um aviso). Ver [Pesos da moto por município](#pesos-da-moto-por-município) |
+| (antes de tudo) | `andorinha/municipalities.py`, `andorinha/weights_tables.py` | Confere a malha municipal do IBGE, `ibge_malha_municipios.json.gz` (cópia versionada: sha256 do conteúdo e os 5.570 municípios), e as duas tabelas de pesos da moto de que a geração parte: as da release da geração publicada (as `.proximo`, que o estudo dela devolveu, ou, sem elas, as normais, `pesos_moto_municipios.csv` e `pesos_moto_estados.csv`; conferidas pelo sha256 e pela contagem, pelo formato, pela malha e por não perderem linhas) ou, se a release não as tem ou elas não conferem, a semente do repositório (sha256 e contagem do `config.py`). A malha e a semente não vêm da rede; a tabela da release, sim (uma tentativa de download e, se falhar, a semente com um aviso). Ver [Pesos da moto por município](#pesos-da-moto-por-município) |
 | osm | `andorinha/sources.py` | Baixa o extrato do Brasil quando há versão nova e confere o md5 publicado. Fonte principal: openstreetmap.fr (se ele troca o extrato durante o download, uma vez por dia, lê o md5 de novo e baixa a versão nova uma vez). Se ele falha, a Geofabrik, pelo arquivo datado do dia (`brazil-AAMMDD.osm.pbf`, que não muda); o log avisa e o `url` do catálogo diz de onde veio. `ANDORINHA_OSM_SOURCES` muda a ordem (no Actions, a entrada `osm_sources` do disparo manual) |
 | tiles | `andorinha/builder.py` | Roda `valhalla_build_admins` e `valhalla_build_tiles` do pyvalhalla, com 8 threads (config e executáveis vêm do `engine.py`), com o banco de fusos só do Brasil de `andorinha/timezones.py` (desde 2026-10-05; o zip da release fixada do timezone-boundary-builder é conferido pelo sha256 de `config.py` e recusado se não bater; precisa do SpatiaLite, `mod_spatialite`) |
 | packages | `andorinha/packing.py` | Divide os tiles em base (nível 0) e um pacote por UF (níveis 1 e 2), pela malha do IBGE, e grava os `.tar.zst` (zstd 19; até 2026-10-05, `.tar.gz`) |
 | packages | `andorinha/municipalities.py` | Grava o arquivo de apoio de cada UF, `andorinha-municipios-<UF>.geojson.zst`: o contorno de cada município (malha municipal do IBGE), o peso do perfil de moto dele e, no cabeçalho, o peso do estado, e grava ao lado as duas tabelas de pesos de que partiu. O estudo dos pesos não roda aqui, e sim no job `weights`, depois; ver [Pesos da moto por município](#pesos-da-moto-por-município) |
-| weights (job à parte) | `andorinha/weights_study.py`, `andorinha/weights_run.py`, `andorinha/weights_tables.py`, `scripts/weights.py` | `study`: extrai os pacotes da geração, escolhe o lote da semana (600 municípios e 1 estado de linha mais velha), refaz os pesos com o Valhalla (4 processos no Actions) e devolve as tabelas novas. `apply`: confere as tabelas novas, refaz os arquivos de apoio por UF e o catálogo da geração. Nada é publicado aqui |
+| weights (job à parte, depois da publicação) | `andorinha/weights_study.py`, `andorinha/weights_run.py`, `andorinha/weights_tables.py`, `scripts/weights.py` | `study`: baixa a release recém-publicada, escolhe o lote da semana (600 municípios e 1 estado de linha mais velha), refaz os pesos com o Valhalla (4 processos no Actions) e grava as tabelas `.proximo` e o `pesos_proximo.json`. `upload`: sobe esses três arquivos na mesma release, sem mexer em mais nada dela |
 | validate | `andorinha/validation.py` | 33 rotas, cada uma só com a base e as UFs dela instaladas, comparadas com a rota do Brasil inteiro. O foco é a moto, com 30: uma dentro de cada UF (capital -> cidade de 25 a 140 km), duas entre UFs vizinhas e Porto Alegre -> Fortaleza só com os pacotes das pontas. Carro, bicicleta e a pé têm uma rota curta cada, dentro de uma UF. Leva ~1 min |
 | catalog | `andorinha/catalog.py` | Monta o `catalogo.json` com tamanho, sha256, bbox e contagem de tiles de cada pacote, e os arquivos de apoio dos municípios (chave `municipalities`), com a geração dos tiles de que vieram os pesos de cada UF |
 
@@ -200,19 +201,34 @@ Resultado da semente: 3.787 municípios em 0,6/0,4, 520 em 0,4/0,4, 378 em 0,8/0
 O país inteiro leva ~3,5 CPU-horas por 600 municípios (ver "Tempo" abaixo): não cabe numa execução só junto com a
 geração, então cada geração refaz um lote.
 
-- **Onde roda.** Num job à parte do workflow `gerar`, o `weights`, depois do `generate` (que monta os pacotes e o
-  catálogo, sem publicar) e antes do `publish`. O `generate` entrega a geração (`data/dist/`) como artefato; o `weights`
-  extrai os pacotes numa pasta só (são os tiles do Brasil, os mesmos que o leitor usa) e roda
-  `python scripts/weights.py study --dist data/dist --out pesos`. O `publish` baixa a geração e o resultado do estudo,
-  roda `python scripts/weights.py apply --dist data/dist --tables pesos` (refaz os arquivos de apoio por UF, o
-  catálogo e o `geracao.json`) e publica. **Se o estudo falhar, ou as tabelas novas não passarem pela conferência, a
-  publicação segue com a tabela de que a geração partiu**; o job `weights` aparece em vermelho, o `publish` põe um
-  aviso e o `geracao.json` diz o que houve. A falha do estudo não abre a issue "Geração falhando".
-- **A tabela fica na release.** A geração publica `pesos_moto_municipios.csv` e `pesos_moto_estados.csv` ao lado dos
-  pacotes, e a geração seguinte lê a tabela da release da geração publicada: o Actions não escreve a tabela no
-  repositório (só o `catalogo.json` e a tabela de downloads do README, como já fazia). Os arquivos não estão na lista
-  `files` do contrato de catálogo (o leitor não precisa deles, os pesos já vão nos arquivos de apoio por UF); o
-  `sha256` e a contagem deles são `municipalities.weights` e `municipalities.state_weights` do catálogo.
+- **Onde roda: depois da publicação, sem artefato.** Num job à parte do workflow `gerar`, o `weights`, que só roda se o
+  `generate` publicou. O `generate` publica como sempre, com as travas de sempre (o estudo não está no caminho dele).
+  O `weights` baixa da release recém-publicada, pelas URLs públicas, o `catalogo.json`, a base e as 27 UFs (conferidos
+  pelo sha256 do catálogo) e as duas tabelas de que a geração partiu, extrai os pacotes numa pasta só (são os tiles
+  do Brasil, os mesmos que o leitor usa) e roda `python scripts/weights.py study --release <build_id> --out pesos`.
+  Depois `python scripts/weights.py upload --tag <build_id> --out pesos` (com o `GITHUB_TOKEN` do job, o único com
+  essa permissão) sobe o resultado. **Se o estudo falhar ou estourar o tempo, nada do que foi publicado muda**, a
+  geração seguinte parte das tabelas normais da release e o job `weights` aparece em vermelho; a falha não abre a issue
+  "Geração falhando" (o `alert` só olha o `generate`). Um artefato pequeno de diagnóstico (`pesos`, com o `estudo.json`
+  e o `/usr/bin/time -v`) sai com `continue-on-error`, e nada depende dele.
+- **O que sobe na release (assets extras da MESMA release).** `pesos_moto_municipios.proximo.csv`,
+  `pesos_moto_estados.proximo.csv` e `pesos_proximo.json` (o `build_id` da release, a versão do Valhalla, o nome, o
+  `sha256` e a contagem de cada tabela e um resumo do estudo: dia, lote, tempo, processos). O `upload` confere que as
+  tabelas são as que o json descreve, sobe com `--clobber` só esses três nomes (o json por último, para a geração
+  seguinte ignorar o que ficar pela metade) e confere que chegaram com o tamanho certo. Não reescreve o `catalogo.json`
+  nem nenhum asset já publicado: o `sha256` dos arquivos de apoio por UF e das tabelas normais continuam sendo os do
+  catálogo.
+- **As tabelas normais e as próximo.** Toda geração publica, ao lado dos pacotes, a tabela de que ela partiu
+  (`pesos_moto_municipios.csv` e `pesos_moto_estados.csv`, com o `sha256` e a contagem no catálogo:
+  `municipalities.weights` e `municipalities.state_weights`). O que o estudo devolve depois fica nos arquivos
+  `.proximo`. O Actions não escreve a tabela no repositório (só o `catalogo.json` e a tabela de downloads do README,
+  como já fazia). Nenhum deles está na lista `files` do contrato de catálogo: o leitor não precisa deles, os pesos já
+  vão nos arquivos de apoio por UF.
+- **Consequência do desenho: os pesos novos chegam ao app uma geração depois.** O estudo roda depois de a geração ser
+  publicada, e os arquivos de apoio por UF dela já saíram com a tabela de que ela partiu. Os pesos que o lote de hoje
+  calcula entram nos arquivos de apoio da geração seguinte (na semana que vem), que parte das tabelas `.proximo`. Um peso
+  tem, portanto, a idade do lote que o calculou mais uma geração, e a volta nos municípios leva 10 gerações para
+  calcular e 11 para chegar ao app.
 - **A rotação.** A cada geração, os 600 municípios (`ANDORINHA_WEIGHTS_BATCH`) de linha mais velha e 1 estado
   (`ANDORINHA_WEIGHTS_STATES`) de linha mais velha. A ordem (`weights_tables.select_batch`): primeiro os sem linha (um
   município novo, ou um dos cinco sem amostra: custam ~30 s cada), depois os de peso calculado com outra versão do
@@ -234,21 +250,24 @@ geração, então cada geração refaz um lote.
 Antes, o gerador só aceitava a cópia do repositório, pelo sha256 do `config.py`. Isso não serve mais: a tabela muda a
 cada geração, pelas mãos do gerador. A conferência equivalente (`andorinha/weights_tables.py`):
 
-1. **Tabela anterior.** O `catalogo.json` publicado diz o `sha256` e a contagem das duas tabelas da release dele. A
-   geração baixa `pesos_moto_municipios.csv` e `pesos_moto_estados.csv` dessa release e confere o `sha256`, a contagem,
-   o formato (cabeçalho, colunas, pesos de 0 a 1 com uma casa e `use_trails` até o teto, geração, versão e data), um
-   município por linha, todos na malha municipal, nenhuma UF faltando e **a tabela não perder linhas** (no mínimo as 5.564
-   da semente). Se o catálogo diz as mesmas tabelas da semente (a primeira vez), usa a cópia do repositório, que continua
-   conferida pelo `sha256` e pela contagem do `config.py`.
-2. **Sem tabela confiável, a semente.** Release sem as tabelas (as gerações de antes deste ciclo), sem rede, ou com
-   tabela que não confere: a geração parte da semente e diz isso no log e nas `notes` do `geracao.json`. Nunca pára a
-   geração (o custo é perder o progresso dos lotes; a rotação os refaz).
-3. **Tabela nova.** Antes de entrar na geração (`apply`), as tabelas que o estudo devolveu passam pelas mesmas
-   verificações e pela de não ter menos municípios que a tabela com que a geração partiu. Qualquer problema deixa
-   `data/dist/` como estava.
-4. **Publicação.** O `publish.py` confere que as duas tabelas existem em `data/dist/` e que o `sha256` de cada uma é o
-   do catálogo; o catálogo e as tabelas saem juntos. O `sha256` que o catálogo publica (`municipalities.weights`) é o
-   da tabela que sobe na release.
+1. **De onde a geração parte** (`weights_tables.previous_tables`). O `catalogo.json` publicado diz a release da geração
+   anterior. Dela, nesta ordem:
+   - **as tabelas `.proximo`**, se existem e passam em tudo: o `pesos_proximo.json` é da mesma geração (`build_id`) e do
+     mesmo Valhalla, o `sha256` e a contagem de cada tabela batem com o json, o formato é o certo (cabeçalho, colunas, pesos
+     de 0 a 1 com uma casa e `use_trails` até o teto, geração, versão e data), um município por linha, todos na malha
+     municipal, uma linha para cada UF e **a tabela não perde linhas** (no mínimo as 5.564 da semente). Release sem elas
+     (o estudo não rodou ou falhou) passa ao próximo sem aviso; com elas e sem servirem, passa com aviso;
+   - **as tabelas normais** da release, de que a geração anterior partiu, conferidas pelo `sha256` e pela contagem do
+     catálogo e pelas mesmas verificações de formato. Se o catálogo diz as tabelas da semente, nada é baixado;
+   - **a semente do repositório** (as cópias `pesos_moto_*.csv`, conferidas pelo `sha256` e pela contagem do
+     `config.py`). Com aviso no log e nas `notes` do `geracao.json` quando a release devia ter as tabelas e elas não
+     serviram (rede, `sha256`, formato); sem aviso na primeira geração, cujo catálogo anterior é de antes dos pesos.
+   Nunca pára a geração (o custo é perder o progresso dos lotes; a rotação os refaz).
+2. **O estudo** parte das tabelas normais da release que acabou de baixar (as de que a geração partiu), conferidas pelo
+   `sha256` do catálogo, e escolhe o lote nelas.
+3. **Publicação.** O `publish.py` confere que as duas tabelas normais existem em `data/dist/` e que o `sha256` de cada
+   uma é o do catálogo; o catálogo e as tabelas saem juntos. O `sha256` que o catálogo publica (`municipalities.weights`)
+   é o da tabela que sobe na release.
 
 ### Conferência com a tabela de 2026-11-14
 
@@ -284,11 +303,11 @@ grandes (~150 s) e os 5 sem amostra (~30 s), dá **~12.500 CPU-segundos (3,5 CPU
 
 No runner do GitHub (`ubuntu-24.04`, 4 vCPUs de um repositório público), as premissas: cada vCPU rende 50% a 65% de
 uma thread da máquina da medição (processador de ~3,2 GHz no máximo, e os 4 vCPUs são 2 núcleos com hyperthreading),
-os 4 processos usam os 4 vCPUs o tempo todo, e o resto (baixar o artefato de ~1,5 GB, extrair os pacotes, abrir os
+os 4 processos usam os 4 vCPUs o tempo todo, e o resto (baixar os pacotes da release (~1,5 GB), extrair, abrir os
 `Actor`s) leva 10 a 15 min. Então: 4,3 CPU-horas / (4 x 0,5 a 0,65) = **1,7 a 2,2 h de estudo, mais ~15 min de
 preparo: de 2 a 2,5 h**, contra o limite de 6 h do job (e o orçamento do estudo, 5 h). Folga de ~2,4x no orçamento. Se o runner for
 mais lento que o previsto, o orçamento de tempo corta o lote em vez de derrubar o job. A primeira execução no Actions
-confirma o número: o `estudo.json` do artefato `pesos` traz os segundos de cada município, e o `pesos-tempo.txt`, o
+confirma o número: o `estudo.json` do artefato de diagnóstico `pesos` traz os segundos de cada município, e o `pesos-tempo.txt`, o
 `/usr/bin/time -v` do job (pico de memória: ~0,4 GB por processo na máquina local, ~1,6 GB com 4).
 
 Esta etapa pode ser rodada à mão, sem o Actions:
@@ -298,8 +317,8 @@ python scripts/weights.py study --tiles /pasta/dos/tiles --build-id 2026-11-09-c
     --municipalities 3102001,3100203 --states 0 --workers 4
 ```
 
-Sem `--municipalities` e sem `--dist`, ele faz o lote da rotação sobre a semente do repositório. O `--out` recebe as
-tabelas novas e o `estudo.json` (o que foi escolhido, o que terminou e o peso, o centro, as viagens e os segundos de cada
+Sem `--municipalities` e sem `--release`, ele faz o lote da rotação sobre a semente do repositório. O `--out` recebe as
+tabelas `.proximo`, o `pesos_proximo.json` e o `estudo.json` (o que foi escolhido, o que terminou e o peso, o centro, as viagens e os segundos de cada
 unidade).
 
 ### Pesos por estado

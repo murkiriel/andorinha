@@ -1,10 +1,12 @@
 """A execução do estudo de um lote: escolhe o que refazer, roda o estudo, junta os resultados na tabela e grava o que a
 publicação precisa. A linha de comando fica em scripts/weights.py; aqui a lógica, testável com um estudo falso.
 
-Entradas: as tiles da geração (a pasta de tiles com a base e as UFs extraídas juntas), o `build_id` dela, a tabela
-de que se parte e o dia. Saída, em `out`:
-- `pesos_moto_municipios.csv` e `pesos_moto_estados.csv`: as tabelas com as linhas refeitas (só se alguma mudou);
-- `estudo.json`: o que foi escolhido, o que terminou, os pesos de cada unidade e os tempos.
+Entradas: os tiles da geração (a pasta de tiles com a base e as UFs extraídas juntas), o `build_id` dela, a tabela
+de que se parte e o dia. `prepare_from_release` monta tudo isso a partir da release já publicada, pelas URLs públicas.
+Saída, em `out`:
+- `pesos_moto_municipios.proximo.csv`, `pesos_moto_estados.proximo.csv` e `pesos_proximo.json`: as tabelas com as
+  linhas refeitas e o json que as descreve (só se alguma unidade mudou); `scripts/weights.py upload` os sobe na release;
+- `estudo.json`: o que foi escolhido, o que terminou, os pesos de cada unidade e os tempos (diagnóstico).
 """
 from __future__ import annotations
 
@@ -13,10 +15,12 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Tuple
 
-from . import config, municipalities, packing, weights_study, weights_tables
-from .municipalities import STATE_WEIGHTS_FILE, WEIGHTS_FILE
+from . import config, municipalities, net, packing, weights_study, weights_tables
+from .municipalities import (NEXT_MANIFEST_FILE, NEXT_STATE_WEIGHTS_FILE, NEXT_WEIGHTS_FILE, STATE_WEIGHTS_FILE,
+                             WEIGHTS_FILE)
+from .util import file_hash
 from .weights_study import Outcome
 
 SUMMARY_FILE = "estudo.json"
@@ -123,10 +127,22 @@ def run(plan: Plan, pool_factory: Optional[Callable] = None, actor_factory: Opti
     new_states, state_updated = weights_tables.merge(state_weights, result.states, plan.build_id,
                                                      config.VALHALLA_VERSION, plan.date)
     result.changed = bool(updated or state_updated)
-    if result.changed:
-        (plan.out / WEIGHTS_FILE).write_bytes(weights_tables.serialize_weights(new_weights).encode("utf-8"))
-        (plan.out / STATE_WEIGHTS_FILE).write_bytes(weights_tables.serialize_state_weights(new_states).encode("utf-8"))
     result.seconds = clock() - started
+    if result.changed:
+        weights_text = weights_tables.serialize_weights(new_weights)
+        state_text = weights_tables.serialize_state_weights(new_states)
+        (plan.out / NEXT_WEIGHTS_FILE).write_bytes(weights_text.encode("utf-8"))
+        (plan.out / NEXT_STATE_WEIGHTS_FILE).write_bytes(state_text.encode("utf-8"))
+        manifest = weights_tables.next_manifest(
+            weights_text, state_text, new_weights, new_states, plan.build_id, date=plan.date,
+            started_from=texts.origin, workers=plan.workers, minutes=round(result.seconds / 60, 2),
+            minutes_budget=plan.minutes,
+            municipalities={"selected": len(result.selected_codes), "finished": len(result.municipalities),
+                            "updated": updated},
+            states={"selected": result.selected_states, "updated": state_updated,
+                    "skipped": sorted(result.skipped_states)})
+        (plan.out / NEXT_MANIFEST_FILE).write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+                                                   encoding="utf-8")
     write_summary(plan, result, texts.origin, updated, state_updated)
     print(f"[pesos] {updated} municípios e {state_updated} estado(s) refeitos em {result.seconds / 60:.1f} min")
     return result
@@ -176,15 +192,38 @@ def write_summary(plan: Plan, result: Result, origin: str, updated: int, state_u
     (plan.out / SUMMARY_FILE).write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def prepare_tiles(dist: Path, work: Path) -> Path:
-    """Extrai os pacotes de uma geração (a base e as UFs de `dist`, pelo catalogo.json) numa pasta só: os tiles do
-    Brasil, como o motor os vê. Devolve a pasta."""
+def prepare_from_release(tag: str, work: Path, fetch=net.fetch_text, download=net.download) -> Tuple[Path, Path, str]:
+    """Baixa da release `tag`, já publicada, pelas URLs públicas (sem artefato do Actions): o `catalogo.json`, a base e
+    as UFs, e as duas tabelas normais, de que a geração partiu. Confere o sha256 de cada pacote e de cada tabela contra
+    o catálogo e extrai os pacotes numa pasta só (os tiles do Brasil). Devolve (pasta de tiles, pasta das tabelas,
+    build_id). Levanta RuntimeError se algo não confere."""
     from . import publishing
 
-    cat = json.loads((dist / "catalogo.json").read_text(encoding="utf-8"))
+    url = config.RELEASE_URL.format(tag=tag)
+    cat = json.loads(fetch(url + "catalogo.json"))
+    if cat.get("build_id") != tag:
+        raise RuntimeError(f"o catalogo.json da release {tag} é da geração {cat.get('build_id')}")
+    packages = work / "pacotes"
     tiles = work / "tiles"
-    tiles.mkdir(parents=True, exist_ok=True)
+    tables = work / "tabelas"
+    for folder in (packages, tiles, tables):
+        folder.mkdir(parents=True, exist_ok=True)
     names = publishing.entries(cat)
     for name in ["base"] + sorted(n for n in names if n != "base"):
-        packing.extract_package(dist / names[name]["file"], tiles)
-    return tiles
+        entry = names[name]
+        dest = packages / entry["file"]
+        print(f"[pesos] baixando {entry['file']} ({entry['bytes'] / 1e6:.1f} MB)...", flush=True)
+        download(url + entry["file"], dest, identity=entry["sha256"])
+        if file_hash(dest) != entry["sha256"]:
+            raise RuntimeError(f"{entry['file']} baixado não bate com o sha256 do catálogo")
+        packing.extract_package(dest, tiles)
+        dest.unlink()  # só os tiles ficam no disco
+    municipal = cat.get("municipalities") or {}
+    for name, key in ((WEIGHTS_FILE, "weights"), (STATE_WEIGHTS_FILE, "state_weights")):
+        if key not in municipal:
+            raise RuntimeError(f"o catálogo da release {tag} não diz a tabela {name}")
+        text = fetch(url + name)
+        if weights_tables.sha256_of(text) != municipal[key]["sha256"]:
+            raise RuntimeError(f"{name} da release {tag} não bate com o sha256 do catálogo")
+        (tables / name).write_bytes(text.encode("utf-8"))
+    return tiles, tables, tag

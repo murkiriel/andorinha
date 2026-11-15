@@ -1,19 +1,20 @@
 """As tabelas de pesos da moto, atualizadas pelo próprio gerador: de onde a geração parte, qual lote ela refaz, como
 os resultados entram na tabela e como a tabela nova chega à release.
 
-O ciclo de uma geração:
-1. **Parte da tabela anterior.** A geração lê a tabela da release da geração publicada (`pesos_moto_municipios.csv` e
-   `pesos_moto_estados.csv`, ao lado dos pacotes), conferida pelo sha256 e pela contagem que o `catalogo.json`
-   publicado diz (`previous_tables`). Sem tabela na release (as gerações de antes deste ciclo), ou com uma que não
-   confere, parte da semente, a cópia do repositório (conferida pelo sha256 do config), e diz isso no log e nas `notes`
-   do `geracao.json`. A geração sai do mesmo jeito, só com pesos mais velhos.
-2. **Estuda o lote.** Depois dos tiles, num job à parte do workflow, andorinha/weights_study.py refaz os pesos do lote
-   da semana (`select_batch`: os municípios de peso mais velho; `select_states`: o estado de peso mais velho) sobre os
-   tiles dessa geração. O que o estudo devolve entra na tabela (`merge`), cada linha com a geração dos tiles, o
-   Valhalla e o dia dela.
-3. **Aplica e publica.** `apply_to_dist` troca as tabelas da geração pelas novas, refaz os arquivos de apoio por UF e o
-   catálogo, e a publicação sobe as tabelas na release junto com tudo. O Actions não escreve no repositório: a tabela
-   fica na release. Se o estudo falhar, a publicação segue com a tabela anterior.
+O ciclo, sem nenhum artefato do Actions no caminho da publicação:
+1. **A geração publica como sempre**, partindo de uma tabela. `previous_tables` escolhe, da release da geração
+   publicada, nesta ordem: as tabelas `proximo` (o que o estudo da geração anterior devolveu), as tabelas normais
+   (`pesos_moto_municipios.csv` e `pesos_moto_estados.csv`, as de que ela mesma partiu) e, por último, a semente do
+   repositório, com um aviso quando uma delas existia e não serviu. Cada passo é conferido (sha256, contagem, formato,
+   malha). A tabela de que a geração partiu sobe na release dela, ao lado dos pacotes.
+2. **Estuda o lote depois de publicar.** Um job à parte (`weights`) baixa os pacotes da release recém-publicada pelas
+   URLs públicas, extrai os tiles e refaz os pesos do lote da semana (`select_batch`: os municípios de peso mais
+   velho; `select_states`: o estado de peso mais velho). O que o estudo devolve entra na tabela (`merge`), cada linha
+   com a geração dos tiles, o Valhalla e o dia dela.
+3. **Sobe o resultado na MESMA release**, como assets extras com nomes próprios: `pesos_moto_municipios.proximo.csv`,
+   `pesos_moto_estados.proximo.csv` e `pesos_proximo.json` (sha256, contagem, lote e tempos; `next_manifest`). Não mexe
+   no `catalogo.json` nem nos arquivos já publicados. A geração seguinte parte deles (passo 1): os pesos refeitos
+   chegam ao app UMA GERAÇÃO DEPOIS de calculados. Se o estudo falha ou estoura o tempo, nada publicado muda.
 
 A rotação: a cada geração, os `BATCH` municípios cujas linhas são mais velhas (os sem linha vão sempre na frente); mais
 um estado, o mais velho. Com as linhas todas do mesmo dia, o desempate é o código (município) ou a sigla (UF), então a
@@ -23,14 +24,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
-import tempfile
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
-from . import catalog, config, municipalities, net
-from .municipalities import (STATE_WEIGHTS_HEADER, STATE_WEIGHTS_FILE, WEIGHTS_FILE, WEIGHTS_HEADER, Inputs,
-                             TableTexts, Weight)
+from . import config, municipalities, net, publishing
+from .municipalities import (NEXT_MANIFEST_FILE, NEXT_STATE_WEIGHTS_FILE, NEXT_WEIGHTS_FILE, STATE_WEIGHTS_FILE,
+                             STATE_WEIGHTS_HEADER, WEIGHTS_FILE, WEIGHTS_HEADER, Inputs, TableTexts, Weight)
 from .weights_study import Outcome
 
 # Quantos municípios e estados cada geração refaz. ANDORINHA_WEIGHTS_BATCH e ANDORINHA_WEIGHTS_STATES mudam (0 desliga).
@@ -139,17 +138,67 @@ def release_tables(cat: dict, known_codes: Iterable[str], states: Iterable[str],
     return TableTexts(texts[0], texts[1], f"a release {cat['build_id']}"), weights, state_weights
 
 
+MANIFEST_VERSION = 1
+
+
+def next_manifest(weights_text: str, state_text: str, weights: Dict[str, Weight], state_weights: Dict[str, Weight],
+                  build_id: str, **study) -> dict:
+    """O `pesos_proximo.json`: descreve as tabelas `proximo` de uma release. `build_id` é o da release (e dos tiles) em
+    que o estudo rodou; `study` entra como está em `study` (lote, tempos, de onde partiu)."""
+    return {"format_version": MANIFEST_VERSION, "build_id": build_id, "valhalla_version": config.VALHALLA_VERSION,
+            "weights": {"file": NEXT_WEIGHTS_FILE, "sha256": sha256_of(weights_text), "count": len(weights)},
+            "state_weights": {"file": NEXT_STATE_WEIGHTS_FILE, "sha256": sha256_of(state_text),
+                              "count": len(state_weights)},
+            "study": study}
+
+
+def next_tables(cat: dict, known_codes: Iterable[str], states: Iterable[str], fetch: Fetch = net.fetch_text,
+                ) -> Tuple[TableTexts, Dict[str, Weight], Dict[str, Weight]]:
+    """As tabelas `proximo` da release do catálogo `cat`: baixa o json e as duas tabelas e confere que o json é da
+    release do catálogo (`build_id`), o sha256 e a contagem de cada tabela contra o json, e o formato de
+    `check_tables` (cabeçalho, pesos, malha, uma UF cada, no mínimo as linhas da semente). Levanta net.PermanentError
+    se a release não tem o json (o estudo não rodou ou falhou: o caso comum), TableError se algo não confere."""
+    url = cat["release_url"]
+    manifest = json.loads(fetch(url + NEXT_MANIFEST_FILE))
+    try:
+        if manifest["format_version"] != MANIFEST_VERSION:
+            raise TableError(f"{NEXT_MANIFEST_FILE} de versão {manifest['format_version']}")
+        if manifest["build_id"] != cat["build_id"]:
+            raise TableError(f"{NEXT_MANIFEST_FILE} é da geração {manifest['build_id']}, não da {cat['build_id']}")
+        if manifest["valhalla_version"] != config.VALHALLA_VERSION:
+            raise TableError(f"tabelas calculadas com o Valhalla {manifest['valhalla_version']}")
+        entries = (manifest["weights"], manifest["state_weights"])
+        names = (NEXT_WEIGHTS_FILE, NEXT_STATE_WEIGHTS_FILE)
+        if [e["file"] for e in entries] != list(names):
+            raise TableError(f"{NEXT_MANIFEST_FILE} descreve outros arquivos")
+        texts = []
+        for entry, name in zip(entries, names):
+            text = fetch(url + name)
+            if sha256_of(text) != entry["sha256"]:
+                raise TableError(f"{name} não bate com o sha256 do {NEXT_MANIFEST_FILE}")
+            texts.append(text)
+        weights, state_weights = check_tables(texts[0], texts[1], known_codes, states)
+        if (len(weights), len(state_weights)) != (int(entries[0]["count"]), int(entries[1]["count"])):
+            raise TableError(f"{len(weights)} municípios e {len(state_weights)} UFs; o {NEXT_MANIFEST_FILE} diz "
+                             f"{entries[0]['count']} e {entries[1]['count']}")
+    except (KeyError, TypeError) as e:
+        raise TableError(f"{NEXT_MANIFEST_FILE} sem a chave {e}") from e
+    return TableTexts(texts[0], texts[1], f"as tabelas próximo da release {cat['build_id']}"), weights, state_weights
+
+
 def previous_tables(known_codes: Iterable[str], states: Iterable[str], catalog_path: Optional[Path] = None,
                     fetch: Fetch = net.fetch_text,
                     ) -> Tuple[TableTexts, Dict[str, Weight], Dict[str, Weight], List[str]]:
     """De onde a geração parte: (textos, pesos dos municípios, pesos dos estados, avisos).
 
-    1. O catálogo publicado (o `catalogo.json` do checkout) diz o sha256 das tabelas da geração publicada. Se são o
-       da semente, a semente vale e nada é baixado.
-    2. Senão, baixa as tabelas da release dela e confere (`release_tables`).
-    3. Sem catálogo, ou com a release sem tabela (404, as gerações de antes deste ciclo), ou com tabela que não
-       confere, ou sem rede: a semente, com um aviso que vai para o log e para as `notes` do `geracao.json`. Nunca
-       pára a geração."""
+    O catálogo publicado (o `catalogo.json` do checkout) diz qual é a release da geração publicada. Dela, nesta ordem:
+    1. as tabelas `proximo` (`next_tables`), se existem e passam em todas as conferências. Release sem elas (o estudo
+       não rodou ou falhou) segue para o passo 2 sem aviso; tabelas `proximo` que existem e não servem, com aviso;
+    2. as tabelas normais, de que aquela geração partiu, conferidas pelo sha256 e pela contagem do catálogo
+       (`release_tables`); se são as da semente, nada é baixado;
+    3. a semente do repositório (sha256 e contagem do `config.py`), com um aviso que vai para o log e para as `notes`
+       do `geracao.json` quando a release devia ter as tabelas e não serviram (rede, sha256, formato). Catálogo de
+       antes dos pesos, ou nenhum: a semente, sem aviso. Nunca pára a geração."""
     known, state_set = list(known_codes), set(states)
     path = catalog_path or config.REPO / "catalogo.json"
     notes: List[str] = []
@@ -160,6 +209,15 @@ def previous_tables(known_codes: Iterable[str], states: Iterable[str], catalog_p
         except ValueError as e:
             notes.append(f"catálogo publicado ilegível ({e}); os pesos partem da semente do repositório")
     published = _published_tables(cat) if cat else None
+    if cat and cat.get("municipalities") and cat.get("release_url"):
+        try:
+            texts, weights, state_weights = next_tables(cat, known, state_set, fetch)
+            return texts, weights, state_weights, notes
+        except net.PermanentError:
+            pass  # a release não tem as tabelas próximo: o estudo daquela geração não rodou ou não terminou
+        except (TableError, net.DownloadError, ValueError) as e:
+            notes.append(f"as tabelas próximo da release {cat['build_id']} não servem ({e}); os pesos partem das "
+                         "tabelas normais dela")
     seed = (config.MOTORCYCLE_WEIGHTS_SHA256, config.MOTORCYCLE_STATE_WEIGHTS_SHA256)
     if cat and published and published[:2] != seed:
         try:
@@ -172,7 +230,6 @@ def previous_tables(known_codes: Iterable[str], states: Iterable[str], catalog_p
             notes.append(f"as tabelas de pesos da release {cat['build_id']} não servem ({e}); os pesos partem da "
                          "semente do repositório")
     elif cat and published is None and cat.get("municipalities") and not notes:
-        # Um catálogo de antes dos pesos (sem a chave `municipalities`) é o caso da primeira geração: sem aviso.
         notes.append("o catálogo publicado não diz as tabelas de pesos; os pesos partem da semente do repositório")
     texts, weights, state_weights = seed_tables(known, state_set)
     return texts, weights, state_weights, notes
@@ -240,51 +297,44 @@ def merge(table: Dict[str, Weight], outcomes: Iterable[Outcome], tiles_build_id:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-# A tabela nova chega à geração.
+# O resultado sobe na release.
 
-class ApplyError(RuntimeError):
-    """As tabelas novas não entraram na geração; `dist` ficou como estava."""
+NEXT_FILES = (NEXT_WEIGHTS_FILE, NEXT_STATE_WEIGHTS_FILE, NEXT_MANIFEST_FILE)
 
 
-def apply_to_dist(dist: Path, tables_dir: Path, study_note: Optional[str] = None) -> List[str]:
-    """Põe as tabelas novas (`tables_dir`) na geração de `dist`: confere o formato, a contagem (a tabela nova não
-    perde linhas da que a geração usava) e a malha, refaz os arquivos de apoio por UF e o catalogo.json (a chave
-    `municipalities` e o `contract`) e atualiza as `notes` do geracao.json. Tudo é preparado numa pasta à parte e só
-    então trocado em `dist`; qualquer problema levanta ApplyError antes de tocar nele. Devolve os avisos novos."""
-    catalog_path = dist / "catalogo.json"
+class UploadError(RuntimeError):
+    """O resultado do estudo não subiu; nada do que já estava publicado mudou."""
+
+
+def upload_next(gh: publishing.Gh, tag: str, folder: Path) -> List[str]:
+    """Sobe `pesos_moto_*.proximo.csv` e `pesos_proximo.json` de `folder` na release `tag`, que tem de estar publicada.
+    Só estes três nomes: nenhum outro asset da release é tocado (o `catalogo.json`, os pacotes e as tabelas normais
+    ficam como estão). Antes de subir, confere que as tabelas são as que o json descreve; depois, que os três assets
+    estão lá com o tamanho certo. O json sobe por último: sem ele a geração seguinte ignora os outros dois. Devolve os
+    nomes subidos. Levanta UploadError."""
+    paths = [folder / name for name in NEXT_FILES]
+    missing = [p.name for p in paths if not p.is_file()]
+    if missing:
+        raise UploadError(f"falta {', '.join(missing)} em {folder}")
     try:
-        cat = json.loads(catalog_path.read_text(encoding="utf-8"))
-        texts = TableTexts((tables_dir / WEIGHTS_FILE).read_bytes().decode("utf-8"),
-                           (tables_dir / STATE_WEIGHTS_FILE).read_bytes().decode("utf-8"), "o estudo desta geração")
-        mesh = municipalities.load_mesh()
-        states = {municipalities.state_of(code) for code in mesh}
-        weights, state_weights = check_tables(texts.weights, texts.state_weights, mesh, states)
-        if (dist / WEIGHTS_FILE).is_file():
-            before = municipalities.parse_weights((dist / WEIGHTS_FILE).read_text(encoding="utf-8"), set(mesh))
-            if len(weights) < len(before):
-                raise TableError(f"a tabela nova tem {len(weights)} municípios e a da geração {len(before)}")
-    except (OSError, ValueError, KeyError, RuntimeError) as e:  # TableError é RuntimeError
-        raise ApplyError(f"as tabelas novas não servem: {e}") from e
-
-    with tempfile.TemporaryDirectory(prefix="andorinha-pesos-", dir=dist) as tmp:
-        staging = Path(tmp)
-        files = municipalities.generate(Inputs(mesh, weights, state_weights, texts), staging)
-        in_catalog = {state: f for state, f in files.items() if state in cat["states"]}
-        updated = dict(cat)
-        updated["municipalities"] = catalog.municipalities_entry(in_catalog, cat["build_id"], texts.digests())
-        commit = (cat.get("contract") or {}).get("generator", {}).get("commit")
-        updated["contract"] = catalog.contract(updated, commit)
-        notes = municipalities.generation_notes(in_catalog, cat["build_id"], config.VALHALLA_VERSION)
-        record = dist / "geracao.json"
-        run = json.loads(record.read_text(encoding="utf-8")) if record.is_file() else None
-
-        # Preparado: agora a troca.
-        municipalities.clean_output(dist)
-        for item in sorted(staging.iterdir()):
-            shutil.move(str(item), str(dist / item.name))
-    catalog.save(updated, catalog_path)
-    if run is not None:
-        kept = [n for n in run.get("notes", []) if not n.startswith("pesos de ")]
-        run["notes"] = kept + notes + ([study_note] if study_note else [])
-        record.write_text(json.dumps(run, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return notes
+        manifest = json.loads(paths[2].read_text(encoding="utf-8"))
+        for entry, path in zip((manifest["weights"], manifest["state_weights"]), paths[:2]):
+            if hashlib.sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
+                raise UploadError(f"{path.name} não bate com o sha256 do {NEXT_MANIFEST_FILE}")
+        if manifest["build_id"] != tag:
+            raise UploadError(f"o {NEXT_MANIFEST_FILE} é da geração {manifest['build_id']}, não da {tag}")
+    except (ValueError, KeyError, TypeError) as e:
+        raise UploadError(f"{NEXT_MANIFEST_FILE} ilegível ({e.__class__.__name__}: {e})") from e
+    try:
+        state, assets = publishing.release_state(gh, tag)
+        if state != "publicada":
+            raise UploadError(f"a release {tag} não está publicada ({state}); nada foi subido")
+        for path in paths:
+            publishing._run(gh, ["release", "upload", tag, str(path), "--clobber"])
+        _, assets = publishing.release_state(gh, tag)
+    except publishing.GhError as e:
+        raise UploadError(str(e)) from e
+    wrong = [p.name for p in paths if assets.get(p.name) != p.stat().st_size]
+    if wrong:
+        raise UploadError(f"a release {tag} continua sem {', '.join(wrong)} (ou com outro tamanho)")
+    return [p.name for p in paths]

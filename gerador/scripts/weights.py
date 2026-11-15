@@ -1,29 +1,26 @@
-"""O estudo dos pesos da moto em lotes e a aplicação do resultado numa geração.
+"""O estudo dos pesos da moto em lotes, depois da publicação, e a subida do resultado na release.
 
-    # o que o workflow faz: extrai os pacotes de data/dist/, estuda o lote da semana, grava as tabelas novas
-    python scripts/weights.py study --dist data/dist --out data/pesos
+    # o que o workflow faz, no job weights: baixa a release recém-publicada, estuda o lote da semana, grava as tabelas novas
+    python scripts/weights.py study --release 2026-11-16-0a1b2c3d --work /tmp/pesos --out pesos
+    python scripts/weights.py upload --tag 2026-11-16-0a1b2c3d --out pesos
 
     # uma execução à mão, sobre uma pasta de tiles já extraída (a base e as UFs juntas), com municípios escolhidos
     python scripts/weights.py study --tiles /caminho/tiles --build-id 2026-11-09-c17dff60 --out /caminho/saida \\
         --municipalities 5201108,5300108 --states 0 --workers 4
 
-    # põe as tabelas novas na geração de data/dist/ (arquivos de apoio por UF e catálogo refeitos)
-    python scripts/weights.py apply --dist data/dist --tables data/pesos
-
-`study` sai com 0 quando refez ao menos uma unidade (e gravou as tabelas novas em --out) e com 1 quando não refez
-nenhuma. Nenhum dos dois comandos publica nada; a publicação é o scripts/publish.py. A lógica fica em
-andorinha/weights_run.py (o estudo) e andorinha/weights_tables.py (as tabelas).
+`study` sai com 0 quando refez ao menos uma unidade (e gravou as tabelas `proximo` e o `pesos_proximo.json` em --out) e
+com 1 quando não refez nenhuma. `upload` sobe só esses três arquivos como assets extras da release, que já tem de estar
+publicada, sem mexer em mais nada dela. A publicação da geração é o scripts/publish.py, que não depende de nada disto.
+A lógica fica em andorinha/weights_run.py (o estudo) e andorinha/weights_tables.py (as tabelas).
 """
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
-from typing import Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from andorinha import config, weights_run, weights_tables  # noqa: E402
+from andorinha import config, publishing, weights_run, weights_tables  # noqa: E402
 
 
 def _csv(value: str):
@@ -31,16 +28,13 @@ def _csv(value: str):
 
 
 def study(args: argparse.Namespace) -> int:
-    if args.dist:
-        cat = json.loads((args.dist / "catalogo.json").read_text(encoding="utf-8"))
-        build_id = cat["build_id"]
-        tables = args.tables or args.dist
+    if args.release:
         work = args.work or config.DATA / "pesos-trabalho"
-        print(f"[pesos] extraindo os pacotes de {args.dist} em {work / 'tiles'}...", flush=True)
-        tiles = weights_run.prepare_tiles(args.dist, work)
+        print(f"[pesos] baixando a release {args.release} em {work}...", flush=True)
+        tiles, tables, build_id = weights_run.prepare_from_release(args.release, work)
     else:
         if not (args.tiles and args.build_id):
-            sys.exit("sem --dist, o study pede --tiles e --build-id")
+            sys.exit("sem --release, o study pede --tiles e --build-id")
         build_id, tables, tiles = args.build_id, args.tables, args.tiles
     plan = weights_run.Plan(tiles_dir=tiles, build_id=build_id, out=args.out, tables_dir=tables)
     for name in ("date", "workers", "batch", "states", "minutes", "state_goal", "state_destinations", "state_origins"):
@@ -55,26 +49,13 @@ def study(args: argparse.Namespace) -> int:
     return 0 if result.changed else 1
 
 
-def study_note(tables: Path) -> Optional[str]:
-    """Uma frase com o resumo do estudo (o `estudo.json` ao lado das tabelas), para as `notes` do geracao.json."""
+def upload(args: argparse.Namespace) -> int:
     try:
-        summary = json.loads((tables / weights_run.SUMMARY_FILE).read_text(encoding="utf-8"))
-        municipal, states = summary["municipalities"], summary["states"]
-        return (f"estudo dos pesos: {municipal['updated']} municípios e {states['updated']} estado(s) refeitos com os "
-                f"tiles desta geração, em {summary['minutes']:.0f} min")
-    except (OSError, ValueError, KeyError):
-        return None
-
-
-def apply(args: argparse.Namespace) -> int:
-    try:
-        notes = weights_tables.apply_to_dist(args.dist, args.tables, args.note or study_note(args.tables))
-    except weights_tables.ApplyError as e:
-        print(f"[pesos] tabelas novas NÃO aplicadas: {e}")
+        names = weights_tables.upload_next(publishing.gh_real, args.tag, args.out)
+    except weights_tables.UploadError as e:
+        print(f"[pesos] resultado do estudo NÃO subiu: {e}")
         return 1
-    print(f"[pesos] tabelas novas aplicadas em {args.dist}")
-    for note in notes:
-        print(f"[pesos] AVISO: {note}")
+    print(f"[pesos] subiram na release {args.tag}: {', '.join(names)}")
     return 0
 
 
@@ -88,12 +69,12 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="command", required=True)
 
     s = sub.add_parser("study", help="estuda o lote da semana")
-    s.add_argument("--dist", type=Path, help="a geração (data/dist/): os pacotes, o catálogo e as tabelas de partida")
-    s.add_argument("--work", type=Path, help="com --dist: onde extrair os tiles (padrão: data/pesos-trabalho)")
-    s.add_argument("--tiles", type=Path, help="sem --dist: a pasta de tiles já extraída")
-    s.add_argument("--build-id", help="sem --dist: o build_id dos tiles")
-    s.add_argument("--tables", type=Path, help="a pasta das tabelas de partida (padrão: --dist; sem os dois, a semente)")
-    s.add_argument("--out", type=Path, required=True, help="onde gravar as tabelas novas e o estudo.json")
+    s.add_argument("--release", help="o build_id de uma release já publicada: baixa dela os pacotes e as tabelas")
+    s.add_argument("--work", type=Path, help="com --release: onde baixar e extrair (padrão: data/pesos-trabalho)")
+    s.add_argument("--tiles", type=Path, help="sem --release: a pasta de tiles já extraída")
+    s.add_argument("--build-id", help="sem --release: o build_id dos tiles")
+    s.add_argument("--tables", type=Path, help="sem --release: a pasta das tabelas de partida (sem ela, a semente)")
+    s.add_argument("--out", type=Path, required=True, help="onde gravar as tabelas próximo, o json e o estudo.json")
     s.add_argument("--date", help="o dia gravado nas linhas (AAAA-MM-DD; padrão: hoje, UTC)")
     s.add_argument("--workers", type=int, help=f"processos (padrão: {config.WEIGHTS_WORKERS})")
     s.add_argument("--batch", type=int, help=f"municípios do lote (padrão: {config.WEIGHTS_BATCH})")
@@ -106,11 +87,10 @@ def main(argv=None) -> int:
     s.add_argument("--state", type=_csv, help="siglas de UF escolhidas à mão, em vez do estado da rotação")
     s.set_defaults(run=study)
 
-    a = sub.add_parser("apply", help="põe as tabelas novas na geração")
-    a.add_argument("--dist", type=Path, default=config.DIST)
-    a.add_argument("--tables", type=Path, required=True, help="a pasta com as tabelas novas (a --out do study)")
-    a.add_argument("--note", help="uma frase para as notes do geracao.json (padrão: o resumo do estudo.json das tabelas)")
-    a.set_defaults(run=apply)
+    u = sub.add_parser("upload", help="sobe o resultado do estudo na release")
+    u.add_argument("--tag", required=True, help="o build_id da release (já publicada)")
+    u.add_argument("--out", type=Path, required=True, help="a --out do study")
+    u.set_defaults(run=upload)
 
     args = ap.parse_args(argv)
     return args.run(args)

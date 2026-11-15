@@ -6,8 +6,8 @@
 
 Etapas, em ordem: osm (baixa o extrato se houver versão nova), tiles (Valhalla), packages (divide por UF e grava
 os arquivos de apoio dos municípios e as tabelas de pesos de que a geração parte), validate (rotas de teste com os
-pacotes), catalog. Depois, `python scripts/weights.py study` refaz o lote de pesos da semana sobre estes tiles e
-`python scripts/weights.py apply` o põe na geração; `python scripts/publish.py` publica.
+pacotes), catalog. Depois, `python scripts/publish.py` publica; só então `python scripts/weights.py study --release
+<build_id>` refaz o lote de pesos da semana sobre os pacotes publicados e `... upload` sobe o resultado na mesma release.
 """
 from __future__ import annotations
 

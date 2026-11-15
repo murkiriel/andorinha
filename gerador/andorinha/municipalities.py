@@ -60,6 +60,12 @@ FILE_GLOB = "andorinha-municipios-*.geojson.zst"
 INDEX_FILE = "municipios.json"  # o que a etapa `packages` gravou, para --from validate e --from catalog
 WEIGHTS_FILE = config.MOTORCYCLE_WEIGHTS_COPY.name              # as tabelas de pesos que a geração usou, na release
 STATE_WEIGHTS_FILE = config.MOTORCYCLE_STATE_WEIGHTS_COPY.name  # ao lado dos arquivos de apoio
+# O que o estudo dos pesos devolve depois da publicação (job `weights`), como assets extras da MESMA release: as duas
+# tabelas com o lote da semana refeito e um json pequeno que as descreve. A geração seguinte parte delas, se passarem
+# nas conferências (andorinha/weights_tables.py).
+NEXT_WEIGHTS_FILE = "pesos_moto_municipios.proximo.csv"
+NEXT_STATE_WEIGHTS_FILE = "pesos_moto_estados.proximo.csv"
+NEXT_MANIFEST_FILE = "pesos_proximo.json"
 WEIGHTS_HEADER = ["codigo_ibge", "use_highways", "use_trails", "geracao_tiles", "versao_valhalla", "data_calculo"]
 STATE_WEIGHTS_HEADER = ["codigo_ibge", "uf", "use_highways", "use_trails", "geracao_tiles", "versao_valhalla",
                         "data_calculo"]

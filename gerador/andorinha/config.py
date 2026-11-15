@@ -81,8 +81,10 @@ MUNICIPALITY_COUNT = 5570
 # x use_trails 0,2 a MOTORCYCLE_WEIGHTS_MAX_USE_TRAILS e depois as vizinhas a 0,1 do melhor; vence o menor tempo médio
 # (empate: a menor distância média, depois a mais perto de 0,6/0,4).
 # Cada linha diz com o que AQUELE município foi calculado (`geracao_tiles`, `versao_valhalla`, `data_calculo`): o
-# catálogo diz, por UF, de que gerações vieram os pesos. A tabela de cada geração sobe na release dela, e a geração
-# seguinte parte dela, conferida pelo sha256 e pela contagem do catálogo publicado. As cópias abaixo, no repositório, são
+# catálogo diz, por UF, de que gerações vieram os pesos. A tabela de que cada geração partiu sobe na release dela; o
+# estudo, que roda DEPOIS da publicação, sobe o resultado como assets extras da mesma release (`.proximo`), e a geração
+# seguinte parte deles (senão, das tabelas normais, conferidas pelo sha256 e pela contagem do catálogo publicado): os
+# pesos refeitos chegam ao app uma geração depois. As cópias abaixo, no repositório, são
 # a SEMENTE: a tabela de 2026-11-14 (estudo feito fora do gerador, ~7 h numa máquina de 12 núcleos), de onde a primeira
 # geração parte e a que vale quando a release anterior não tem tabela. Têm sha256 e contagem fixos aqui; trocar a semente
 # = trocar o arquivo e esses dois valores (gerador/PENDENCIAS.md, "Atualizar a tabela de pesos"). Pesos de outra geração
@@ -105,7 +107,7 @@ MOTORCYCLE_WEIGHTS_USE_TOLLS = 1.0
 MOTORCYCLE_WEIGHTS_MAX_USE_TRAILS = 0.4
 
 # O estudo dos pesos em lotes (andorinha/weights_study.py, andorinha/weights_tables.py, scripts/weights.py): a cada
-# geração, num job à parte do workflow, o gerador refaz os pesos dos WEIGHTS_BATCH municípios de linha mais velha e de
+# geração, num job à parte do workflow que roda depois da publicação, o gerador refaz os pesos dos WEIGHTS_BATCH municípios de linha mais velha e de
 # WEIGHTS_STATES estado(s), sobre os tiles da própria geração. Com 5.570 municípios, 600 por geração dão a volta em 10
 # semanas. O lote cabe no limite de 6 h do job com folga (medições e estimativa em gerador/README.md).
 # - ANDORINHA_WEIGHTS_BATCH e ANDORINHA_WEIGHTS_STATES mudam os tamanhos (0 desliga o estudo dos municípios ou dos

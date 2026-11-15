@@ -1,20 +1,20 @@
 {
   "schema": 1,
-  "build_id": "2026-11-09-c17dff60",
-  "built_at": "2026-11-09T01:15:23Z",
+  "build_id": "2026-11-15-498f9792",
+  "built_at": "2026-11-15T14:31:00Z",
   "valhalla_version": "3.9.1",
-  "generator_commit": "079993d",
+  "generator_commit": "666b44a",
   "required_config": {
     "loki.use_connectivity": false,
     "service_limits.motorcycle.max_distance": 5000000
   },
   "osm": {
-    "timestamp": "2026-11-09T00:31:19Z",
-    "md5": "c17dff60347f269911ccba4491071a64",
+    "timestamp": "2026-11-15T00:29:28Z",
+    "md5": "498f97923d9548e5fb96fcfe8ed3fb72",
     "url": "https://download.openstreetmap.fr/extracts/south-america/brazil-latest.osm.pbf"
   },
-  "release_url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-09-c17dff60/",
-  "attribution": "© colaboradores do OpenStreetMap (ODbL 1.0); limites das UFs: IBGE",
+  "release_url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/",
+  "attribution": "© colaboradores do OpenStreetMap (ODbL 1.0); limites das UFs e dos municípios: IBGE",
   "timezones": {
     "release": "2026d",
     "tzids": [
@@ -38,9 +38,9 @@
   },
   "base": {
     "file": "andorinha-base.tar.zst",
-    "sha256": "bcbd3664a23ce64d2a67219fc4163a5fdb9f36fc4450ac1050da3294f78f5de2",
+    "sha256": "ef2042a726a113b7aabbda16540d6ac27df1d984a91d0e46738fe9ab3e52d29f",
     "tiles": 65,
-    "bytes_tiles": 160410512,
+    "bytes_tiles": 160464376,
     "bbox": [
       -33.76,
       -74.0,
@@ -53,15 +53,15 @@
       6.0,
       -32.0
     ],
-    "bytes": 52765421
+    "bytes": 52774865
   },
   "states": {
     "AC": {
       "name": "Acre",
       "file": "andorinha-AC.tar.zst",
-      "sha256": "0ed3114de21bbdd900df4437b9802f6978827f87e38b21e91207ba18963d9754",
+      "sha256": "accc51a88906d150fe6fb9d78bd180bfd54d4fbe1595ca99f64818806ff53e18",
       "tiles": 172,
-      "bytes_tiles": 11387296,
+      "bytes_tiles": 11391560,
       "bbox": [
         -11.15,
         -74.0,
@@ -74,14 +74,14 @@
         -7.0,
         -66.0
       ],
-      "bytes": 4140292
+      "bytes": 4145733
     },
     "AL": {
       "name": "Alagoas",
       "file": "andorinha-AL.tar.zst",
-      "sha256": "7cb9c39c7ebc493773346fc04f567a3a02c452e60fb002f3b3819a734d41857e",
+      "sha256": "35050bdd96baa4419683f2ed689a1214bf8b7d3dc88f1cdf3cee4f863d18cbfc",
       "tiles": 71,
-      "bytes_tiles": 59181816,
+      "bytes_tiles": 59196824,
       "bbox": [
         -10.5,
         -38.24,
@@ -94,14 +94,14 @@
         -8.0,
         -35.0
       ],
-      "bytes": 20795711
+      "bytes": 20797593
     },
     "AM": {
       "name": "Amazonas",
       "file": "andorinha-AM.tar.zst",
-      "sha256": "c5c3263c30d51d7ec824696c09b5ff32d4e339c6a5604f2bac689e0f78cef979",
+      "sha256": "5189d8b7160d5b024e3679c7b0cc3343034f79b2aacf83800e4d57bfb571b5ee",
       "tiles": 802,
-      "bytes_tiles": 33762504,
+      "bytes_tiles": 33771264,
       "bbox": [
         -9.82,
         -73.81,
@@ -114,14 +114,14 @@
         2.25,
         -56.0
       ],
-      "bytes": 11117804
+      "bytes": 11121404
     },
     "AP": {
       "name": "Amapá",
       "file": "andorinha-AP.tar.zst",
-      "sha256": "db57c2356048422641a89feab69d5013714ecc3c0580beedf03e71d5eb971b3e",
+      "sha256": "75d49fc53fab0daf9d048af7ef31d78d4af258e02a7a7d0630ee94bc75cca6c9",
       "tiles": 112,
-      "bytes_tiles": 6182096,
+      "bytes_tiles": 6183344,
       "bbox": [
         -1.24,
         -54.88,
@@ -134,14 +134,14 @@
         4.25,
         -49.75
       ],
-      "bytes": 2088101
+      "bytes": 2089602
     },
     "BA": {
       "name": "Bahia",
       "file": "andorinha-BA.tar.zst",
-      "sha256": "34d903897508abb68d566baf1c5cc9a75052c093556f51f0ce02fec915ae0e11",
+      "sha256": "8b01816a24ac206ebd8219abbfaad4cf7e0ef36c487798e37bdb32f7cbe8dea7",
       "tiles": 960,
-      "bytes_tiles": 282962520,
+      "bytes_tiles": 282987384,
       "bbox": [
         -18.34,
         -46.58,
@@ -154,14 +154,14 @@
         -8.0,
         -37.0
       ],
-      "bytes": 104653899
+      "bytes": 104666071
     },
     "CE": {
       "name": "Ceará",
       "file": "andorinha-CE.tar.zst",
-      "sha256": "151c63b1907d89359f2f110edc7d8ff46bea145787473cbe08a3189555a76443",
+      "sha256": "bc0b98101c7061d8c9a586bd3033c8baf18cc79ffb74a153d22bbe3ff2cc7b77",
       "tiles": 268,
-      "bytes_tiles": 164287616,
+      "bytes_tiles": 164565424,
       "bbox": [
         -7.86,
         -41.43,
@@ -174,14 +174,14 @@
         -2.0,
         -37.0
       ],
-      "bytes": 58087434
+      "bytes": 58205307
     },
     "DF": {
       "name": "Distrito Federal",
       "file": "andorinha-DF.tar.zst",
-      "sha256": "e896a78cb635afcc20a70b64277235aa0b38e46d328ef9da3bb06205b76d35fb",
+      "sha256": "306b32b3393cae5b77c7d4cdf5988977d4ab880fe6f1680fa3d749a8a435bec3",
       "tiles": 23,
-      "bytes_tiles": 55709528,
+      "bytes_tiles": 55731760,
       "bbox": [
         -16.05,
         -48.29,
@@ -194,14 +194,14 @@
         -15.0,
         -47.0
       ],
-      "bytes": 17110261
+      "bytes": 17119663
     },
     "ES": {
       "name": "Espírito Santo",
       "file": "andorinha-ES.tar.zst",
-      "sha256": "f5e89535bbea7cbce0deab6134a4ddfdb7719bdb0b66a0742529fa805bbfefce",
+      "sha256": "baacd295bb990d73cedb3b45a0115408b34169a1f54ad3d2f522c7f286ec3af3",
       "tiles": 108,
-      "bytes_tiles": 82736000,
+      "bytes_tiles": 82738240,
       "bbox": [
         -21.31,
         -41.88,
@@ -214,14 +214,14 @@
         -17.0,
         -29.25
       ],
-      "bytes": 32161201
+      "bytes": 32157848
     },
     "GO": {
       "name": "Goiás",
       "file": "andorinha-GO.tar.zst",
-      "sha256": "a76957be16918bf14a60cbd9d3e1b8d104b16b1efb4a41748c1b20f46d80c443",
+      "sha256": "ba7931de05a3124844526d68b9baf758c4efa75cf04f080021410d6bfd68a671",
       "tiles": 605,
-      "bytes_tiles": 190559920,
+      "bytes_tiles": 190699680,
       "bbox": [
         -19.5,
         -53.25,
@@ -234,14 +234,14 @@
         -12.0,
         -45.0
       ],
-      "bytes": 63126549
+      "bytes": 63171320
     },
     "MA": {
       "name": "Maranhão",
       "file": "andorinha-MA.tar.zst",
-      "sha256": "486a9ff21b24c5ed0bf6904f1fc2a44ccb0e05b415ab9fa8c21229cafdacaf53",
+      "sha256": "0e21c3602aae4b014021d776f35e4610fb2940a07be3d95a48867c163d7aa83e",
       "tiles": 573,
-      "bytes_tiles": 103440816,
+      "bytes_tiles": 103459104,
       "bbox": [
         -10.26,
         -48.76,
@@ -254,14 +254,14 @@
         -1.0,
         -41.0
       ],
-      "bytes": 36703288
+      "bytes": 36712563
     },
     "MG": {
       "name": "Minas Gerais",
       "file": "andorinha-MG.tar.zst",
-      "sha256": "d896c2cbbffe04941901426565c93e67025ae67e778d56f03f1b91727a0557ca",
+      "sha256": "ece622ebe6903b16ccaf2ab5429f6741635d7d46fcd386f97f7f776b7d47a2a9",
       "tiles": 1006,
-      "bytes_tiles": 500381224,
+      "bytes_tiles": 500500456,
       "bbox": [
         -22.93,
         -51.05,
@@ -274,14 +274,14 @@
         -14.0,
         -39.0
       ],
-      "bytes": 188140793
+      "bytes": 188181126
     },
     "MS": {
       "name": "Mato Grosso do Sul",
       "file": "andorinha-MS.tar.zst",
-      "sha256": "283c6ca6f454a928d403a60746783edce4a4d06e05fd98fb64c8602f998aa79a",
+      "sha256": "13282766ae0c115a5bed9d2da3ac39f29897d38380ed448d29e7e302899423b7",
       "tiles": 634,
-      "bytes_tiles": 76323608,
+      "bytes_tiles": 76356568,
       "bbox": [
         -24.07,
         -58.17,
@@ -294,14 +294,14 @@
         -17.0,
         -50.0
       ],
-      "bytes": 25197320
+      "bytes": 25216433
     },
     "MT": {
       "name": "Mato Grosso",
       "file": "andorinha-MT.tar.zst",
-      "sha256": "269b63367da066a45fd30dd1b56adeaaa3c7bd5792bbf13d7e63b99f0529d17a",
+      "sha256": "2f662083b03481686ef574e39e42d8af3e4b50344c4fb218c9055b6954c2d112",
       "tiles": 1353,
-      "bytes_tiles": 94826200,
+      "bytes_tiles": 95003856,
       "bbox": [
         -18.05,
         -61.64,
@@ -314,14 +314,14 @@
         -7.25,
         -50.0
       ],
-      "bytes": 32682455
+      "bytes": 32745626
     },
     "PA": {
       "name": "Pará",
       "file": "andorinha-PA.tar.zst",
-      "sha256": "372b7761484029156d4d41973aab074d13e779667d97be9f9046965d713d67c4",
+      "sha256": "d7659c0a44494ed69f13076b4d8730c74897e4991388bbce66efb5aab593f4e2",
       "tiles": 1225,
-      "bytes_tiles": 93648576,
+      "bytes_tiles": 93666568,
       "bbox": [
         -9.85,
         -58.9,
@@ -334,14 +334,14 @@
         2.5,
         -46.0
       ],
-      "bytes": 33564265
+      "bytes": 33558867
     },
     "PB": {
       "name": "Paraíba",
       "file": "andorinha-PB.tar.zst",
-      "sha256": "21557008b5782a29106abaf6a3d4c4b289160d3f1dbadae4daad0de754a6947c",
+      "sha256": "807f31ac354e42f361ef54f09091b91e2060c10055e580b6abde16c4bb287aa4",
       "tiles": 136,
-      "bytes_tiles": 113332344,
+      "bytes_tiles": 113376784,
       "bbox": [
         -8.31,
         -38.77,
@@ -354,14 +354,14 @@
         -5.0,
         -34.0
       ],
-      "bytes": 41285819
+      "bytes": 41305826
     },
     "PE": {
       "name": "Pernambuco",
       "file": "andorinha-PE.tar.zst",
-      "sha256": "bb3659dfac69b9d47b7e7a4eee377497c84c7efd5e732d10667d1e1835d2e313",
+      "sha256": "8381e24a331ea7edc837a834b037c73fb5dfc540e82a0d8a7185ffeefdd6c1b3",
       "tiles": 218,
-      "bytes_tiles": 184966864,
+      "bytes_tiles": 184974960,
       "bbox": [
         -9.49,
         -41.36,
@@ -374,14 +374,14 @@
         -3.0,
         -32.0
       ],
-      "bytes": 65862224
+      "bytes": 65873606
     },
     "PI": {
       "name": "Piauí",
       "file": "andorinha-PI.tar.zst",
-      "sha256": "6a73baec51d50e8d4350baebac45869b394fb785a92d2027dbbaa4f3687e52b5",
+      "sha256": "706a18d37f5f45a6d52b519adeaf4703df1d2ed6cdee647859e2ec24cb16fa38",
       "tiles": 450,
-      "bytes_tiles": 89905248,
+      "bytes_tiles": 89951296,
       "bbox": [
         -10.93,
         -46.03,
@@ -394,14 +394,14 @@
         -2.0,
         -40.0
       ],
-      "bytes": 32711416
+      "bytes": 32723100
     },
     "PR": {
       "name": "Paraná",
       "file": "andorinha-PR.tar.zst",
-      "sha256": "cb249d9dd62ba2d2577fd0154bae90d3394f069876864024ad34a59ca822f2df",
+      "sha256": "32c4ae5106e5bf480e535873ecfe1e2c648826b0b71c35cd77749b0ef26be7ad",
       "tiles": 380,
-      "bytes_tiles": 272465960,
+      "bytes_tiles": 272495184,
       "bbox": [
         -26.72,
         -54.62,
@@ -414,14 +414,14 @@
         -22.0,
         -47.0
       ],
-      "bytes": 93818146
+      "bytes": 93840380
     },
     "RJ": {
       "name": "Rio de Janeiro",
       "file": "andorinha-RJ.tar.zst",
-      "sha256": "25699b2677c42de59da5d0472fba3f8db0f298d4d4eddb16d278a932a6b4e52e",
+      "sha256": "ad1a7824f5808ef8c4c620b048bc7048a576ff048bfcccb371f6773f82b75f3f",
       "tiles": 117,
-      "bytes_tiles": 156443584,
+      "bytes_tiles": 156473888,
       "bbox": [
         -23.37,
         -44.89,
@@ -434,14 +434,14 @@
         -20.0,
         -40.0
       ],
-      "bytes": 54382952
+      "bytes": 54387753
     },
     "RN": {
       "name": "Rio Grande do Norte",
       "file": "andorinha-RN.tar.zst",
-      "sha256": "f2049b33ab336fc6062469455626b698e15e42a9fc8fd9a7ea048e14f829a3b9",
+      "sha256": "5a36d32b482d53d8a009f7d2556c699430e39e0fbe811c7920f7b788fb93fd08",
       "tiles": 119,
-      "bytes_tiles": 76345520,
+      "bytes_tiles": 76358608,
       "bbox": [
         -6.99,
         -38.59,
@@ -454,14 +454,14 @@
         -4.0,
         -34.0
       ],
-      "bytes": 26496585
+      "bytes": 26503539
     },
     "RO": {
       "name": "Rondônia",
       "file": "andorinha-RO.tar.zst",
-      "sha256": "18bde087a91e6e80eb5857bd349af829ab29aadb3e03c85e136ff3996de1fb3a",
+      "sha256": "2a6afbe851e930a4435840f0d8a3331ca6e161d69975e2c09d6da39565c7d790",
       "tiles": 352,
-      "bytes_tiles": 28602536,
+      "bytes_tiles": 28612584,
       "bbox": [
         -13.7,
         -66.82,
@@ -474,14 +474,14 @@
         -7.0,
         -59.0
       ],
-      "bytes": 9964730
+      "bytes": 9965328
     },
     "RR": {
       "name": "Roraima",
       "file": "andorinha-RR.tar.zst",
-      "sha256": "b8e16499e0b562f6f063d8726a73ff5fa75fa018c6846685729240e827113134",
+      "sha256": "28b4d0058aa4f8933e153c49e2f74c5c8805ef051253ada854df4835ed962338",
       "tiles": 236,
-      "bytes_tiles": 11075728,
+      "bytes_tiles": 11077960,
       "bbox": [
         -1.59,
         -64.83,
@@ -494,14 +494,14 @@
         5.5,
         -59.0
       ],
-      "bytes": 3902953
+      "bytes": 3901396
     },
     "RS": {
       "name": "Rio Grande do Sul",
       "file": "andorinha-RS.tar.zst",
-      "sha256": "c4a364839ae8c6a950a637099f3522a81b22457833f1552e6bce4bf4df8d8f43",
+      "sha256": "35b23a5561d2d5bf1ec2f8ff8ae65402cd67798e87462780435ea8c171fc1f19",
       "tiles": 538,
-      "bytes_tiles": 235886008,
+      "bytes_tiles": 235955544,
       "bbox": [
         -33.76,
         -57.65,
@@ -514,14 +514,14 @@
         -27.0,
         -49.0
       ],
-      "bytes": 82655633
+      "bytes": 82682332
     },
     "SC": {
       "name": "Santa Catarina",
       "file": "andorinha-SC.tar.zst",
-      "sha256": "2133652441370c38aa62341391f607c29e0804db72ecbe7923b7f2651582bf46",
+      "sha256": "1a4388d17c2ad37def3f039c391842819e6b16d52de4aff173d2d3cebde6b4ff",
       "tiles": 223,
-      "bytes_tiles": 196665904,
+      "bytes_tiles": 196751392,
       "bbox": [
         -29.36,
         -53.84,
@@ -534,14 +534,14 @@
         -25.0,
         -48.0
       ],
-      "bytes": 70261975
+      "bytes": 70276814
     },
     "SE": {
       "name": "Sergipe",
       "file": "andorinha-SE.tar.zst",
-      "sha256": "cd75d0f24a37646e84437af498e6a70ac1711e415132dd60bcef8c2d8ecf16d7",
+      "sha256": "ed33f73a3c028d4f9916381398f0d2ccdff006f4aad38c2ef340394a2b8fd02b",
       "tiles": 62,
-      "bytes_tiles": 45943200,
+      "bytes_tiles": 45948000,
       "bbox": [
         -11.57,
         -38.25,
@@ -554,14 +554,14 @@
         -9.0,
         -36.0
       ],
-      "bytes": 16421813
+      "bytes": 16420959
     },
     "SP": {
       "name": "São Paulo",
       "file": "andorinha-SP.tar.zst",
-      "sha256": "bc6879963518416081a7c0bb2adefbb2385ad4494bc267c7f144f8cd909c7cc1",
+      "sha256": "0ba47be7e8122c8ab6b31f5a0f79481f7b554c4cfd3d2d1c599c4a2c2e2594cb",
       "tiles": 476,
-      "bytes_tiles": 594041624,
+      "bytes_tiles": 594119064,
       "bbox": [
         -25.31,
         -53.12,
@@ -574,14 +574,14 @@
         -19.0,
         -44.0
       ],
-      "bytes": 197852764
+      "bytes": 197863280
     },
     "TO": {
       "name": "Tocantins",
       "file": "andorinha-TO.tar.zst",
-      "sha256": "7516c7716ceb7c24e2dc4e8108c87f1d06aba798d4d9c781d7eb2b908f744f1d",
+      "sha256": "47e0453dd453d5dbc38a9267e994651c77be543acdad7461be5081839cae30b6",
       "tiles": 490,
-      "bytes_tiles": 51199976,
+      "bytes_tiles": 51208912,
       "bbox": [
         -13.47,
         -50.75,
@@ -594,7 +594,2864 @@
         -5.0,
         -45.0
       ],
-      "bytes": 18889516
+      "bytes": 18889724
     }
+  },
+  "municipalities": {
+    "format_version": 1,
+    "mesh": {
+      "url": "https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=intermediaria",
+      "date": "2026-11-14",
+      "sha256": "4bae3d8d9c8dd5ec520c94a35dadf0d273f5f661a63cf0b5e95e9efdb3047588",
+      "count": 5570
+    },
+    "weights": {
+      "costing": "motorcycle",
+      "use_tolls": 1.0,
+      "sha256": "66cc4078eef4f9fee1bce2ef3074aebb79e97765cc2524db6c77b5a1984be434",
+      "count": 5564,
+      "generations": [
+        {
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "count": 5564
+        }
+      ],
+      "same_generation": false
+    },
+    "state_weights": {
+      "costing": "motorcycle",
+      "use_tolls": 1.0,
+      "sha256": "fd306ff04a7b0d67d72ca693ae0c06523ce015e60baf8db7a75e121095dbe685",
+      "count": 27,
+      "generations": [
+        {
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "count": 27
+        }
+      ],
+      "same_generation": false
+    },
+    "states": {
+      "AC": {
+        "file": "andorinha-municipios-AC.geojson.zst",
+        "bytes": 17269,
+        "sha256": "bf85b3bec6241cbb0982b8e5945567d88642e2fc8c2970fab5562aec95493051",
+        "bytes_unpacked": 96663,
+        "municipalities": 22,
+        "weights": 22,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 22
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.6,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "AL": {
+        "file": "andorinha-municipios-AL.geojson.zst",
+        "bytes": 13713,
+        "sha256": "ce9e122b92954a941b312e83b6a166021488368f4b398ba32845ca3570866103",
+        "bytes_unpacked": 91055,
+        "municipalities": 102,
+        "weights": 102,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 102
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.5,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "AM": {
+        "file": "andorinha-municipios-AM.geojson.zst",
+        "bytes": 115197,
+        "sha256": "299b9ccc0e5332e56f5c3b8c30635f5a19585fd25acbed0150b555a2d629f3f3",
+        "bytes_unpacked": 620029,
+        "municipalities": 62,
+        "weights": 58,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 58
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.6,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "AP": {
+        "file": "andorinha-municipios-AP.geojson.zst",
+        "bytes": 22226,
+        "sha256": "ea7cc928a0f5660909c4737d5811501f760c8cf94c27d5c6824bdcdec15800f3",
+        "bytes_unpacked": 113451,
+        "municipalities": 16,
+        "weights": 16,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 16
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.4,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "BA": {
+        "file": "andorinha-municipios-BA.geojson.zst",
+        "bytes": 138706,
+        "sha256": "bc2a6fb52ba61b86e2eb1b5db3a5c8af6e6736246f3f0ce783db29187665a41c",
+        "bytes_unpacked": 845252,
+        "municipalities": 417,
+        "weights": 417,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 417
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "CE": {
+        "file": "andorinha-municipios-CE.geojson.zst",
+        "bytes": 50675,
+        "sha256": "4ea013572a28b1722d0c6f0c5ba648b243e0a9c6afc0886a0971a4b63a1ad403",
+        "bytes_unpacked": 304240,
+        "municipalities": 184,
+        "weights": 184,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 184
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.8,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "DF": {
+        "file": "andorinha-municipios-DF.geojson.zst",
+        "bytes": 809,
+        "sha256": "ef4437410dff0efdcfa2e13c8c2861b18e2388bfe0281bb60eefd3657d3b9a61",
+        "bytes_unpacked": 2849,
+        "municipalities": 1,
+        "weights": 1,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 1
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.9,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "ES": {
+        "file": "andorinha-municipios-ES.geojson.zst",
+        "bytes": 23888,
+        "sha256": "8ce5aaf0b881743c91104b235d92a1428eb54dec3a1fb76c1409648698bb9204",
+        "bytes_unpacked": 149769,
+        "municipalities": 78,
+        "weights": 78,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 78
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "GO": {
+        "file": "andorinha-municipios-GO.geojson.zst",
+        "bytes": 116154,
+        "sha256": "31052d7fb84501eaedbba98427a5c848f2b0030381e4ff097c9891bd654e75dc",
+        "bytes_unpacked": 697612,
+        "municipalities": 246,
+        "weights": 246,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 246
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.8,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "MA": {
+        "file": "andorinha-municipios-MA.geojson.zst",
+        "bytes": 75871,
+        "sha256": "2cf8be236f914270e50636744568149889627f9ab78a0b85216e203edc7e766c",
+        "bytes_unpacked": 440535,
+        "municipalities": 217,
+        "weights": 217,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 217
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "MG": {
+        "file": "andorinha-municipios-MG.geojson.zst",
+        "bytes": 284670,
+        "sha256": "8ca2ed66b67d9a1c0d61dc943e789af77cc7d452ead491191439ece83b0ea3a1",
+        "bytes_unpacked": 1762745,
+        "municipalities": 853,
+        "weights": 853,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 853
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "MS": {
+        "file": "andorinha-municipios-MS.geojson.zst",
+        "bytes": 59980,
+        "sha256": "1845699a047138c047b2bb29188c48ee60b2a8c5c6b90f9fb160316b2f15fde9",
+        "bytes_unpacked": 349213,
+        "municipalities": 79,
+        "weights": 79,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 79
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.5,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "MT": {
+        "file": "andorinha-municipios-MT.geojson.zst",
+        "bytes": 135104,
+        "sha256": "2e5e824b3302182aae061e2e247dc6781d0ad2218273d7b37087d421b516628b",
+        "bytes_unpacked": 789461,
+        "municipalities": 141,
+        "weights": 141,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 141
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.9,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "PA": {
+        "file": "andorinha-municipios-PA.geojson.zst",
+        "bytes": 127770,
+        "sha256": "a90287c5db17a5734da861ff853efcb1fe2d0ed546c03791b7507692dcdab257",
+        "bytes_unpacked": 700801,
+        "municipalities": 144,
+        "weights": 143,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 143
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.5,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "PB": {
+        "file": "andorinha-municipios-PB.geojson.zst",
+        "bytes": 34469,
+        "sha256": "713702e5883431f566900e80f7c07d61233716a9644b60d519f436158b45ab4d",
+        "bytes_unpacked": 222560,
+        "municipalities": 223,
+        "weights": 223,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 223
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.6,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "PE": {
+        "file": "andorinha-municipios-PE.geojson.zst",
+        "bytes": 36377,
+        "sha256": "29fa7fd84b84d141b0533b5881b929005159c31b96e14b68308dafdf7e7262af",
+        "bytes_unpacked": 225197,
+        "municipalities": 185,
+        "weights": 184,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 184
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "PI": {
+        "file": "andorinha-municipios-PI.geojson.zst",
+        "bytes": 46927,
+        "sha256": "c9bd366002424a61a193fbae958ae0787d63a9fefdae1a963b476b5e181a79f5",
+        "bytes_unpacked": 285616,
+        "municipalities": 224,
+        "weights": 224,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 224
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "PR": {
+        "file": "andorinha-municipios-PR.geojson.zst",
+        "bytes": 113494,
+        "sha256": "1f34fb81c7cceaed6e3d24a7d5b50e3f39520d58edf12d91f560145f1d44c79f",
+        "bytes_unpacked": 710626,
+        "municipalities": 399,
+        "weights": 399,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 399
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.9,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "RJ": {
+        "file": "andorinha-municipios-RJ.geojson.zst",
+        "bytes": 24067,
+        "sha256": "0b4a0ec341677ce2dbbd7a00b7d3a39d13f7957867cf83bad7097de59789d89c",
+        "bytes_unpacked": 150735,
+        "municipalities": 92,
+        "weights": 92,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 92
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.8,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "RN": {
+        "file": "andorinha-municipios-RN.geojson.zst",
+        "bytes": 20608,
+        "sha256": "79571f8eedf1f67b276838ba3c9fd1116f9fc5e1823ea924135218a765635780",
+        "bytes_unpacked": 138053,
+        "municipalities": 167,
+        "weights": 167,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 167
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.8,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "RO": {
+        "file": "andorinha-municipios-RO.geojson.zst",
+        "bytes": 37219,
+        "sha256": "7e19f9d880b01b4559e39537fb8403dcd3f4eda790f92c01611edacb03002776",
+        "bytes_unpacked": 217299,
+        "municipalities": 52,
+        "weights": 52,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 52
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.8,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "RR": {
+        "file": "andorinha-municipios-RR.geojson.zst",
+        "bytes": 23736,
+        "sha256": "c70dcefd7bccad93307c2c1ce9bcb1c901c3536f6ff220012b33a244edca948c",
+        "bytes_unpacked": 121900,
+        "municipalities": 15,
+        "weights": 15,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 15
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.6,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "RS": {
+        "file": "andorinha-municipios-RS.geojson.zst",
+        "bytes": 136690,
+        "sha256": "aed07753878168f2916f01db178c7d748ab372010744ed77061f02e3ed0cb734",
+        "bytes_unpacked": 861636,
+        "municipalities": 497,
+        "weights": 497,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 497
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.9,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "SC": {
+        "file": "andorinha-municipios-SC.geojson.zst",
+        "bytes": 69474,
+        "sha256": "4ca8277c898e417fbe2119fb1cabede5f8ec46660458a4f35c1e690ec161c2b7",
+        "bytes_unpacked": 446135,
+        "municipalities": 295,
+        "weights": 295,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 295
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.8,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "SE": {
+        "file": "andorinha-municipios-SE.geojson.zst",
+        "bytes": 12781,
+        "sha256": "8b33ed30ccfa95c16609ba3c1dc2dcc9c27b64672e8b3e37cc96c66c21825a63",
+        "bytes_unpacked": 83428,
+        "municipalities": 75,
+        "weights": 75,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 75
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "SP": {
+        "file": "andorinha-municipios-SP.geojson.zst",
+        "bytes": 157879,
+        "sha256": "6290ac093615a8880a528a6ebd352b3588a22e8b2dbb9bc38d7e7d1f75074066",
+        "bytes_unpacked": 998640,
+        "municipalities": 645,
+        "weights": 645,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 645
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.6,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      "TO": {
+        "file": "andorinha-municipios-TO.geojson.zst",
+        "bytes": 74090,
+        "sha256": "0b3ca3a0fc6fece4a9397f920dcaefd10e4a8d3c63fd76ce9c0f9c3ae379a0e7",
+        "bytes_unpacked": 430986,
+        "municipalities": 139,
+        "weights": 139,
+        "generations": [
+          {
+            "tiles_build_id": "2026-11-09-c17dff60",
+            "valhalla_version": "3.9.1",
+            "date": "2026-11-14",
+            "count": 139
+          }
+        ],
+        "same_generation": false,
+        "state_weights": {
+          "use_highways": 0.9,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      }
+    }
+  },
+  "contract": {
+    "name": "catalogo-comum",
+    "version": 1,
+    "min_reader_version": 1,
+    "dataset": "andorinha",
+    "build_id": "2026-11-15-498f9792",
+    "built_at": "2026-11-15T14:31:00Z",
+    "release_url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/",
+    "generator": {
+      "repository": "https://github.com/murkiriel/andorinha",
+      "commit": "666b44a426e6695166728397ed8ae621804697ca"
+    },
+    "license": {
+      "data": "ODbL-1.0",
+      "code": "MIT",
+      "attribution": "© colaboradores do OpenStreetMap (ODbL 1.0); limites das UFs e dos municípios: IBGE"
+    },
+    "coordinates": {
+      "crs": "EPSG:4326",
+      "bbox_order": "lat_min,lon_min,lat_max,lon_max"
+    },
+    "osm_snapshot": {
+      "date": "2026-11-15T00:29:28Z",
+      "md5": "498f97923d9548e5fb96fcfe8ed3fb72"
+    },
+    "sources": [
+      {
+        "id": "openstreetmap",
+        "name": "OpenStreetMap (extrato do Brasil)",
+        "url": "https://download.openstreetmap.fr/extracts/south-america/brazil-latest.osm.pbf",
+        "date": "2026-11-15T00:29:28Z",
+        "license": "ODbL-1.0",
+        "checksums": {
+          "md5": "498f97923d9548e5fb96fcfe8ed3fb72"
+        }
+      },
+      {
+        "id": "ibge-malha-uf",
+        "name": "IBGE, malha das UFs (cópia versionada no repositório)",
+        "url": "https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?formato=application/vnd.geo%2Bjson&intrarregiao=UF&qualidade=maxima",
+        "date": "2026-11-08",
+        "license": null,
+        "checksums": {
+          "sha256": "4435b2e0e62de6d68f5c5387e01efc31655242948ae9434b78a3b5b05582e497"
+        }
+      },
+      {
+        "id": "timezone-boundary-builder",
+        "name": "timezone-boundary-builder (fusos horários)",
+        "url": "https://github.com/evansiroky/timezone-boundary-builder/releases/download/2026d/timezones-with-oceans.geojson.zip",
+        "date": null,
+        "version": "2026d",
+        "license": "ODbL-1.0",
+        "checksums": {
+          "sha256": "e391c92c7b90339c3afe8558082b4532b8d9afc9daad68da31f4569a1ca61034"
+        }
+      },
+      {
+        "id": "ibge-malha-municipios",
+        "name": "IBGE, malha municipal (cópia versionada no repositório)",
+        "url": "https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=intermediaria",
+        "date": "2026-11-14",
+        "license": null,
+        "checksums": {
+          "sha256": "4bae3d8d9c8dd5ec520c94a35dadf0d273f5f661a63cf0b5e95e9efdb3047588"
+        },
+        "note": "sha256 do conteúdo descompactado"
+      },
+      {
+        "id": "pesos-moto-municipios",
+        "name": "Pesos do perfil de moto por município (tabela versionada no repositório)",
+        "url": null,
+        "date": "2026-11-14",
+        "license": null,
+        "checksums": {
+          "sha256": "66cc4078eef4f9fee1bce2ef3074aebb79e97765cc2524db6c77b5a1984be434"
+        },
+        "note": "a geração dos tiles de cada peso está em municipalities.weights.generations"
+      },
+      {
+        "id": "pesos-moto-estados",
+        "name": "Pesos do perfil de moto por estado (tabela versionada no repositório)",
+        "url": null,
+        "date": "2026-11-14",
+        "license": null,
+        "checksums": {
+          "sha256": "fd306ff04a7b0d67d72ca693ae0c06523ce015e60baf8db7a75e121095dbe685"
+        },
+        "note": "a geração dos tiles de cada peso está em municipalities.state_weights.generations"
+      }
+    ],
+    "compatibility": {
+      "mix_generations": false,
+      "data_format": {
+        "name": "valhalla-tiles",
+        "version": "3.9.1"
+      },
+      "andorinha": {
+        "engine": "valhalla",
+        "valhalla_engine_version": "3.9.1",
+        "valhalla_commit": "bafb69902220615a48307d5c790fb6c943802ba4",
+        "tile_format_version": "3.9.1",
+        "valhalla_mobile_version": "0.6.4",
+        "valhalla_mobile_artifact": "io.github.rallista:valhalla-mobile:0.6.4",
+        "valhalla_mobile_aar_sha256": "5c3118b51ff4b17655d6239a5e3f2ebdb0c36c0da3ba34a771bd7078f247dd00",
+        "valhalla_mobile_abis": [
+          "arm64-v8a",
+          "armeabi-v7a",
+          "x86",
+          "x86_64"
+        ],
+        "required_config": {
+          "loki.use_connectivity": false,
+          "service_limits.motorcycle.max_distance": 5000000
+        }
+      }
+    },
+    "files": [
+      {
+        "id": "base",
+        "kind": "base",
+        "region": "BR",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-base.tar.zst",
+        "sha256": "ef2042a726a113b7aabbda16540d6ac27df1d984a91d0e46738fe9ab3e52d29f",
+        "bytes": 52774865,
+        "bytes_unpacked": 160464376,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -33.76,
+          -74.0,
+          5.28,
+          -29.29
+        ],
+        "coverage_level": "BASE_HIGHWAYS_ONLY",
+        "requires": []
+      },
+      {
+        "id": "AC",
+        "kind": "uf",
+        "region": "AC",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-AC.tar.zst",
+        "sha256": "accc51a88906d150fe6fb9d78bd180bfd54d4fbe1595ca99f64818806ff53e18",
+        "bytes": 4145733,
+        "bytes_unpacked": 11391560,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -11.15,
+          -74.0,
+          -7.11,
+          -66.62
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "AL",
+        "kind": "uf",
+        "region": "AL",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-AL.tar.zst",
+        "sha256": "35050bdd96baa4419683f2ed689a1214bf8b7d3dc88f1cdf3cee4f863d18cbfc",
+        "bytes": 20797593,
+        "bytes_unpacked": 59196824,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -10.5,
+          -38.24,
+          -8.81,
+          -35.15
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "AM",
+        "kind": "uf",
+        "region": "AM",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-AM.tar.zst",
+        "sha256": "5189d8b7160d5b024e3679c7b0cc3343034f79b2aacf83800e4d57bfb571b5ee",
+        "bytes": 11121404,
+        "bytes_unpacked": 33771264,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -9.82,
+          -73.81,
+          2.25,
+          -56.09
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "AP",
+        "kind": "uf",
+        "region": "AP",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-AP.tar.zst",
+        "sha256": "75d49fc53fab0daf9d048af7ef31d78d4af258e02a7a7d0630ee94bc75cca6c9",
+        "bytes": 2089602,
+        "bytes_unpacked": 6183344,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -1.24,
+          -54.88,
+          4.51,
+          -49.87
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "BA",
+        "kind": "uf",
+        "region": "BA",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-BA.tar.zst",
+        "sha256": "8b01816a24ac206ebd8219abbfaad4cf7e0ef36c487798e37bdb32f7cbe8dea7",
+        "bytes": 104666071,
+        "bytes_unpacked": 282987384,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -18.34,
+          -46.58,
+          -8.53,
+          -37.34
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "CE",
+        "kind": "uf",
+        "region": "CE",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-CE.tar.zst",
+        "sha256": "bc0b98101c7061d8c9a586bd3033c8baf18cc79ffb74a153d22bbe3ff2cc7b77",
+        "bytes": 58205307,
+        "bytes_unpacked": 164565424,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -7.86,
+          -41.43,
+          -2.78,
+          -37.25
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "DF",
+        "kind": "uf",
+        "region": "DF",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-DF.tar.zst",
+        "sha256": "306b32b3393cae5b77c7d4cdf5988977d4ab880fe6f1680fa3d749a8a435bec3",
+        "bytes": 17119663,
+        "bytes_unpacked": 55731760,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -16.05,
+          -48.29,
+          -15.5,
+          -47.3
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "ES",
+        "kind": "uf",
+        "region": "ES",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-ES.tar.zst",
+        "sha256": "baacd295bb990d73cedb3b45a0115408b34169a1f54ad3d2f522c7f286ec3af3",
+        "bytes": 32157848,
+        "bytes_unpacked": 82738240,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -21.31,
+          -41.88,
+          -17.89,
+          -29.29
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "GO",
+        "kind": "uf",
+        "region": "GO",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-GO.tar.zst",
+        "sha256": "ba7931de05a3124844526d68b9baf758c4efa75cf04f080021410d6bfd68a671",
+        "bytes": 63171320,
+        "bytes_unpacked": 190699680,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -19.5,
+          -53.25,
+          -12.39,
+          -45.9
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "MA",
+        "kind": "uf",
+        "region": "MA",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-MA.tar.zst",
+        "sha256": "0e21c3602aae4b014021d776f35e4610fb2940a07be3d95a48867c163d7aa83e",
+        "bytes": 36712563,
+        "bytes_unpacked": 103459104,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -10.26,
+          -48.76,
+          -1.04,
+          -41.79
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "MG",
+        "kind": "uf",
+        "region": "MG",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-MG.tar.zst",
+        "sha256": "ece622ebe6903b16ccaf2ab5429f6741635d7d46fcd386f97f7f776b7d47a2a9",
+        "bytes": 188181126,
+        "bytes_unpacked": 500500456,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -22.93,
+          -51.05,
+          -14.23,
+          -39.85
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "MS",
+        "kind": "uf",
+        "region": "MS",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-MS.tar.zst",
+        "sha256": "13282766ae0c115a5bed9d2da3ac39f29897d38380ed448d29e7e302899423b7",
+        "bytes": 25216433,
+        "bytes_unpacked": 76356568,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -24.07,
+          -58.17,
+          -17.16,
+          -50.92
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "MT",
+        "kind": "uf",
+        "region": "MT",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-MT.tar.zst",
+        "sha256": "2f662083b03481686ef574e39e42d8af3e4b50344c4fb218c9055b6954c2d112",
+        "bytes": 32745626,
+        "bytes_unpacked": 95003856,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -18.05,
+          -61.64,
+          -7.34,
+          -50.22
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "PA",
+        "kind": "uf",
+        "region": "PA",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-PA.tar.zst",
+        "sha256": "d7659c0a44494ed69f13076b4d8730c74897e4991388bbce66efb5aab593f4e2",
+        "bytes": 33558867,
+        "bytes_unpacked": 93666568,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -9.85,
+          -58.9,
+          2.6,
+          -46.06
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "PB",
+        "kind": "uf",
+        "region": "PB",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-PB.tar.zst",
+        "sha256": "807f31ac354e42f361ef54f09091b91e2060c10055e580b6abde16c4bb287aa4",
+        "bytes": 41305826,
+        "bytes_unpacked": 113376784,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -8.31,
+          -38.77,
+          -6.02,
+          -34.79
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "PE",
+        "kind": "uf",
+        "region": "PE",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-PE.tar.zst",
+        "sha256": "8381e24a331ea7edc837a834b037c73fb5dfc540e82a0d8a7185ffeefdd6c1b3",
+        "bytes": 65873606,
+        "bytes_unpacked": 184974960,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -9.49,
+          -41.36,
+          -3.83,
+          -32.39
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "PI",
+        "kind": "uf",
+        "region": "PI",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-PI.tar.zst",
+        "sha256": "706a18d37f5f45a6d52b519adeaf4703df1d2ed6cdee647859e2ec24cb16fa38",
+        "bytes": 32723100,
+        "bytes_unpacked": 89951296,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -10.93,
+          -46.03,
+          -2.74,
+          -40.37
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "PR",
+        "kind": "uf",
+        "region": "PR",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-PR.tar.zst",
+        "sha256": "32c4ae5106e5bf480e535873ecfe1e2c648826b0b71c35cd77749b0ef26be7ad",
+        "bytes": 93840380,
+        "bytes_unpacked": 272495184,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -26.72,
+          -54.62,
+          -22.51,
+          -48.02
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "RJ",
+        "kind": "uf",
+        "region": "RJ",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-RJ.tar.zst",
+        "sha256": "ad1a7824f5808ef8c4c620b048bc7048a576ff048bfcccb371f6773f82b75f3f",
+        "bytes": 54387753,
+        "bytes_unpacked": 156473888,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -23.37,
+          -44.89,
+          -20.76,
+          -40.95
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "RN",
+        "kind": "uf",
+        "region": "RN",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-RN.tar.zst",
+        "sha256": "5a36d32b482d53d8a009f7d2556c699430e39e0fbe811c7920f7b788fb93fd08",
+        "bytes": 26503539,
+        "bytes_unpacked": 76358608,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -6.99,
+          -38.59,
+          -4.83,
+          -34.96
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "RO",
+        "kind": "uf",
+        "region": "RO",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-RO.tar.zst",
+        "sha256": "2a6afbe851e930a4435840f0d8a3331ca6e161d69975e2c09d6da39565c7d790",
+        "bytes": 9965328,
+        "bytes_unpacked": 28612584,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -13.7,
+          -66.82,
+          -7.97,
+          -59.77
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "RR",
+        "kind": "uf",
+        "region": "RR",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-RR.tar.zst",
+        "sha256": "28b4d0058aa4f8933e153c49e2f74c5c8805ef051253ada854df4835ed962338",
+        "bytes": 3901396,
+        "bytes_unpacked": 11077960,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -1.59,
+          -64.83,
+          5.28,
+          -58.88
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "RS",
+        "kind": "uf",
+        "region": "RS",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-RS.tar.zst",
+        "sha256": "35b23a5561d2d5bf1ec2f8ff8ae65402cd67798e87462780435ea8c171fc1f19",
+        "bytes": 82682332,
+        "bytes_unpacked": 235955544,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -33.76,
+          -57.65,
+          -27.08,
+          -49.69
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "SC",
+        "kind": "uf",
+        "region": "SC",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-SC.tar.zst",
+        "sha256": "1a4388d17c2ad37def3f039c391842819e6b16d52de4aff173d2d3cebde6b4ff",
+        "bytes": 70276814,
+        "bytes_unpacked": 196751392,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -29.36,
+          -53.84,
+          -25.95,
+          -48.35
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "SE",
+        "kind": "uf",
+        "region": "SE",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-SE.tar.zst",
+        "sha256": "ed33f73a3c028d4f9916381398f0d2ccdff006f4aad38c2ef340394a2b8fd02b",
+        "bytes": 16420959,
+        "bytes_unpacked": 45948000,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -11.57,
+          -38.25,
+          -9.51,
+          -36.39
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "SP",
+        "kind": "uf",
+        "region": "SP",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-SP.tar.zst",
+        "sha256": "0ba47be7e8122c8ab6b31f5a0f79481f7b554c4cfd3d2d1c599c4a2c2e2594cb",
+        "bytes": 197863280,
+        "bytes_unpacked": 594119064,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -25.31,
+          -53.12,
+          -19.77,
+          -44.16
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "TO",
+        "kind": "uf",
+        "region": "TO",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-TO.tar.zst",
+        "sha256": "47e0453dd453d5dbc38a9267e994651c77be543acdad7461be5081839cae30b6",
+        "bytes": 18889724,
+        "bytes_unpacked": 51208912,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd",
+          "tar"
+        ],
+        "format": "valhalla-tiles",
+        "bbox": [
+          -13.47,
+          -50.75,
+          -5.16,
+          -45.69
+        ],
+        "coverage_level": "DETAILED",
+        "requires": [
+          "base"
+        ]
+      },
+      {
+        "id": "municipios-AC",
+        "kind": "auxiliary",
+        "region": "AC",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-AC.geojson.zst",
+        "sha256": "bf85b3bec6241cbb0982b8e5945567d88642e2fc8c2970fab5562aec95493051",
+        "bytes": 17269,
+        "bytes_unpacked": 96663,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -11.15,
+          -74.0,
+          -7.11,
+          -66.62
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 22,
+        "weights": {
+          "count": 22,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 22
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.6,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-AL",
+        "kind": "auxiliary",
+        "region": "AL",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-AL.geojson.zst",
+        "sha256": "ce9e122b92954a941b312e83b6a166021488368f4b398ba32845ca3570866103",
+        "bytes": 13713,
+        "bytes_unpacked": 91055,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -10.5,
+          -38.24,
+          -8.81,
+          -35.15
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 102,
+        "weights": {
+          "count": 102,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 102
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.5,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-AM",
+        "kind": "auxiliary",
+        "region": "AM",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-AM.geojson.zst",
+        "sha256": "299b9ccc0e5332e56f5c3b8c30635f5a19585fd25acbed0150b555a2d629f3f3",
+        "bytes": 115197,
+        "bytes_unpacked": 620029,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -9.82,
+          -73.81,
+          2.25,
+          -56.09
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 62,
+        "weights": {
+          "count": 58,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 58
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.6,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-AP",
+        "kind": "auxiliary",
+        "region": "AP",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-AP.geojson.zst",
+        "sha256": "ea7cc928a0f5660909c4737d5811501f760c8cf94c27d5c6824bdcdec15800f3",
+        "bytes": 22226,
+        "bytes_unpacked": 113451,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -1.24,
+          -54.88,
+          4.51,
+          -49.87
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 16,
+        "weights": {
+          "count": 16,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 16
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.4,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-BA",
+        "kind": "auxiliary",
+        "region": "BA",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-BA.geojson.zst",
+        "sha256": "bc2a6fb52ba61b86e2eb1b5db3a5c8af6e6736246f3f0ce783db29187665a41c",
+        "bytes": 138706,
+        "bytes_unpacked": 845252,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -18.34,
+          -46.58,
+          -8.53,
+          -37.34
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 417,
+        "weights": {
+          "count": 417,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 417
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-CE",
+        "kind": "auxiliary",
+        "region": "CE",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-CE.geojson.zst",
+        "sha256": "4ea013572a28b1722d0c6f0c5ba648b243e0a9c6afc0886a0971a4b63a1ad403",
+        "bytes": 50675,
+        "bytes_unpacked": 304240,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -7.86,
+          -41.43,
+          -2.78,
+          -37.25
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 184,
+        "weights": {
+          "count": 184,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 184
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.8,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-DF",
+        "kind": "auxiliary",
+        "region": "DF",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-DF.geojson.zst",
+        "sha256": "ef4437410dff0efdcfa2e13c8c2861b18e2388bfe0281bb60eefd3657d3b9a61",
+        "bytes": 809,
+        "bytes_unpacked": 2849,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -16.05,
+          -48.29,
+          -15.5,
+          -47.3
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 1,
+        "weights": {
+          "count": 1,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 1
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.9,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-ES",
+        "kind": "auxiliary",
+        "region": "ES",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-ES.geojson.zst",
+        "sha256": "8ce5aaf0b881743c91104b235d92a1428eb54dec3a1fb76c1409648698bb9204",
+        "bytes": 23888,
+        "bytes_unpacked": 149769,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -21.31,
+          -41.88,
+          -17.89,
+          -29.29
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 78,
+        "weights": {
+          "count": 78,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 78
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-GO",
+        "kind": "auxiliary",
+        "region": "GO",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-GO.geojson.zst",
+        "sha256": "31052d7fb84501eaedbba98427a5c848f2b0030381e4ff097c9891bd654e75dc",
+        "bytes": 116154,
+        "bytes_unpacked": 697612,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -19.5,
+          -53.25,
+          -12.39,
+          -45.9
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 246,
+        "weights": {
+          "count": 246,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 246
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.8,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-MA",
+        "kind": "auxiliary",
+        "region": "MA",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-MA.geojson.zst",
+        "sha256": "2cf8be236f914270e50636744568149889627f9ab78a0b85216e203edc7e766c",
+        "bytes": 75871,
+        "bytes_unpacked": 440535,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -10.26,
+          -48.76,
+          -1.04,
+          -41.79
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 217,
+        "weights": {
+          "count": 217,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 217
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-MG",
+        "kind": "auxiliary",
+        "region": "MG",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-MG.geojson.zst",
+        "sha256": "8ca2ed66b67d9a1c0d61dc943e789af77cc7d452ead491191439ece83b0ea3a1",
+        "bytes": 284670,
+        "bytes_unpacked": 1762745,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -22.93,
+          -51.05,
+          -14.23,
+          -39.85
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 853,
+        "weights": {
+          "count": 853,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 853
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-MS",
+        "kind": "auxiliary",
+        "region": "MS",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-MS.geojson.zst",
+        "sha256": "1845699a047138c047b2bb29188c48ee60b2a8c5c6b90f9fb160316b2f15fde9",
+        "bytes": 59980,
+        "bytes_unpacked": 349213,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -24.07,
+          -58.17,
+          -17.16,
+          -50.92
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 79,
+        "weights": {
+          "count": 79,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 79
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.5,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-MT",
+        "kind": "auxiliary",
+        "region": "MT",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-MT.geojson.zst",
+        "sha256": "2e5e824b3302182aae061e2e247dc6781d0ad2218273d7b37087d421b516628b",
+        "bytes": 135104,
+        "bytes_unpacked": 789461,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -18.05,
+          -61.64,
+          -7.34,
+          -50.22
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 141,
+        "weights": {
+          "count": 141,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 141
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.9,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-PA",
+        "kind": "auxiliary",
+        "region": "PA",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-PA.geojson.zst",
+        "sha256": "a90287c5db17a5734da861ff853efcb1fe2d0ed546c03791b7507692dcdab257",
+        "bytes": 127770,
+        "bytes_unpacked": 700801,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -9.85,
+          -58.9,
+          2.6,
+          -46.06
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 144,
+        "weights": {
+          "count": 143,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 143
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.5,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-PB",
+        "kind": "auxiliary",
+        "region": "PB",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-PB.geojson.zst",
+        "sha256": "713702e5883431f566900e80f7c07d61233716a9644b60d519f436158b45ab4d",
+        "bytes": 34469,
+        "bytes_unpacked": 222560,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -8.31,
+          -38.77,
+          -6.02,
+          -34.79
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 223,
+        "weights": {
+          "count": 223,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 223
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.6,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-PE",
+        "kind": "auxiliary",
+        "region": "PE",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-PE.geojson.zst",
+        "sha256": "29fa7fd84b84d141b0533b5881b929005159c31b96e14b68308dafdf7e7262af",
+        "bytes": 36377,
+        "bytes_unpacked": 225197,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -9.49,
+          -41.36,
+          -3.83,
+          -32.39
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 185,
+        "weights": {
+          "count": 184,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 184
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-PI",
+        "kind": "auxiliary",
+        "region": "PI",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-PI.geojson.zst",
+        "sha256": "c9bd366002424a61a193fbae958ae0787d63a9fefdae1a963b476b5e181a79f5",
+        "bytes": 46927,
+        "bytes_unpacked": 285616,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -10.93,
+          -46.03,
+          -2.74,
+          -40.37
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 224,
+        "weights": {
+          "count": 224,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 224
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-PR",
+        "kind": "auxiliary",
+        "region": "PR",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-PR.geojson.zst",
+        "sha256": "1f34fb81c7cceaed6e3d24a7d5b50e3f39520d58edf12d91f560145f1d44c79f",
+        "bytes": 113494,
+        "bytes_unpacked": 710626,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -26.72,
+          -54.62,
+          -22.51,
+          -48.02
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 399,
+        "weights": {
+          "count": 399,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 399
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.9,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-RJ",
+        "kind": "auxiliary",
+        "region": "RJ",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-RJ.geojson.zst",
+        "sha256": "0b4a0ec341677ce2dbbd7a00b7d3a39d13f7957867cf83bad7097de59789d89c",
+        "bytes": 24067,
+        "bytes_unpacked": 150735,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -23.37,
+          -44.89,
+          -20.76,
+          -40.95
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 92,
+        "weights": {
+          "count": 92,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 92
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.8,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-RN",
+        "kind": "auxiliary",
+        "region": "RN",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-RN.geojson.zst",
+        "sha256": "79571f8eedf1f67b276838ba3c9fd1116f9fc5e1823ea924135218a765635780",
+        "bytes": 20608,
+        "bytes_unpacked": 138053,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -6.99,
+          -38.59,
+          -4.83,
+          -34.96
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 167,
+        "weights": {
+          "count": 167,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 167
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.8,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-RO",
+        "kind": "auxiliary",
+        "region": "RO",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-RO.geojson.zst",
+        "sha256": "7e19f9d880b01b4559e39537fb8403dcd3f4eda790f92c01611edacb03002776",
+        "bytes": 37219,
+        "bytes_unpacked": 217299,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -13.7,
+          -66.82,
+          -7.97,
+          -59.77
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 52,
+        "weights": {
+          "count": 52,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 52
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.8,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-RR",
+        "kind": "auxiliary",
+        "region": "RR",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-RR.geojson.zst",
+        "sha256": "c70dcefd7bccad93307c2c1ce9bcb1c901c3536f6ff220012b33a244edca948c",
+        "bytes": 23736,
+        "bytes_unpacked": 121900,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -1.59,
+          -64.83,
+          5.28,
+          -58.88
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 15,
+        "weights": {
+          "count": 15,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 15
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.6,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-RS",
+        "kind": "auxiliary",
+        "region": "RS",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-RS.geojson.zst",
+        "sha256": "aed07753878168f2916f01db178c7d748ab372010744ed77061f02e3ed0cb734",
+        "bytes": 136690,
+        "bytes_unpacked": 861636,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -33.76,
+          -57.65,
+          -27.08,
+          -49.69
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 497,
+        "weights": {
+          "count": 497,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 497
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.9,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-SC",
+        "kind": "auxiliary",
+        "region": "SC",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-SC.geojson.zst",
+        "sha256": "4ca8277c898e417fbe2119fb1cabede5f8ec46660458a4f35c1e690ec161c2b7",
+        "bytes": 69474,
+        "bytes_unpacked": 446135,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -29.36,
+          -53.84,
+          -25.95,
+          -48.35
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 295,
+        "weights": {
+          "count": 295,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 295
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.8,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-SE",
+        "kind": "auxiliary",
+        "region": "SE",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-SE.geojson.zst",
+        "sha256": "8b33ed30ccfa95c16609ba3c1dc2dcc9c27b64672e8b3e37cc96c66c21825a63",
+        "bytes": 12781,
+        "bytes_unpacked": 83428,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -11.57,
+          -38.25,
+          -9.51,
+          -36.39
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 75,
+        "weights": {
+          "count": 75,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 75
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.7,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-SP",
+        "kind": "auxiliary",
+        "region": "SP",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-SP.geojson.zst",
+        "sha256": "6290ac093615a8880a528a6ebd352b3588a22e8b2dbb9bc38d7e7d1f75074066",
+        "bytes": 157879,
+        "bytes_unpacked": 998640,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -25.31,
+          -53.12,
+          -19.77,
+          -44.16
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 645,
+        "weights": {
+          "count": 645,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 645
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.6,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      },
+      {
+        "id": "municipios-TO",
+        "kind": "auxiliary",
+        "region": "TO",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-TO.geojson.zst",
+        "sha256": "0b3ca3a0fc6fece4a9397f920dcaefd10e4a8d3c63fd76ce9c0f9c3ae379a0e7",
+        "bytes": 74090,
+        "bytes_unpacked": 430986,
+        "media_type": "application/zstd",
+        "unpack": [
+          "zstd"
+        ],
+        "format": "geojson",
+        "bbox": [
+          -13.47,
+          -50.75,
+          -5.16,
+          -45.69
+        ],
+        "coverage_level": null,
+        "requires": [],
+        "content": "municipalities",
+        "format_version": 1,
+        "municipalities": 139,
+        "weights": {
+          "count": 139,
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "generations": [
+            {
+              "tiles_build_id": "2026-11-09-c17dff60",
+              "valhalla_version": "3.9.1",
+              "date": "2026-11-14",
+              "count": 139
+            }
+          ],
+          "same_generation": false
+        },
+        "state_weights": {
+          "costing": "motorcycle",
+          "use_tolls": 1.0,
+          "use_highways": 0.9,
+          "use_trails": 0.4,
+          "tiles_build_id": "2026-11-09-c17dff60",
+          "valhalla_version": "3.9.1",
+          "date": "2026-11-14",
+          "same_generation": false
+        }
+      }
+    ]
   }
 }

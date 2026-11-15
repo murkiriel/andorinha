@@ -193,11 +193,11 @@ recusaria um arquivo a mais), e é baixado e conferido à parte, pelo `sha256` d
   pontos da viagem estão naquele estado, mas não no mesmo município (no mesmo município vale o peso do município).
   Numa viagem entre estados, o leitor usa o peso padrão dele. Traz também com que tiles, com que Valhalla e em que
   dia foi calculado.
-- Seis municípios não têm peso (o estudo não achou amostra de rotas neles): as cinco chaves do peso vêm `null`, e o
-  leitor usa o peso padrão.
+- Alguns municípios não têm peso (hoje cinco: o estudo não acha um ponto a até 150 m de uma via neles): as cinco chaves
+  do peso vêm `null`, e o leitor usa o peso padrão.
 - `tiles_build_id`, `valhalla_version` e `date` dizem com que tiles, com que Valhalla e em que dia o peso **daquele
-  município** foi calculado. Os pesos não são refeitos a cada geração: quase sempre são de tiles de uma geração
-  anterior à dos pacotes. O catálogo repete isso por UF (`municipalities.states.<UF>.generations` e
+  município** foi calculado. Os pesos são refeitos em lotes, 600 municípios e 1 estado por geração (a volta leva 10
+  semanas nos municípios e 27 nos estados): quase sempre são de tiles de uma geração anterior à dos pacotes. O catálogo repete isso por UF (`municipalities.states.<UF>.generations` e
   `same_generation`; para o peso do estado, `municipalities.states.<UF>.state_weights`), e um leitor decide se aceita
   um peso mais velho que os tiles.
 
@@ -300,8 +300,9 @@ não um link fixo de release.
 commit `generator_commit` refaz a geração com as mesmas entradas: o Python 3.12, o Valhalla e as dependências Python
 travados com hashes ([`gerador/requirements.in`](gerador/requirements.in) → [`gerador/requirements.txt`](gerador/requirements.txt),
 instalados com `pip install --require-hashes`), as actions do GitHub fixadas pelo SHA do commit, as malhas do IBGE
-(UFs e municípios) e a tabela de pesos da moto versionadas no repositório e o zip de fusos conferido pelo sha256. O
-extrato, não: ele vem do arquivo "latest" do dia,
+(UFs e municípios) versionadas no repositório e o zip de fusos conferido pelo sha256. Os pesos da moto, não só do
+código: cada geração parte da tabela da release anterior (conferida pelo sha256 do catálogo publicado; a primeira, da
+semente do repositório) e refaz um lote dela. O extrato, não: ele vem do arquivo "latest" do dia,
 que a fonte troca e que o Andorinha não arquiva. O catálogo registra o md5 (`osm.md5`), a data e o endereço do extrato
 usado; com isso dá para conferir um extrato, não recuperá-lo. Uma geração antiga não pode ser refeita depois que a
 fonte troca o arquivo; os pacotes dela continuam nas releases enquanto ela estiver entre as 12. O SpatiaLite do build
@@ -318,9 +319,9 @@ Os **pacotes** são uma base derivada do OpenStreetMap, distribuída sob a **Ope
   (dado do IBGE, não parte do código).
 - Contornos dos municípios (arquivos de apoio): malha municipal do IBGE, guardada em
   [`gerador/ibge_malha_municipios.json.gz`](gerador/ibge_malha_municipios.json.gz) (dado do IBGE, não parte do
-  código). Os pesos da moto ([`gerador/pesos_moto_municipios.csv`](gerador/pesos_moto_municipios.csv) e
-  [`gerador/pesos_moto_estados.csv`](gerador/pesos_moto_estados.csv)) foram
-  calculados sobre os tiles, que derivam do OpenStreetMap.
+  código). Os pesos da moto (a semente, em [`gerador/pesos_moto_municipios.csv`](gerador/pesos_moto_municipios.csv) e
+  [`gerador/pesos_moto_estados.csv`](gerador/pesos_moto_estados.csv), e as tabelas de cada geração, que sobem na release
+  ao lado dos pacotes) são calculados pelo gerador sobre os tiles, que derivam do OpenStreetMap.
 
 O texto do crédito está no `attribution` do `catalogo.json`, e cada release leva também um `LICENCA-DADOS.txt`, com a
 atribuição, as fontes daquela geração e o texto inteiro da ODbL, para quem baixar só os pacotes. Ele fica fora dos

@@ -1,19 +1,19 @@
 {
   "schema": 1,
-  "build_id": "2026-11-15-498f9792",
-  "built_at": "2026-11-15T14:31:00Z",
+  "build_id": "2026-11-22-709f550d",
+  "built_at": "2026-11-22T15:20:22Z",
   "valhalla_version": "3.9.1",
-  "generator_commit": "666b44a",
+  "generator_commit": "551543b",
   "required_config": {
     "loki.use_connectivity": false,
     "service_limits.motorcycle.max_distance": 5000000
   },
   "osm": {
-    "timestamp": "2026-11-15T00:29:28Z",
-    "md5": "498f97923d9548e5fb96fcfe8ed3fb72",
+    "timestamp": "2026-11-21T00:49:19Z",
+    "md5": "709f550de7b43e0e8e1f080929be2203",
     "url": "https://download.openstreetmap.fr/extracts/south-america/brazil-latest.osm.pbf"
   },
-  "release_url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/",
+  "release_url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/",
   "attribution": "© colaboradores do OpenStreetMap (ODbL 1.0); limites das UFs e dos municípios: IBGE",
   "timezones": {
     "release": "2026d",
@@ -38,9 +38,9 @@
   },
   "base": {
     "file": "andorinha-base.tar.zst",
-    "sha256": "ef2042a726a113b7aabbda16540d6ac27df1d984a91d0e46738fe9ab3e52d29f",
+    "sha256": "7c7c09ecf9443ee9db479de598f0c385ef40107aba66d257478da6efcb928b99",
     "tiles": 65,
-    "bytes_tiles": 160464376,
+    "bytes_tiles": 160531320,
     "bbox": [
       -33.76,
       -74.0,
@@ -53,15 +53,15 @@
       6.0,
       -32.0
     ],
-    "bytes": 52774865
+    "bytes": 52792282
   },
   "states": {
     "AC": {
       "name": "Acre",
       "file": "andorinha-AC.tar.zst",
-      "sha256": "accc51a88906d150fe6fb9d78bd180bfd54d4fbe1595ca99f64818806ff53e18",
+      "sha256": "2c16521865c8a82741814c4b9f75ac5519f525bdb556ff7db406dcafacc76d77",
       "tiles": 172,
-      "bytes_tiles": 11391560,
+      "bytes_tiles": 11393328,
       "bbox": [
         -11.15,
         -74.0,
@@ -74,14 +74,14 @@
         -7.0,
         -66.0
       ],
-      "bytes": 4145733
+      "bytes": 4145755
     },
     "AL": {
       "name": "Alagoas",
       "file": "andorinha-AL.tar.zst",
-      "sha256": "35050bdd96baa4419683f2ed689a1214bf8b7d3dc88f1cdf3cee4f863d18cbfc",
+      "sha256": "d5d7ded3f6f167033a028c8856f0f9590603cf34bb54e881c7217182c229764f",
       "tiles": 71,
-      "bytes_tiles": 59196824,
+      "bytes_tiles": 59198616,
       "bbox": [
         -10.5,
         -38.24,
@@ -94,14 +94,14 @@
         -8.0,
         -35.0
       ],
-      "bytes": 20797593
+      "bytes": 20798957
     },
     "AM": {
       "name": "Amazonas",
       "file": "andorinha-AM.tar.zst",
-      "sha256": "5189d8b7160d5b024e3679c7b0cc3343034f79b2aacf83800e4d57bfb571b5ee",
-      "tiles": 802,
-      "bytes_tiles": 33771264,
+      "sha256": "d2452ed40dbc9c71172dd93fcbd55a2e188e67766606de944d2f638f45e968cf",
+      "tiles": 803,
+      "bytes_tiles": 33783328,
       "bbox": [
         -9.82,
         -73.81,
@@ -114,14 +114,14 @@
         2.25,
         -56.0
       ],
-      "bytes": 11121404
+      "bytes": 11124017
     },
     "AP": {
       "name": "Amapá",
       "file": "andorinha-AP.tar.zst",
-      "sha256": "75d49fc53fab0daf9d048af7ef31d78d4af258e02a7a7d0630ee94bc75cca6c9",
+      "sha256": "074b32b97fa1e5b10805df606d4698ad548c85957275ae1be79ec6bee5546ff6",
       "tiles": 112,
-      "bytes_tiles": 6183344,
+      "bytes_tiles": 6187952,
       "bbox": [
         -1.24,
         -54.88,
@@ -134,14 +134,14 @@
         4.25,
         -49.75
       ],
-      "bytes": 2089602
+      "bytes": 2090140
     },
     "BA": {
       "name": "Bahia",
       "file": "andorinha-BA.tar.zst",
-      "sha256": "8b01816a24ac206ebd8219abbfaad4cf7e0ef36c487798e37bdb32f7cbe8dea7",
+      "sha256": "15b5c3bf2fb566f1d9e1981229299d92e0dcd8d4f9e3676f31bb5a94d4ebdde0",
       "tiles": 960,
-      "bytes_tiles": 282987384,
+      "bytes_tiles": 282964664,
       "bbox": [
         -18.34,
         -46.58,
@@ -154,14 +154,14 @@
         -8.0,
         -37.0
       ],
-      "bytes": 104666071
+      "bytes": 104655611
     },
     "CE": {
       "name": "Ceará",
       "file": "andorinha-CE.tar.zst",
-      "sha256": "bc0b98101c7061d8c9a586bd3033c8baf18cc79ffb74a153d22bbe3ff2cc7b77",
+      "sha256": "8d470378899c93ffda022b8e8e99065cd37a1a510f0625bf6c1d0a502d739e3b",
       "tiles": 268,
-      "bytes_tiles": 164565424,
+      "bytes_tiles": 164667872,
       "bbox": [
         -7.86,
         -41.43,
@@ -174,14 +174,14 @@
         -2.0,
         -37.0
       ],
-      "bytes": 58205307
+      "bytes": 58243312
     },
     "DF": {
       "name": "Distrito Federal",
       "file": "andorinha-DF.tar.zst",
-      "sha256": "306b32b3393cae5b77c7d4cdf5988977d4ab880fe6f1680fa3d749a8a435bec3",
+      "sha256": "fff80a46de465d7bc157522d08ed3ad416763dc208b949ae7942355b3f9a8dc3",
       "tiles": 23,
-      "bytes_tiles": 55731760,
+      "bytes_tiles": 55739376,
       "bbox": [
         -16.05,
         -48.29,
@@ -194,14 +194,14 @@
         -15.0,
         -47.0
       ],
-      "bytes": 17119663
+      "bytes": 17123890
     },
     "ES": {
       "name": "Espírito Santo",
       "file": "andorinha-ES.tar.zst",
-      "sha256": "baacd295bb990d73cedb3b45a0115408b34169a1f54ad3d2f522c7f286ec3af3",
+      "sha256": "5a163e066b2643b0bcf59488b367952699936ccee1a842092779a8b77bb01137",
       "tiles": 108,
-      "bytes_tiles": 82738240,
+      "bytes_tiles": 82734800,
       "bbox": [
         -21.31,
         -41.88,
@@ -214,14 +214,14 @@
         -17.0,
         -29.25
       ],
-      "bytes": 32157848
+      "bytes": 32160661
     },
     "GO": {
       "name": "Goiás",
       "file": "andorinha-GO.tar.zst",
-      "sha256": "ba7931de05a3124844526d68b9baf758c4efa75cf04f080021410d6bfd68a671",
+      "sha256": "8eddcae92dad3c385666e734df9316f6e5ca9c77915995661c113298ab11db59",
       "tiles": 605,
-      "bytes_tiles": 190699680,
+      "bytes_tiles": 190733208,
       "bbox": [
         -19.5,
         -53.25,
@@ -234,14 +234,14 @@
         -12.0,
         -45.0
       ],
-      "bytes": 63171320
+      "bytes": 63189832
     },
     "MA": {
       "name": "Maranhão",
       "file": "andorinha-MA.tar.zst",
-      "sha256": "0e21c3602aae4b014021d776f35e4610fb2940a07be3d95a48867c163d7aa83e",
-      "tiles": 573,
-      "bytes_tiles": 103459104,
+      "sha256": "f540f5978d2e13473460c736497884b8949b34e1fd80a00ed2a4a10e59688da8",
+      "tiles": 574,
+      "bytes_tiles": 103519056,
       "bbox": [
         -10.26,
         -48.76,
@@ -254,14 +254,14 @@
         -1.0,
         -41.0
       ],
-      "bytes": 36712563
+      "bytes": 36736418
     },
     "MG": {
       "name": "Minas Gerais",
       "file": "andorinha-MG.tar.zst",
-      "sha256": "ece622ebe6903b16ccaf2ab5429f6741635d7d46fcd386f97f7f776b7d47a2a9",
+      "sha256": "798f370b383bc16f52b3917d97f19cc0e19a0267c701cceedc48ab225e992e86",
       "tiles": 1006,
-      "bytes_tiles": 500500456,
+      "bytes_tiles": 500626656,
       "bbox": [
         -22.93,
         -51.05,
@@ -274,14 +274,14 @@
         -14.0,
         -39.0
       ],
-      "bytes": 188181126
+      "bytes": 188254953
     },
     "MS": {
       "name": "Mato Grosso do Sul",
       "file": "andorinha-MS.tar.zst",
-      "sha256": "13282766ae0c115a5bed9d2da3ac39f29897d38380ed448d29e7e302899423b7",
+      "sha256": "a667dfdf832f309b9caa40f1df8a7a92d49e5794e0d38304a14eaf906b19d1dd",
       "tiles": 634,
-      "bytes_tiles": 76356568,
+      "bytes_tiles": 76356384,
       "bbox": [
         -24.07,
         -58.17,
@@ -294,14 +294,14 @@
         -17.0,
         -50.0
       ],
-      "bytes": 25216433
+      "bytes": 25213599
     },
     "MT": {
       "name": "Mato Grosso",
       "file": "andorinha-MT.tar.zst",
-      "sha256": "2f662083b03481686ef574e39e42d8af3e4b50344c4fb218c9055b6954c2d112",
+      "sha256": "3c92ba2725767ff1f99c7cc3779b265b9c9471ebf04c097f8bca2e54568ad6a6",
       "tiles": 1353,
-      "bytes_tiles": 95003856,
+      "bytes_tiles": 95116472,
       "bbox": [
         -18.05,
         -61.64,
@@ -314,14 +314,14 @@
         -7.25,
         -50.0
       ],
-      "bytes": 32745626
+      "bytes": 32801376
     },
     "PA": {
       "name": "Pará",
       "file": "andorinha-PA.tar.zst",
-      "sha256": "d7659c0a44494ed69f13076b4d8730c74897e4991388bbce66efb5aab593f4e2",
+      "sha256": "f426a18d2edfd5ac259a198eb0fc535a872df4d26c12d722aa813a73d485a3c6",
       "tiles": 1225,
-      "bytes_tiles": 93666568,
+      "bytes_tiles": 93677840,
       "bbox": [
         -9.85,
         -58.9,
@@ -334,14 +334,14 @@
         2.5,
         -46.0
       ],
-      "bytes": 33558867
+      "bytes": 33567389
     },
     "PB": {
       "name": "Paraíba",
       "file": "andorinha-PB.tar.zst",
-      "sha256": "807f31ac354e42f361ef54f09091b91e2060c10055e580b6abde16c4bb287aa4",
+      "sha256": "4a259523d4c57927921058e0607f7ccfe430f0eb4b8589a3a8fbd5890bb76d26",
       "tiles": 136,
-      "bytes_tiles": 113376784,
+      "bytes_tiles": 113446504,
       "bbox": [
         -8.31,
         -38.77,
@@ -354,14 +354,14 @@
         -5.0,
         -34.0
       ],
-      "bytes": 41305826
+      "bytes": 41318385
     },
     "PE": {
       "name": "Pernambuco",
       "file": "andorinha-PE.tar.zst",
-      "sha256": "8381e24a331ea7edc837a834b037c73fb5dfc540e82a0d8a7185ffeefdd6c1b3",
+      "sha256": "57a51867c189c3ec434e5859a5cf41fdcf1c9f710af7c7c71abfd64328ac051d",
       "tiles": 218,
-      "bytes_tiles": 184974960,
+      "bytes_tiles": 185030384,
       "bbox": [
         -9.49,
         -41.36,
@@ -374,14 +374,14 @@
         -3.0,
         -32.0
       ],
-      "bytes": 65873606
+      "bytes": 65904070
     },
     "PI": {
       "name": "Piauí",
       "file": "andorinha-PI.tar.zst",
-      "sha256": "706a18d37f5f45a6d52b519adeaf4703df1d2ed6cdee647859e2ec24cb16fa38",
+      "sha256": "ef06f238c6db2b32ced941fbf46028f355b6640adf860bd13652abbc5352ee21",
       "tiles": 450,
-      "bytes_tiles": 89951296,
+      "bytes_tiles": 90022584,
       "bbox": [
         -10.93,
         -46.03,
@@ -394,14 +394,14 @@
         -2.0,
         -40.0
       ],
-      "bytes": 32723100
+      "bytes": 32748120
     },
     "PR": {
       "name": "Paraná",
       "file": "andorinha-PR.tar.zst",
-      "sha256": "32c4ae5106e5bf480e535873ecfe1e2c648826b0b71c35cd77749b0ef26be7ad",
+      "sha256": "20c66e887ad29c78ea8d5abb675b9932d898865427826901946f2461d201514d",
       "tiles": 380,
-      "bytes_tiles": 272495184,
+      "bytes_tiles": 272512160,
       "bbox": [
         -26.72,
         -54.62,
@@ -414,14 +414,14 @@
         -22.0,
         -47.0
       ],
-      "bytes": 93840380
+      "bytes": 93829209
     },
     "RJ": {
       "name": "Rio de Janeiro",
       "file": "andorinha-RJ.tar.zst",
-      "sha256": "ad1a7824f5808ef8c4c620b048bc7048a576ff048bfcccb371f6773f82b75f3f",
+      "sha256": "a32baecce4fe631e369900b6f387507fda8f45b7d329d572e7860953c49aadb6",
       "tiles": 117,
-      "bytes_tiles": 156473888,
+      "bytes_tiles": 156489024,
       "bbox": [
         -23.37,
         -44.89,
@@ -434,14 +434,14 @@
         -20.0,
         -40.0
       ],
-      "bytes": 54387753
+      "bytes": 54394022
     },
     "RN": {
       "name": "Rio Grande do Norte",
       "file": "andorinha-RN.tar.zst",
-      "sha256": "5a36d32b482d53d8a009f7d2556c699430e39e0fbe811c7920f7b788fb93fd08",
+      "sha256": "2dd0e70ad7c002eb6ca3ce01dae682370337ea17207a9c28b8da595d307e0d61",
       "tiles": 119,
-      "bytes_tiles": 76358608,
+      "bytes_tiles": 76381784,
       "bbox": [
         -6.99,
         -38.59,
@@ -454,14 +454,14 @@
         -4.0,
         -34.0
       ],
-      "bytes": 26503539
+      "bytes": 26511734
     },
     "RO": {
       "name": "Rondônia",
       "file": "andorinha-RO.tar.zst",
-      "sha256": "2a6afbe851e930a4435840f0d8a3331ca6e161d69975e2c09d6da39565c7d790",
+      "sha256": "43844762dd1e374e4f579cfb5ac46c29cea7e36d2b9e1232d18cfa5e460d898b",
       "tiles": 352,
-      "bytes_tiles": 28612584,
+      "bytes_tiles": 28642944,
       "bbox": [
         -13.7,
         -66.82,
@@ -474,14 +474,14 @@
         -7.0,
         -59.0
       ],
-      "bytes": 9965328
+      "bytes": 9973828
     },
     "RR": {
       "name": "Roraima",
       "file": "andorinha-RR.tar.zst",
-      "sha256": "28b4d0058aa4f8933e153c49e2f74c5c8805ef051253ada854df4835ed962338",
+      "sha256": "b0bc098541b8269b76b509d88f90c775a098466af44cf37725f5ab5103ddd004",
       "tiles": 236,
-      "bytes_tiles": 11077960,
+      "bytes_tiles": 11077296,
       "bbox": [
         -1.59,
         -64.83,
@@ -494,14 +494,14 @@
         5.5,
         -59.0
       ],
-      "bytes": 3901396
+      "bytes": 3902001
     },
     "RS": {
       "name": "Rio Grande do Sul",
       "file": "andorinha-RS.tar.zst",
-      "sha256": "35b23a5561d2d5bf1ec2f8ff8ae65402cd67798e87462780435ea8c171fc1f19",
+      "sha256": "22763573793e1fd7db9da2f88ba97cdee5b6e6806c57b197a0f8f9bbe2ff56ca",
       "tiles": 538,
-      "bytes_tiles": 235955544,
+      "bytes_tiles": 236079992,
       "bbox": [
         -33.76,
         -57.65,
@@ -514,14 +514,14 @@
         -27.0,
         -49.0
       ],
-      "bytes": 82682332
+      "bytes": 82716752
     },
     "SC": {
       "name": "Santa Catarina",
       "file": "andorinha-SC.tar.zst",
-      "sha256": "1a4388d17c2ad37def3f039c391842819e6b16d52de4aff173d2d3cebde6b4ff",
+      "sha256": "29bd40a383b1ba3062b55bd5e3071685a44256c816ad535d3e31360edb5f1d29",
       "tiles": 223,
-      "bytes_tiles": 196751392,
+      "bytes_tiles": 196953000,
       "bbox": [
         -29.36,
         -53.84,
@@ -534,14 +534,14 @@
         -25.0,
         -48.0
       ],
-      "bytes": 70276814
+      "bytes": 70346658
     },
     "SE": {
       "name": "Sergipe",
       "file": "andorinha-SE.tar.zst",
-      "sha256": "ed33f73a3c028d4f9916381398f0d2ccdff006f4aad38c2ef340394a2b8fd02b",
+      "sha256": "a0f817f01e127f9f54d0f94e6954efb5d6772ac2e37be3b04b09b23ace4b4e66",
       "tiles": 62,
-      "bytes_tiles": 45948000,
+      "bytes_tiles": 45945264,
       "bbox": [
         -11.57,
         -38.25,
@@ -554,14 +554,14 @@
         -9.0,
         -36.0
       ],
-      "bytes": 16420959
+      "bytes": 16421568
     },
     "SP": {
       "name": "São Paulo",
       "file": "andorinha-SP.tar.zst",
-      "sha256": "0ba47be7e8122c8ab6b31f5a0f79481f7b554c4cfd3d2d1c599c4a2c2e2594cb",
+      "sha256": "ea56da8e84220f19bcbcf2be20c2d8b5aa5ed3f0cfa02ab6fd05d26a3bfcf156",
       "tiles": 476,
-      "bytes_tiles": 594119064,
+      "bytes_tiles": 594165024,
       "bbox": [
         -25.31,
         -53.12,
@@ -574,14 +574,14 @@
         -19.0,
         -44.0
       ],
-      "bytes": 197863280
+      "bytes": 197876397
     },
     "TO": {
       "name": "Tocantins",
       "file": "andorinha-TO.tar.zst",
-      "sha256": "47e0453dd453d5dbc38a9267e994651c77be543acdad7461be5081839cae30b6",
+      "sha256": "294cb9fd178fda39b36c4d0d3920a13b82e4808604a2df7aa4e90a8fb6ff0323",
       "tiles": 490,
-      "bytes_tiles": 51208912,
+      "bytes_tiles": 51215120,
       "bbox": [
         -13.47,
         -50.75,
@@ -594,7 +594,7 @@
         -5.0,
         -45.0
       ],
-      "bytes": 18889724
+      "bytes": 18894424
     }
   },
   "municipalities": {
@@ -1318,12 +1318,12 @@
     "version": 1,
     "min_reader_version": 1,
     "dataset": "andorinha",
-    "build_id": "2026-11-15-498f9792",
-    "built_at": "2026-11-15T14:31:00Z",
-    "release_url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/",
+    "build_id": "2026-11-22-709f550d",
+    "built_at": "2026-11-22T15:20:22Z",
+    "release_url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/",
     "generator": {
       "repository": "https://github.com/murkiriel/andorinha",
-      "commit": "666b44a426e6695166728397ed8ae621804697ca"
+      "commit": "551543bc6b4d41dc086fb635317a703869d937e8"
     },
     "license": {
       "data": "ODbL-1.0",
@@ -1335,18 +1335,18 @@
       "bbox_order": "lat_min,lon_min,lat_max,lon_max"
     },
     "osm_snapshot": {
-      "date": "2026-11-15T00:29:28Z",
-      "md5": "498f97923d9548e5fb96fcfe8ed3fb72"
+      "date": "2026-11-21T00:49:19Z",
+      "md5": "709f550de7b43e0e8e1f080929be2203"
     },
     "sources": [
       {
         "id": "openstreetmap",
         "name": "OpenStreetMap (extrato do Brasil)",
         "url": "https://download.openstreetmap.fr/extracts/south-america/brazil-latest.osm.pbf",
-        "date": "2026-11-15T00:29:28Z",
+        "date": "2026-11-21T00:49:19Z",
         "license": "ODbL-1.0",
         "checksums": {
-          "md5": "498f97923d9548e5fb96fcfe8ed3fb72"
+          "md5": "709f550de7b43e0e8e1f080929be2203"
         }
       },
       {
@@ -1383,25 +1383,25 @@
       },
       {
         "id": "pesos-moto-municipios",
-        "name": "Pesos do perfil de moto por município (tabela versionada no repositório)",
+        "name": "Pesos do perfil de moto por município (tabela publicada na release)",
         "url": null,
         "date": "2026-11-14",
         "license": null,
         "checksums": {
           "sha256": "66cc4078eef4f9fee1bce2ef3074aebb79e97765cc2524db6c77b5a1984be434"
         },
-        "note": "a geração dos tiles de cada peso está em municipalities.weights.generations"
+        "note": "a geração dos tiles de cada peso está em municipalities.weights.generations; a tabela é o arquivo pesos_moto_municipios.csv da release, nas gerações que o publicam"
       },
       {
         "id": "pesos-moto-estados",
-        "name": "Pesos do perfil de moto por estado (tabela versionada no repositório)",
+        "name": "Pesos do perfil de moto por estado (tabela publicada na release)",
         "url": null,
         "date": "2026-11-14",
         "license": null,
         "checksums": {
           "sha256": "fd306ff04a7b0d67d72ca693ae0c06523ce015e60baf8db7a75e121095dbe685"
         },
-        "note": "a geração dos tiles de cada peso está em municipalities.state_weights.generations"
+        "note": "a geração dos tiles de cada peso está em municipalities.state_weights.generations; a tabela é o arquivo pesos_moto_estados.csv da release, nas gerações que o publicam"
       }
     ],
     "compatibility": {
@@ -1435,10 +1435,10 @@
         "id": "base",
         "kind": "base",
         "region": "BR",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-base.tar.zst",
-        "sha256": "ef2042a726a113b7aabbda16540d6ac27df1d984a91d0e46738fe9ab3e52d29f",
-        "bytes": 52774865,
-        "bytes_unpacked": 160464376,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-base.tar.zst",
+        "sha256": "7c7c09ecf9443ee9db479de598f0c385ef40107aba66d257478da6efcb928b99",
+        "bytes": 52792282,
+        "bytes_unpacked": 160531320,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1458,10 +1458,10 @@
         "id": "AC",
         "kind": "uf",
         "region": "AC",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-AC.tar.zst",
-        "sha256": "accc51a88906d150fe6fb9d78bd180bfd54d4fbe1595ca99f64818806ff53e18",
-        "bytes": 4145733,
-        "bytes_unpacked": 11391560,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-AC.tar.zst",
+        "sha256": "2c16521865c8a82741814c4b9f75ac5519f525bdb556ff7db406dcafacc76d77",
+        "bytes": 4145755,
+        "bytes_unpacked": 11393328,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1483,10 +1483,10 @@
         "id": "AL",
         "kind": "uf",
         "region": "AL",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-AL.tar.zst",
-        "sha256": "35050bdd96baa4419683f2ed689a1214bf8b7d3dc88f1cdf3cee4f863d18cbfc",
-        "bytes": 20797593,
-        "bytes_unpacked": 59196824,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-AL.tar.zst",
+        "sha256": "d5d7ded3f6f167033a028c8856f0f9590603cf34bb54e881c7217182c229764f",
+        "bytes": 20798957,
+        "bytes_unpacked": 59198616,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1508,10 +1508,10 @@
         "id": "AM",
         "kind": "uf",
         "region": "AM",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-AM.tar.zst",
-        "sha256": "5189d8b7160d5b024e3679c7b0cc3343034f79b2aacf83800e4d57bfb571b5ee",
-        "bytes": 11121404,
-        "bytes_unpacked": 33771264,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-AM.tar.zst",
+        "sha256": "d2452ed40dbc9c71172dd93fcbd55a2e188e67766606de944d2f638f45e968cf",
+        "bytes": 11124017,
+        "bytes_unpacked": 33783328,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1533,10 +1533,10 @@
         "id": "AP",
         "kind": "uf",
         "region": "AP",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-AP.tar.zst",
-        "sha256": "75d49fc53fab0daf9d048af7ef31d78d4af258e02a7a7d0630ee94bc75cca6c9",
-        "bytes": 2089602,
-        "bytes_unpacked": 6183344,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-AP.tar.zst",
+        "sha256": "074b32b97fa1e5b10805df606d4698ad548c85957275ae1be79ec6bee5546ff6",
+        "bytes": 2090140,
+        "bytes_unpacked": 6187952,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1558,10 +1558,10 @@
         "id": "BA",
         "kind": "uf",
         "region": "BA",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-BA.tar.zst",
-        "sha256": "8b01816a24ac206ebd8219abbfaad4cf7e0ef36c487798e37bdb32f7cbe8dea7",
-        "bytes": 104666071,
-        "bytes_unpacked": 282987384,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-BA.tar.zst",
+        "sha256": "15b5c3bf2fb566f1d9e1981229299d92e0dcd8d4f9e3676f31bb5a94d4ebdde0",
+        "bytes": 104655611,
+        "bytes_unpacked": 282964664,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1583,10 +1583,10 @@
         "id": "CE",
         "kind": "uf",
         "region": "CE",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-CE.tar.zst",
-        "sha256": "bc0b98101c7061d8c9a586bd3033c8baf18cc79ffb74a153d22bbe3ff2cc7b77",
-        "bytes": 58205307,
-        "bytes_unpacked": 164565424,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-CE.tar.zst",
+        "sha256": "8d470378899c93ffda022b8e8e99065cd37a1a510f0625bf6c1d0a502d739e3b",
+        "bytes": 58243312,
+        "bytes_unpacked": 164667872,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1608,10 +1608,10 @@
         "id": "DF",
         "kind": "uf",
         "region": "DF",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-DF.tar.zst",
-        "sha256": "306b32b3393cae5b77c7d4cdf5988977d4ab880fe6f1680fa3d749a8a435bec3",
-        "bytes": 17119663,
-        "bytes_unpacked": 55731760,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-DF.tar.zst",
+        "sha256": "fff80a46de465d7bc157522d08ed3ad416763dc208b949ae7942355b3f9a8dc3",
+        "bytes": 17123890,
+        "bytes_unpacked": 55739376,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1633,10 +1633,10 @@
         "id": "ES",
         "kind": "uf",
         "region": "ES",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-ES.tar.zst",
-        "sha256": "baacd295bb990d73cedb3b45a0115408b34169a1f54ad3d2f522c7f286ec3af3",
-        "bytes": 32157848,
-        "bytes_unpacked": 82738240,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-ES.tar.zst",
+        "sha256": "5a163e066b2643b0bcf59488b367952699936ccee1a842092779a8b77bb01137",
+        "bytes": 32160661,
+        "bytes_unpacked": 82734800,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1658,10 +1658,10 @@
         "id": "GO",
         "kind": "uf",
         "region": "GO",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-GO.tar.zst",
-        "sha256": "ba7931de05a3124844526d68b9baf758c4efa75cf04f080021410d6bfd68a671",
-        "bytes": 63171320,
-        "bytes_unpacked": 190699680,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-GO.tar.zst",
+        "sha256": "8eddcae92dad3c385666e734df9316f6e5ca9c77915995661c113298ab11db59",
+        "bytes": 63189832,
+        "bytes_unpacked": 190733208,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1683,10 +1683,10 @@
         "id": "MA",
         "kind": "uf",
         "region": "MA",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-MA.tar.zst",
-        "sha256": "0e21c3602aae4b014021d776f35e4610fb2940a07be3d95a48867c163d7aa83e",
-        "bytes": 36712563,
-        "bytes_unpacked": 103459104,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-MA.tar.zst",
+        "sha256": "f540f5978d2e13473460c736497884b8949b34e1fd80a00ed2a4a10e59688da8",
+        "bytes": 36736418,
+        "bytes_unpacked": 103519056,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1708,10 +1708,10 @@
         "id": "MG",
         "kind": "uf",
         "region": "MG",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-MG.tar.zst",
-        "sha256": "ece622ebe6903b16ccaf2ab5429f6741635d7d46fcd386f97f7f776b7d47a2a9",
-        "bytes": 188181126,
-        "bytes_unpacked": 500500456,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-MG.tar.zst",
+        "sha256": "798f370b383bc16f52b3917d97f19cc0e19a0267c701cceedc48ab225e992e86",
+        "bytes": 188254953,
+        "bytes_unpacked": 500626656,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1733,10 +1733,10 @@
         "id": "MS",
         "kind": "uf",
         "region": "MS",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-MS.tar.zst",
-        "sha256": "13282766ae0c115a5bed9d2da3ac39f29897d38380ed448d29e7e302899423b7",
-        "bytes": 25216433,
-        "bytes_unpacked": 76356568,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-MS.tar.zst",
+        "sha256": "a667dfdf832f309b9caa40f1df8a7a92d49e5794e0d38304a14eaf906b19d1dd",
+        "bytes": 25213599,
+        "bytes_unpacked": 76356384,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1758,10 +1758,10 @@
         "id": "MT",
         "kind": "uf",
         "region": "MT",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-MT.tar.zst",
-        "sha256": "2f662083b03481686ef574e39e42d8af3e4b50344c4fb218c9055b6954c2d112",
-        "bytes": 32745626,
-        "bytes_unpacked": 95003856,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-MT.tar.zst",
+        "sha256": "3c92ba2725767ff1f99c7cc3779b265b9c9471ebf04c097f8bca2e54568ad6a6",
+        "bytes": 32801376,
+        "bytes_unpacked": 95116472,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1783,10 +1783,10 @@
         "id": "PA",
         "kind": "uf",
         "region": "PA",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-PA.tar.zst",
-        "sha256": "d7659c0a44494ed69f13076b4d8730c74897e4991388bbce66efb5aab593f4e2",
-        "bytes": 33558867,
-        "bytes_unpacked": 93666568,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-PA.tar.zst",
+        "sha256": "f426a18d2edfd5ac259a198eb0fc535a872df4d26c12d722aa813a73d485a3c6",
+        "bytes": 33567389,
+        "bytes_unpacked": 93677840,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1808,10 +1808,10 @@
         "id": "PB",
         "kind": "uf",
         "region": "PB",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-PB.tar.zst",
-        "sha256": "807f31ac354e42f361ef54f09091b91e2060c10055e580b6abde16c4bb287aa4",
-        "bytes": 41305826,
-        "bytes_unpacked": 113376784,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-PB.tar.zst",
+        "sha256": "4a259523d4c57927921058e0607f7ccfe430f0eb4b8589a3a8fbd5890bb76d26",
+        "bytes": 41318385,
+        "bytes_unpacked": 113446504,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1833,10 +1833,10 @@
         "id": "PE",
         "kind": "uf",
         "region": "PE",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-PE.tar.zst",
-        "sha256": "8381e24a331ea7edc837a834b037c73fb5dfc540e82a0d8a7185ffeefdd6c1b3",
-        "bytes": 65873606,
-        "bytes_unpacked": 184974960,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-PE.tar.zst",
+        "sha256": "57a51867c189c3ec434e5859a5cf41fdcf1c9f710af7c7c71abfd64328ac051d",
+        "bytes": 65904070,
+        "bytes_unpacked": 185030384,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1858,10 +1858,10 @@
         "id": "PI",
         "kind": "uf",
         "region": "PI",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-PI.tar.zst",
-        "sha256": "706a18d37f5f45a6d52b519adeaf4703df1d2ed6cdee647859e2ec24cb16fa38",
-        "bytes": 32723100,
-        "bytes_unpacked": 89951296,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-PI.tar.zst",
+        "sha256": "ef06f238c6db2b32ced941fbf46028f355b6640adf860bd13652abbc5352ee21",
+        "bytes": 32748120,
+        "bytes_unpacked": 90022584,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1883,10 +1883,10 @@
         "id": "PR",
         "kind": "uf",
         "region": "PR",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-PR.tar.zst",
-        "sha256": "32c4ae5106e5bf480e535873ecfe1e2c648826b0b71c35cd77749b0ef26be7ad",
-        "bytes": 93840380,
-        "bytes_unpacked": 272495184,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-PR.tar.zst",
+        "sha256": "20c66e887ad29c78ea8d5abb675b9932d898865427826901946f2461d201514d",
+        "bytes": 93829209,
+        "bytes_unpacked": 272512160,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1908,10 +1908,10 @@
         "id": "RJ",
         "kind": "uf",
         "region": "RJ",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-RJ.tar.zst",
-        "sha256": "ad1a7824f5808ef8c4c620b048bc7048a576ff048bfcccb371f6773f82b75f3f",
-        "bytes": 54387753,
-        "bytes_unpacked": 156473888,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-RJ.tar.zst",
+        "sha256": "a32baecce4fe631e369900b6f387507fda8f45b7d329d572e7860953c49aadb6",
+        "bytes": 54394022,
+        "bytes_unpacked": 156489024,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1933,10 +1933,10 @@
         "id": "RN",
         "kind": "uf",
         "region": "RN",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-RN.tar.zst",
-        "sha256": "5a36d32b482d53d8a009f7d2556c699430e39e0fbe811c7920f7b788fb93fd08",
-        "bytes": 26503539,
-        "bytes_unpacked": 76358608,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-RN.tar.zst",
+        "sha256": "2dd0e70ad7c002eb6ca3ce01dae682370337ea17207a9c28b8da595d307e0d61",
+        "bytes": 26511734,
+        "bytes_unpacked": 76381784,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1958,10 +1958,10 @@
         "id": "RO",
         "kind": "uf",
         "region": "RO",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-RO.tar.zst",
-        "sha256": "2a6afbe851e930a4435840f0d8a3331ca6e161d69975e2c09d6da39565c7d790",
-        "bytes": 9965328,
-        "bytes_unpacked": 28612584,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-RO.tar.zst",
+        "sha256": "43844762dd1e374e4f579cfb5ac46c29cea7e36d2b9e1232d18cfa5e460d898b",
+        "bytes": 9973828,
+        "bytes_unpacked": 28642944,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -1983,10 +1983,10 @@
         "id": "RR",
         "kind": "uf",
         "region": "RR",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-RR.tar.zst",
-        "sha256": "28b4d0058aa4f8933e153c49e2f74c5c8805ef051253ada854df4835ed962338",
-        "bytes": 3901396,
-        "bytes_unpacked": 11077960,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-RR.tar.zst",
+        "sha256": "b0bc098541b8269b76b509d88f90c775a098466af44cf37725f5ab5103ddd004",
+        "bytes": 3902001,
+        "bytes_unpacked": 11077296,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -2008,10 +2008,10 @@
         "id": "RS",
         "kind": "uf",
         "region": "RS",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-RS.tar.zst",
-        "sha256": "35b23a5561d2d5bf1ec2f8ff8ae65402cd67798e87462780435ea8c171fc1f19",
-        "bytes": 82682332,
-        "bytes_unpacked": 235955544,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-RS.tar.zst",
+        "sha256": "22763573793e1fd7db9da2f88ba97cdee5b6e6806c57b197a0f8f9bbe2ff56ca",
+        "bytes": 82716752,
+        "bytes_unpacked": 236079992,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -2033,10 +2033,10 @@
         "id": "SC",
         "kind": "uf",
         "region": "SC",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-SC.tar.zst",
-        "sha256": "1a4388d17c2ad37def3f039c391842819e6b16d52de4aff173d2d3cebde6b4ff",
-        "bytes": 70276814,
-        "bytes_unpacked": 196751392,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-SC.tar.zst",
+        "sha256": "29bd40a383b1ba3062b55bd5e3071685a44256c816ad535d3e31360edb5f1d29",
+        "bytes": 70346658,
+        "bytes_unpacked": 196953000,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -2058,10 +2058,10 @@
         "id": "SE",
         "kind": "uf",
         "region": "SE",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-SE.tar.zst",
-        "sha256": "ed33f73a3c028d4f9916381398f0d2ccdff006f4aad38c2ef340394a2b8fd02b",
-        "bytes": 16420959,
-        "bytes_unpacked": 45948000,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-SE.tar.zst",
+        "sha256": "a0f817f01e127f9f54d0f94e6954efb5d6772ac2e37be3b04b09b23ace4b4e66",
+        "bytes": 16421568,
+        "bytes_unpacked": 45945264,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -2083,10 +2083,10 @@
         "id": "SP",
         "kind": "uf",
         "region": "SP",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-SP.tar.zst",
-        "sha256": "0ba47be7e8122c8ab6b31f5a0f79481f7b554c4cfd3d2d1c599c4a2c2e2594cb",
-        "bytes": 197863280,
-        "bytes_unpacked": 594119064,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-SP.tar.zst",
+        "sha256": "ea56da8e84220f19bcbcf2be20c2d8b5aa5ed3f0cfa02ab6fd05d26a3bfcf156",
+        "bytes": 197876397,
+        "bytes_unpacked": 594165024,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -2108,10 +2108,10 @@
         "id": "TO",
         "kind": "uf",
         "region": "TO",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-TO.tar.zst",
-        "sha256": "47e0453dd453d5dbc38a9267e994651c77be543acdad7461be5081839cae30b6",
-        "bytes": 18889724,
-        "bytes_unpacked": 51208912,
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-TO.tar.zst",
+        "sha256": "294cb9fd178fda39b36c4d0d3920a13b82e4808604a2df7aa4e90a8fb6ff0323",
+        "bytes": 18894424,
+        "bytes_unpacked": 51215120,
         "media_type": "application/zstd",
         "unpack": [
           "zstd",
@@ -2133,7 +2133,7 @@
         "id": "municipios-AC",
         "kind": "auxiliary",
         "region": "AC",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-AC.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-AC.geojson.zst",
         "sha256": "bf85b3bec6241cbb0982b8e5945567d88642e2fc8c2970fab5562aec95493051",
         "bytes": 17269,
         "bytes_unpacked": 96663,
@@ -2182,7 +2182,7 @@
         "id": "municipios-AL",
         "kind": "auxiliary",
         "region": "AL",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-AL.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-AL.geojson.zst",
         "sha256": "ce9e122b92954a941b312e83b6a166021488368f4b398ba32845ca3570866103",
         "bytes": 13713,
         "bytes_unpacked": 91055,
@@ -2231,7 +2231,7 @@
         "id": "municipios-AM",
         "kind": "auxiliary",
         "region": "AM",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-AM.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-AM.geojson.zst",
         "sha256": "299b9ccc0e5332e56f5c3b8c30635f5a19585fd25acbed0150b555a2d629f3f3",
         "bytes": 115197,
         "bytes_unpacked": 620029,
@@ -2280,7 +2280,7 @@
         "id": "municipios-AP",
         "kind": "auxiliary",
         "region": "AP",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-AP.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-AP.geojson.zst",
         "sha256": "ea7cc928a0f5660909c4737d5811501f760c8cf94c27d5c6824bdcdec15800f3",
         "bytes": 22226,
         "bytes_unpacked": 113451,
@@ -2329,7 +2329,7 @@
         "id": "municipios-BA",
         "kind": "auxiliary",
         "region": "BA",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-BA.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-BA.geojson.zst",
         "sha256": "bc2a6fb52ba61b86e2eb1b5db3a5c8af6e6736246f3f0ce783db29187665a41c",
         "bytes": 138706,
         "bytes_unpacked": 845252,
@@ -2378,7 +2378,7 @@
         "id": "municipios-CE",
         "kind": "auxiliary",
         "region": "CE",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-CE.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-CE.geojson.zst",
         "sha256": "4ea013572a28b1722d0c6f0c5ba648b243e0a9c6afc0886a0971a4b63a1ad403",
         "bytes": 50675,
         "bytes_unpacked": 304240,
@@ -2427,7 +2427,7 @@
         "id": "municipios-DF",
         "kind": "auxiliary",
         "region": "DF",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-DF.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-DF.geojson.zst",
         "sha256": "ef4437410dff0efdcfa2e13c8c2861b18e2388bfe0281bb60eefd3657d3b9a61",
         "bytes": 809,
         "bytes_unpacked": 2849,
@@ -2476,7 +2476,7 @@
         "id": "municipios-ES",
         "kind": "auxiliary",
         "region": "ES",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-ES.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-ES.geojson.zst",
         "sha256": "8ce5aaf0b881743c91104b235d92a1428eb54dec3a1fb76c1409648698bb9204",
         "bytes": 23888,
         "bytes_unpacked": 149769,
@@ -2525,7 +2525,7 @@
         "id": "municipios-GO",
         "kind": "auxiliary",
         "region": "GO",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-GO.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-GO.geojson.zst",
         "sha256": "31052d7fb84501eaedbba98427a5c848f2b0030381e4ff097c9891bd654e75dc",
         "bytes": 116154,
         "bytes_unpacked": 697612,
@@ -2574,7 +2574,7 @@
         "id": "municipios-MA",
         "kind": "auxiliary",
         "region": "MA",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-MA.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-MA.geojson.zst",
         "sha256": "2cf8be236f914270e50636744568149889627f9ab78a0b85216e203edc7e766c",
         "bytes": 75871,
         "bytes_unpacked": 440535,
@@ -2623,7 +2623,7 @@
         "id": "municipios-MG",
         "kind": "auxiliary",
         "region": "MG",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-MG.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-MG.geojson.zst",
         "sha256": "8ca2ed66b67d9a1c0d61dc943e789af77cc7d452ead491191439ece83b0ea3a1",
         "bytes": 284670,
         "bytes_unpacked": 1762745,
@@ -2672,7 +2672,7 @@
         "id": "municipios-MS",
         "kind": "auxiliary",
         "region": "MS",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-MS.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-MS.geojson.zst",
         "sha256": "1845699a047138c047b2bb29188c48ee60b2a8c5c6b90f9fb160316b2f15fde9",
         "bytes": 59980,
         "bytes_unpacked": 349213,
@@ -2721,7 +2721,7 @@
         "id": "municipios-MT",
         "kind": "auxiliary",
         "region": "MT",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-MT.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-MT.geojson.zst",
         "sha256": "2e5e824b3302182aae061e2e247dc6781d0ad2218273d7b37087d421b516628b",
         "bytes": 135104,
         "bytes_unpacked": 789461,
@@ -2770,7 +2770,7 @@
         "id": "municipios-PA",
         "kind": "auxiliary",
         "region": "PA",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-PA.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-PA.geojson.zst",
         "sha256": "a90287c5db17a5734da861ff853efcb1fe2d0ed546c03791b7507692dcdab257",
         "bytes": 127770,
         "bytes_unpacked": 700801,
@@ -2819,7 +2819,7 @@
         "id": "municipios-PB",
         "kind": "auxiliary",
         "region": "PB",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-PB.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-PB.geojson.zst",
         "sha256": "713702e5883431f566900e80f7c07d61233716a9644b60d519f436158b45ab4d",
         "bytes": 34469,
         "bytes_unpacked": 222560,
@@ -2868,7 +2868,7 @@
         "id": "municipios-PE",
         "kind": "auxiliary",
         "region": "PE",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-PE.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-PE.geojson.zst",
         "sha256": "29fa7fd84b84d141b0533b5881b929005159c31b96e14b68308dafdf7e7262af",
         "bytes": 36377,
         "bytes_unpacked": 225197,
@@ -2917,7 +2917,7 @@
         "id": "municipios-PI",
         "kind": "auxiliary",
         "region": "PI",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-PI.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-PI.geojson.zst",
         "sha256": "c9bd366002424a61a193fbae958ae0787d63a9fefdae1a963b476b5e181a79f5",
         "bytes": 46927,
         "bytes_unpacked": 285616,
@@ -2966,7 +2966,7 @@
         "id": "municipios-PR",
         "kind": "auxiliary",
         "region": "PR",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-PR.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-PR.geojson.zst",
         "sha256": "1f34fb81c7cceaed6e3d24a7d5b50e3f39520d58edf12d91f560145f1d44c79f",
         "bytes": 113494,
         "bytes_unpacked": 710626,
@@ -3015,7 +3015,7 @@
         "id": "municipios-RJ",
         "kind": "auxiliary",
         "region": "RJ",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-RJ.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-RJ.geojson.zst",
         "sha256": "0b4a0ec341677ce2dbbd7a00b7d3a39d13f7957867cf83bad7097de59789d89c",
         "bytes": 24067,
         "bytes_unpacked": 150735,
@@ -3064,7 +3064,7 @@
         "id": "municipios-RN",
         "kind": "auxiliary",
         "region": "RN",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-RN.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-RN.geojson.zst",
         "sha256": "79571f8eedf1f67b276838ba3c9fd1116f9fc5e1823ea924135218a765635780",
         "bytes": 20608,
         "bytes_unpacked": 138053,
@@ -3113,7 +3113,7 @@
         "id": "municipios-RO",
         "kind": "auxiliary",
         "region": "RO",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-RO.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-RO.geojson.zst",
         "sha256": "7e19f9d880b01b4559e39537fb8403dcd3f4eda790f92c01611edacb03002776",
         "bytes": 37219,
         "bytes_unpacked": 217299,
@@ -3162,7 +3162,7 @@
         "id": "municipios-RR",
         "kind": "auxiliary",
         "region": "RR",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-RR.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-RR.geojson.zst",
         "sha256": "c70dcefd7bccad93307c2c1ce9bcb1c901c3536f6ff220012b33a244edca948c",
         "bytes": 23736,
         "bytes_unpacked": 121900,
@@ -3211,7 +3211,7 @@
         "id": "municipios-RS",
         "kind": "auxiliary",
         "region": "RS",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-RS.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-RS.geojson.zst",
         "sha256": "aed07753878168f2916f01db178c7d748ab372010744ed77061f02e3ed0cb734",
         "bytes": 136690,
         "bytes_unpacked": 861636,
@@ -3260,7 +3260,7 @@
         "id": "municipios-SC",
         "kind": "auxiliary",
         "region": "SC",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-SC.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-SC.geojson.zst",
         "sha256": "4ca8277c898e417fbe2119fb1cabede5f8ec46660458a4f35c1e690ec161c2b7",
         "bytes": 69474,
         "bytes_unpacked": 446135,
@@ -3309,7 +3309,7 @@
         "id": "municipios-SE",
         "kind": "auxiliary",
         "region": "SE",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-SE.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-SE.geojson.zst",
         "sha256": "8b33ed30ccfa95c16609ba3c1dc2dcc9c27b64672e8b3e37cc96c66c21825a63",
         "bytes": 12781,
         "bytes_unpacked": 83428,
@@ -3358,7 +3358,7 @@
         "id": "municipios-SP",
         "kind": "auxiliary",
         "region": "SP",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-SP.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-SP.geojson.zst",
         "sha256": "6290ac093615a8880a528a6ebd352b3588a22e8b2dbb9bc38d7e7d1f75074066",
         "bytes": 157879,
         "bytes_unpacked": 998640,
@@ -3407,7 +3407,7 @@
         "id": "municipios-TO",
         "kind": "auxiliary",
         "region": "TO",
-        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-15-498f9792/andorinha-municipios-TO.geojson.zst",
+        "url": "https://github.com/murkiriel/andorinha/releases/download/2026-11-22-709f550d/andorinha-municipios-TO.geojson.zst",
         "sha256": "0b3ca3a0fc6fece4a9397f920dcaefd10e4a8d3c63fd76ce9c0f9c3ae379a0e7",
         "bytes": 74090,
         "bytes_unpacked": 430986,

@@ -129,13 +129,15 @@ class RedirectTargetTest(unittest.TestCase):
             s.files["/brazil-261107.osm.pbf"] = SAMPLE_DATA
             target = net.redirect_target(s.url("/brazil-latest.osm.pbf"), delay=0)
             self.assertEqual(s.url("/brazil-261107.osm.pbf"), target)
-            self.assertEqual([("/brazil-latest.osm.pbf", None)], s.requests)
+            # O destino também é pedido, para saber se ele redireciona de novo; sem baixar o corpo nem mandar Range.
+            self.assertEqual([("/brazil-latest.osm.pbf", None), ("/brazil-261107.osm.pbf", None)], s.requests)
 
     def test_absolute_target_is_kept(self):
         with FakeServer() as s:
             s.redirect["/latest"] = "https://download.example.org/brazil-261107.osm.pbf"
+            # `stop`: o destino é outro servidor e não é pedido
             self.assertEqual("https://download.example.org/brazil-261107.osm.pbf",
-                             net.redirect_target(s.url("/latest"), delay=0))
+                             net.redirect_target(s.url("/latest"), delay=0, stop=lambda u: "example.org" in u))
 
     def test_answer_without_redirect_fails(self):
         with FakeServer() as s:
@@ -155,6 +157,56 @@ class RedirectTargetTest(unittest.TestCase):
             with self.assertRaises(net.DownloadError):
                 net.redirect_target(s.url("/latest"), attempts=3, delay=0)
             self.assertEqual(3, len(s.requests))
+
+    def chain(self, s, *paths):
+        """Liga os caminhos em corrente: o primeiro redireciona (301, depois 307) para o segundo, e assim por diante."""
+        for i, (here, there) in enumerate(zip(paths, paths[1:])):
+            s.redirect[here] = there
+            s.redirect_status[here] = 301 if i == 0 else 307
+
+    def test_two_hops_give_the_last_address(self):
+        """O `-latest` da Geofabrik desde 2026-11-22: 301 e depois 307 até o arquivo datado."""
+        with FakeServer() as s:
+            self.chain(s, "/sa/brazil-latest.osm.pbf", "/sa/brazil/brazil-latest.osm.pbf", "/sa/brazil/brazil-261122.osm.pbf")
+            s.files["/sa/brazil/brazil-261122.osm.pbf"] = SAMPLE_DATA
+            target = net.redirect_target(s.url("/sa/brazil-latest.osm.pbf"), delay=0)
+            self.assertEqual(s.url("/sa/brazil/brazil-261122.osm.pbf"), target)
+
+    def test_stop_ends_the_chain_without_requesting_the_last_address(self):
+        """O datado do dia pode não responder; como o nome já diz que ele é o fim, nem é pedido."""
+        with FakeServer() as s:
+            self.chain(s, "/a", "/b", "/brazil-261122.osm.pbf")
+            s.code["/brazil-261122.osm.pbf"] = 404
+            target = net.redirect_target(s.url("/a"), delay=0, stop=lambda u: u.endswith(".osm.pbf"))
+            self.assertEqual(s.url("/brazil-261122.osm.pbf"), target)
+            self.assertEqual(["/a", "/b"], [path for path, _ in s.requests])
+
+    def test_three_hops_are_allowed_and_four_are_not(self):
+        with FakeServer() as s:
+            self.chain(s, "/1", "/2", "/3", "/4")
+            s.files["/4"] = SAMPLE_DATA
+            self.assertEqual(s.url("/4"), net.redirect_target(s.url("/1"), delay=0))
+        with FakeServer() as s:
+            self.chain(s, "/1", "/2", "/3", "/4", "/5")
+            s.files["/5"] = SAMPLE_DATA
+            with self.assertRaises(net.PermanentError) as ctx:
+                net.redirect_target(s.url("/1"), delay=0)
+            self.assertIn("redirecionamentos", str(ctx.exception))
+            self.assertEqual(4, len(s.requests))  # parou sem pedir o quinto
+
+    def test_loop_fails(self):
+        with FakeServer() as s:
+            s.redirect["/a"] = "/b"
+            s.redirect["/b"] = "/a"
+            with self.assertRaises(net.PermanentError):
+                net.redirect_target(s.url("/a"), delay=0)
+
+    def test_404_in_the_middle_of_the_chain_fails_at_once(self):
+        with FakeServer() as s:
+            s.redirect["/a"] = "/b"  # /b não existe
+            with self.assertRaises(net.PermanentError):
+                net.redirect_target(s.url("/a"), delay=5)
+            self.assertEqual(2, len(s.requests))
 
 
 def md5(b: bytes) -> str:

@@ -44,11 +44,15 @@ OSM_SOURCES = tuple(s.strip() for s in (os.environ.get("ANDORINHA_OSM_SOURCES") 
 OSM_PBF_URL = "https://download.openstreetmap.fr/extracts/south-america/brazil-latest.osm.pbf"
 OSM_STATE_URL = "https://download.openstreetmap.fr/extracts/south-america/brazil.state.txt"
 OSM_MD5_URL = "https://download.openstreetmap.fr/extracts/south-america/brazil.osm.pbf.md5"
-# Geofabrik (~2,1 GB, sem os metadados de usuário, que o Valhalla não usa): o `-latest` redireciona para o arquivo
-# datado do dia (brazil-AAMMDD.osm.pbf), que tem o próprio .md5 e não muda depois de publicado. A data e a hora vêm do
-# state.txt das atualizações.
-GEOFABRIK_LATEST_URL = "https://download.geofabrik.de/south-america/brazil-latest.osm.pbf"
-GEOFABRIK_STATE_URL = "https://download.geofabrik.de/south-america/brazil-updates/state.txt"
+# Geofabrik (~2,1 GB, sem os metadados de usuário, que o Valhalla não usa): o arquivo datado do dia
+# (brazil-AAMMDD.osm.pbf) tem o próprio .md5 e não muda depois de publicado. Desde 2026-11-22 o `-latest` dá dois saltos
+# (south-america/brazil-latest -> 301 -> south-america/brazil/brazil-latest -> 307 -> brazil/brazil-AAMMDD) e o datado do
+# dia fica na listagem horas antes de responder (404, ou 502 no .md5), então o gerador também lê a listagem da pasta e
+# cai para o datado do dia anterior. A data e a hora dos dados vêm do cabeçalho do próprio arquivo (andorinha/pbf_header.py).
+GEOFABRIK_LATEST_URL = "https://download.geofabrik.de/south-america/brazil/brazil-latest.osm.pbf"
+GEOFABRIK_LISTING_URL = "https://download.geofabrik.de/south-america/brazil/"
+# Quantos datados da listagem (do mais novo ao mais velho) a geração tenta depois do que o `-latest` aponta.
+GEOFABRIK_LISTED_DATES = 3
 
 # Malha oficial das UFs (API de malhas do IBGE, v3, qualidade máxima): decide em que pacote cada tile entra. A geração
 # usa só a cópia no repositório, baixada desta URL em 2026-11-08 (1.001.279 bytes, as 27 UFs, idêntica à de 2026-09-30,

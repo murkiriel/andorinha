@@ -1,14 +1,17 @@
 import hashlib
+import io
 import json
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from andorinha import sources, config, net  # noqa: E402
+from andorinha import sources, config, net, publishing  # noqa: E402
 from andorinha.util import file_hash  # noqa: E402
+from tests import fake_pbf  # noqa: E402
 from tests.fake_server import FakeServer  # noqa: E402
 
 A = b"extrato versao A " * 5000
@@ -86,16 +89,34 @@ class ExtractTest(unittest.TestCase):
         self.assertEqual(2, self.downloads())
 
 
-GEOFABRIK_STATE = b"# original OSM minutely replication sequence number 7362973\n" \
-                  b"timestamp=2026-11-07T21\\:21\\:36Z\nsequenceNumber=4967\n"
+GF_TIME = "2026-11-07T21:21:36Z"
+GF = fake_pbf.pbf(GF_TIME)  # o arquivo datado do dia, com o cabeçalho e o horário dos dados
+GF_OLD_TIME = "2026-11-06T21:20:10Z"
+GF_OLD = fake_pbf.pbf(GF_OLD_TIME, size=70_000)
 
 
-def serve_geofabrik(s: FakeServer, content: bytes = A, day: str = "261107") -> None:
-    """Imita a Geofabrik: `-latest` redireciona para o arquivo datado do dia, que tem o próprio .md5."""
-    s.redirect["/gf/brazil-latest.osm.pbf"] = f"/gf/brazil-{day}.osm.pbf"
-    s.files[f"/gf/brazil-{day}.osm.pbf"] = content
-    s.files[f"/gf/brazil-{day}.osm.pbf.md5"] = f"{md5(A)}  brazil-{day}.osm.pbf\n".encode()
-    s.files["/gf/state.txt"] = GEOFABRIK_STATE
+def listing(days) -> bytes:
+    """A listagem da pasta da Geofabrik: cada arquivo datado com os .md5 e .torrent ao lado, como no site."""
+    rows = "".join(f'<tr><td><a href="brazil-{d}.osm.pbf">brazil-{d}.osm.pbf</a></td>'
+                   f'<td><a href="brazil-{d}.osm.pbf.md5">[MD5]</a></td></tr>' for d in days)
+    return (f'<html><body><a href="brazil-latest.osm.pbf">brazil-latest.osm.pbf</a>{rows}'
+            '<a href="brazil-internal.osm.pbf">brazil-internal.osm.pbf</a></body></html>').encode()
+
+
+def serve_geofabrik(s: FakeServer, days=None, latest: str = "261107", listed=None) -> None:
+    """Imita a Geofabrik de hoje: o `-latest` dá dois saltos (301 e 307) até o datado, que tem o próprio .md5.
+    `days`: {AAMMDD: conteúdo} dos arquivos que respondem; `listed`: os dias que a listagem mostra (padrão: `days`)."""
+    days = {"261107": GF} if days is None else days
+    for table in (s.files, s.code, s.redirect, s.redirect_status):  # começa do zero: o setUp já serviu o padrão
+        for path in [p for p in table if p.startswith("/gf/")]:
+            del table[path]
+    s.redirect["/gf/brazil-latest.osm.pbf"] = "/gf/brazil/brazil-latest.osm.pbf"
+    s.redirect_status["/gf/brazil-latest.osm.pbf"] = 301
+    s.redirect["/gf/brazil/brazil-latest.osm.pbf"] = f"/gf/brazil/brazil-{latest}.osm.pbf"
+    for day, content in days.items():
+        s.files[f"/gf/brazil/brazil-{day}.osm.pbf"] = content
+        s.files[f"/gf/brazil/brazil-{day}.osm.pbf.md5"] = f"{md5(content)}  brazil-{day}.osm.pbf\n".encode()
+    s.files["/gf/brazil/"] = listing(sorted(days) if listed is None else listed)
 
 
 class SourcesTestCase(unittest.TestCase):
@@ -117,7 +138,7 @@ class SourcesTestCase(unittest.TestCase):
                          mock.patch.object(config, "OSM_MD5_URL", s.url("/fr/x.md5")),
                          mock.patch.object(config, "OSM_PBF_URL", s.url("/fr/x.pbf")),
                          mock.patch.object(config, "GEOFABRIK_LATEST_URL", s.url("/gf/brazil-latest.osm.pbf")),
-                         mock.patch.object(config, "GEOFABRIK_STATE_URL", s.url("/gf/state.txt")),
+                         mock.patch.object(config, "GEOFABRIK_LISTING_URL", s.url("/gf/brazil/")),
                          mock.patch.object(config, "OSM_SOURCES", self.order),
                          mock.patch.object(sources, "RETRY_DELAY", 0)]
         for p in self._patches:
@@ -132,50 +153,151 @@ class SourcesTestCase(unittest.TestCase):
     def requested(self, prefix: str) -> int:
         return sum(1 for path, _ in self.server.requests if path.startswith(prefix))
 
+    def hits(self, path: str) -> int:
+        """Quantos pedidos chegaram exatamente a este caminho."""
+        return sum(1 for p, _ in self.server.requests if p == path)
+
+    def extract(self):
+        """sources.osm_extract() e o que ele escreveu no log."""
+        out = io.StringIO()
+        with redirect_stdout(out):
+            meta = sources.osm_extract()
+        self.log = out.getvalue()
+        return meta
+
+    def dated(self, day: str) -> str:
+        return self.server.url(f"/gf/brazil/brazil-{day}.osm.pbf")
+
 
 class GeofabrikTest(SourcesTestCase):
-    """sources.osm_extract só com a Geofabrik: o arquivo datado do dia, que não muda depois de publicado."""
+    """sources.osm_extract só com a Geofabrik: o arquivo datado que responde, o mais novo primeiro."""
     order = ("geofabrik",)
 
-    def test_downloads_the_dated_file(self):
-        meta = sources.osm_extract()
-        self.assertEqual(A, self.pbf.read_bytes())
-        self.assertEqual(md5(A), meta["md5"])
-        self.assertEqual("2026-11-07T21:21:36Z", meta["timestamp"])
-        self.assertEqual(self.server.url("/gf/brazil-261107.osm.pbf"), meta["url"])
+    def test_downloads_the_dated_file_after_two_redirects(self):
+        meta = self.extract()
+        self.assertEqual(GF, self.pbf.read_bytes())
+        self.assertEqual(md5(GF), meta["md5"])
+        self.assertEqual(self.dated("261107"), meta["url"])
         self.assertEqual(0, self.requested("/fr/"))
+
+    def test_timestamp_is_the_one_in_the_file_header_not_the_state(self):
+        meta = self.extract()
+        self.assertEqual(GF_TIME, meta["timestamp"])
+        self.assertNotIn("AVISO", self.log)
+
+    def test_stored_names_in_data_raw_do_not_change(self):
+        """O cache e o "já tenho" contam com estes nomes, qualquer que seja o arquivo datado."""
+        self.extract()
+        self.assertEqual(["brazil-latest.meta.json", "brazil-latest.osm.pbf"], sorted(p.name for p in self.raw.iterdir()))
+        meta = json.loads((self.raw / "brazil-latest.meta.json").read_text())
+        self.assertEqual({"path", "url", "timestamp", "md5", "size"}, set(meta))
+        self.assertEqual(str(self.pbf), meta["path"])
 
     def test_does_not_download_again_when_up_to_date(self):
         sources.osm_extract()
-        sources.osm_extract()
-        self.assertEqual(1, sum(1 for path, _ in self.server.requests if path == "/gf/brazil-261107.osm.pbf"))
+        meta = sources.osm_extract()
+        self.assertEqual(1, self.hits("/gf/brazil/brazil-261107.osm.pbf"))
+        self.assertEqual(GF_TIME, meta["timestamp"])
 
     def test_corrupted_file_fails_and_is_removed(self):
-        serve_geofabrik(self.server, content=A[:-10] + b"corrompido")
+        self.server.files["/gf/brazil/brazil-261107.osm.pbf"] = GF[:-10] + b"corrompido"
         with self.assertRaises(RuntimeError) as ctx:
             sources.osm_extract()
         self.assertIn("md5", str(ctx.exception))
         self.assertFalse(self.pbf.exists())
 
-    def test_state_of_another_day_is_read_again(self):
-        """A troca diária pode cair entre ler o `-latest` e o state.txt: lê os dois de novo uma vez."""
-        states = [GEOFABRIK_STATE.replace(b"2026-11-07T21", b"2026-11-08T21"), GEOFABRIK_STATE]
-        self.server.files["/gf/state.txt"] = lambda: states.pop(0) if len(states) > 1 else states[0]
-        meta = sources.osm_extract()
-        self.assertEqual("2026-11-07T21:21:36Z", meta["timestamp"])
-        self.assertEqual(A, self.pbf.read_bytes())
+    def test_day_that_does_not_answer_uses_yesterdays_without_waiting(self):
+        """22/11/2026: o datado do dia está na listagem e o `-latest` aponta para ele, mas o .md5 dá 502."""
+        serve_geofabrik(self.server, days={"261106": GF_OLD}, latest="261107", listed=["261106", "261107"])
+        self.server.code["/gf/brazil/brazil-261107.osm.pbf.md5"] = 502
+        meta = self.extract()
+        self.assertEqual(self.dated("261106"), meta["url"])
+        self.assertEqual(GF_OLD, self.pbf.read_bytes())
+        self.assertEqual(GF_OLD_TIME, meta["timestamp"])
+        self.assertEqual(1, self.hits("/gf/brazil/brazil-261107.osm.pbf.md5"))  # uma tentativa, sem retentar
+        self.assertEqual(0, self.hits("/gf/brazil/brazil-261107.osm.pbf"))  # o arquivo do dia nem foi pedido
+        self.assertIn("brazil-261107.osm.pbf", self.log)
+        self.assertIn("pulados", self.log)
 
-    def test_state_that_never_matches_the_file_fails(self):
-        self.server.files["/gf/state.txt"] = GEOFABRIK_STATE.replace(b"2026-11-07T21", b"2026-11-09T21")
+    def test_day_with_md5_but_without_the_file_goes_to_the_previous(self):
+        serve_geofabrik(self.server, days={"261107": GF, "261106": GF_OLD}, latest="261107")
+        del self.server.files["/gf/brazil/brazil-261107.osm.pbf"]  # o .md5 saiu e o arquivo ainda não
+        meta = self.extract()
+        self.assertEqual(self.dated("261106"), meta["url"])
+        self.assertEqual(GF_OLD, self.pbf.read_bytes())
+
+    def test_third_candidate_answers(self):
+        """A listagem tem 4 datados, o `-latest` aponta o mais novo: tenta 3 (261109, 261108, 261107) e para no 3º."""
+        serve_geofabrik(self.server, days={"261107": GF}, latest="261109", listed=["261106", "261107", "261108", "261109"])
+        meta = self.extract()
+        self.assertEqual(self.dated("261107"), meta["url"])
+        self.assertEqual(1, self.hits("/gf/brazil/brazil-261109.osm.pbf.md5"))
+        self.assertEqual(1, self.hits("/gf/brazil/brazil-261108.osm.pbf.md5"))
+        self.assertEqual(0, self.requested("/gf/brazil/brazil-261106"))  # o 4º da listagem nem entra
+
+    def test_all_candidates_fail_naming_each_one(self):
+        serve_geofabrik(self.server, days={}, latest="261109", listed=["261107", "261108", "261109"])
         with self.assertRaises(RuntimeError) as ctx:
             sources.osm_extract()
-        self.assertIn("261107", str(ctx.exception))
+        message = str(ctx.exception)
+        for day in ("261107", "261108", "261109"):
+            self.assertIn(f"brazil-{day}.osm.pbf", message)
         self.assertFalse(self.pbf.exists())
 
-    def test_unexpected_file_name_fails(self):
-        self.server.redirect["/gf/brazil-latest.osm.pbf"] = "/gf/outra-coisa.osm.pbf"
-        with self.assertRaises(RuntimeError):
+    def test_candidates_are_in_order_without_repeats(self):
+        serve_geofabrik(self.server, days={}, latest="261108", listed=["261105", "261106", "261107", "261108", "261109"])
+        with mock.patch.object(config, "GEOFABRIK_LISTED_DATES", 3):
+            names = [u.rsplit("/", 1)[-1] for u in sources._geofabrik_candidates()]
+        # o que o -latest aponta primeiro; depois os 3 mais novos da listagem, sem repetir o 261108
+        self.assertEqual(["brazil-261108.osm.pbf", "brazil-261109.osm.pbf", "brazil-261107.osm.pbf"], names)
+
+    def test_listing_does_not_count_md5_torrent_or_latest(self):
+        html = listing(["261107"]).decode() + \
+            '<a href="brazil-261108.osm.pbf.md5">x</a><a href="brazil-261109.osm.pbf.torrent">y</a>'
+        self.assertEqual({"261107"}, set(sources.LISTED.findall(html)))
+
+    def test_latest_that_does_not_answer_falls_back_to_the_listing(self):
+        self.server.code["/gf/brazil-latest.osm.pbf"] = 404
+        meta = self.extract()
+        self.assertEqual(self.dated("261107"), meta["url"])
+        self.assertIn("AVISO", self.log)
+
+    def test_latest_pointing_somewhere_else_falls_back_to_the_listing(self):
+        self.server.redirect["/gf/brazil/brazil-latest.osm.pbf"] = "/gf/brazil/outra-coisa.osm.pbf"
+        self.server.files["/gf/brazil/outra-coisa.osm.pbf"] = GF
+        meta = self.extract()
+        self.assertEqual(self.dated("261107"), meta["url"])
+        self.assertIn("inesperado", self.log)
+
+    def test_neither_latest_nor_listing_fails(self):
+        self.server.code["/gf/brazil-latest.osm.pbf"] = 404
+        self.server.code["/gf/brazil/"] = 404
+        with self.assertRaises(RuntimeError) as ctx:
             sources.osm_extract()
+        self.assertIn("nenhum arquivo datado", str(ctx.exception))
+
+    def test_md5_answer_that_is_not_an_md5_is_skipped(self):
+        serve_geofabrik(self.server, days={"261106": GF_OLD}, latest="261107", listed=["261106", "261107"])
+        self.server.files["/gf/brazil/brazil-261107.osm.pbf.md5"] = b"<html>Servico indisponivel</html>"
+        meta = self.extract()
+        self.assertEqual(self.dated("261106"), meta["url"])
+
+    def test_header_that_cannot_be_read_uses_midnight_of_the_file_day_with_a_warning(self):
+        serve_geofabrik(self.server, days={"261107": A})  # um "arquivo" que não começa com o cabeçalho de um PBF
+        meta = self.extract()
+        self.assertEqual("2026-11-07T00:00:00Z", meta["timestamp"])
+        self.assertIn("AVISO", self.log)
+        self.assertIn("meia-noite", self.log)
+
+    def test_timestamp_decides_the_older_generation_check(self):
+        """A trava de extrato mais velho que o publicado compara o horário do arquivo, não o de quem olhou o state."""
+        meta = self.extract()
+        published = {"build_id": "x", "osm": {"timestamp": "2026-11-07T21:00:00Z"}}
+        updated = {"build_id": "y", "osm": {"timestamp": meta["timestamp"]}}
+        self.assertEqual([], publishing.older_generation(published, updated))
+        older = {"build_id": "y", "osm": {"timestamp": "2026-11-07T21:00:00Z"}}
+        published["osm"]["timestamp"] = meta["timestamp"]
+        self.assertEqual(1, len(publishing.older_generation(published, older)))
 
 
 class FallbackTest(SourcesTestCase):
@@ -189,19 +311,29 @@ class FallbackTest(SourcesTestCase):
 
     def test_first_source_down_uses_the_next(self):
         self.server.code["/fr/state.txt"] = 503
-        meta = sources.osm_extract()
-        self.assertEqual(self.server.url("/gf/brazil-261107.osm.pbf"), meta["url"])
-        self.assertEqual(A, self.pbf.read_bytes())
+        meta = self.extract()
+        self.assertEqual(self.dated("261107"), meta["url"])
+        self.assertEqual(GF, self.pbf.read_bytes())
+        self.assertEqual(GF_TIME, meta["timestamp"])
+        self.assertIn("veio da reserva", self.log)
+
+    def test_first_source_down_and_the_days_file_missing_uses_yesterdays_from_the_reserve(self):
+        serve_geofabrik(self.server, days={"261106": GF_OLD}, latest="261107", listed=["261106", "261107"])
+        self.server.code["/fr/state.txt"] = 502
+        meta = self.extract()
+        self.assertEqual(self.dated("261106"), meta["url"])
+        self.assertEqual(GF_OLD, self.pbf.read_bytes())
 
     def test_first_source_with_bad_md5_uses_the_next(self):
         self.server.files["/fr/x.pbf"] = B[:-10] + b"corrompido"
-        meta = sources.osm_extract()
-        self.assertEqual(md5(A), meta["md5"])
-        self.assertEqual(A, self.pbf.read_bytes())
+        meta = self.extract()
+        self.assertEqual(md5(GF), meta["md5"])
+        self.assertEqual(GF, self.pbf.read_bytes())
 
     def test_all_sources_down_fails_naming_each_one(self):
         self.server.code["/fr/state.txt"] = 503
         self.server.code["/gf/brazil-latest.osm.pbf"] = 404
+        self.server.code["/gf/brazil/"] = 404
         with self.assertRaises(RuntimeError) as ctx:
             sources.osm_extract()
         self.assertIn("openstreetmap.fr", str(ctx.exception))

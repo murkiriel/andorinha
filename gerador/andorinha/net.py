@@ -20,7 +20,7 @@ import urllib.parse
 import urllib.request
 import zlib
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from . import config
 from .util import CHUNK
@@ -66,11 +66,11 @@ def mark_origin(partial: Path, identity: str) -> None:
     _origin_path(partial).write_text(identity, encoding="utf-8")
 
 
-def fetch_text(url: str, attempts: int = 3, delay: float = 5) -> str:
+def fetch_text(url: str, attempts: int = 3, delay: float = 5, timeout: float = 60) -> str:
     """O corpo da resposta como texto UTF-8."""
     for attempt in range(1, attempts + 1):
         try:
-            with _open(url, timeout=60) as r:
+            with _open(url, timeout=timeout) as r:
                 body = r.read()
                 decoder = _decoder(url, r)
             if decoder is not None:
@@ -92,17 +92,15 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None  # o urllib devolve o 3xx como HTTPError, com o Location nos cabeçalhos
 
 
-def redirect_target(url: str, attempts: int = 3, delay: float = 5) -> str:
-    """Para onde `url` redireciona (o Location, absoluto), sem seguir. Uma resposta sem redirecionamento é erro
-    permanente: quem chama conta com o redirecionamento (ex.: o `-latest` da Geofabrik aponta o arquivo datado)."""
-    opener = urllib.request.build_opener(_NoRedirect)
+def _next_hop(opener: urllib.request.OpenerDirector, url: str, attempts: int, delay: float) -> Optional[str]:
+    """O Location (absoluto) de `url`, ou None se ela responde sem redirecionar. Erro permanente (4xx) falha na hora;
+    o resto (5xx, conexão, tempo esgotado) é retentado com espera crescente."""
     error: Exception = DownloadError("nenhuma tentativa")
     for attempt in range(1, attempts + 1):
         req = urllib.request.Request(url, headers={"User-Agent": config.USER_AGENT})
         try:
             with opener.open(req, timeout=60):
-                pass
-            raise PermanentError(f"{url}: respondeu sem redirecionar")
+                return None  # 2xx: fecha sem ler o corpo
         except urllib.error.HTTPError as e:
             location = e.headers.get("Location") if 300 <= e.code < 400 else None
             if location:
@@ -110,13 +108,37 @@ def redirect_target(url: str, attempts: int = 3, delay: float = 5) -> str:
             if 300 <= e.code < 400 or _is_permanent(e):
                 raise PermanentError(f"{url}: HTTP {e.code}") from e
             error = e
-        except PermanentError:
-            raise
         except (OSError, http.client.HTTPException) as e:
             error = e
         if attempt < attempts:
             time.sleep(delay * attempt)
     raise DownloadError(f"{url}: {attempts} tentativas falharam ({error})")
+
+
+def redirect_target(url: str, attempts: int = 3, delay: float = 5, max_hops: int = 3,
+                    stop: Optional[Callable[[str], bool]] = None) -> str:
+    """Onde termina a corrente de redirecionamentos de `url` (o último endereço, absoluto). Cada salto é um pedido
+    à parte, lido sem seguir o redirecionamento e sem baixar corpo. Uma resposta sem redirecionar logo no primeiro salto é erro permanente: quem chama conta com o
+    redirecionamento. Mais de `max_hops` saltos também é erro (corrente sem fim: em 2026-09, numa rede doméstica, o
+    `-latest` da Geofabrik entrou em laço).
+
+    `stop`: se devolve True para um endereço da corrente, ele é o fim e nem é pedido. A Geofabrik precisa disso: o
+    `-latest` dá dois saltos (301 e 307) até o arquivo datado, e pedir o datado do dia, que às vezes não responde, faria
+    falhar a leitura de um endereço que já se sabe certo."""
+    opener = urllib.request.build_opener(_NoRedirect)
+    current = url
+    for hop in range(max_hops + 1):
+        target = _next_hop(opener, current, attempts, delay)
+        if target is None:
+            if hop == 0:
+                raise PermanentError(f"{url}: respondeu sem redirecionar")
+            return current
+        if hop == max_hops:
+            raise PermanentError(f"{url}: mais de {max_hops} redirecionamentos (parou em {target})")
+        current = target
+        if stop is not None and stop(current):
+            return current
+    raise AssertionError("inalcançável")  # o laço sempre retorna ou levanta
 
 
 def download(url: str, dest: Path, identity: Optional[str] = None, attempts: int = 5, delay: float = 10,

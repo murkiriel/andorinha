@@ -8,18 +8,22 @@ O openstreetmap.fr troca o extrato uma vez por dia (por volta de 01:00 UTC), sem
 durante o download (~25 min), o arquivo baixado é o novo e o md5 lido antes é o velho: nesse caso o md5 e a data são
 lidos de novo e, se mudaram, a versão nova é baixada uma vez. Se não mudaram, o arquivo veio corrompido.
 
-Na Geofabrik, o `-latest` redireciona para o arquivo datado do dia (brazil-AAMMDD.osm.pbf), que não muda depois de
-publicado e tem o próprio .md5: o download não corre contra a troca diária. Só o redirecionamento é lido (sem
-segui-lo). Em 2026-09, a partir de uma rede doméstica, seguir o `-latest` entrou em redirecionamento sem fim.
+Na Geofabrik, o arquivo datado do dia (brazil-AAMMDD.osm.pbf) não muda depois de publicado e tem o próprio .md5: o
+download não corre contra a troca diária. O `-latest` só aponta para ele (dois redirecionamentos, lidos um a um sem
+segui-los: em 2026-09, a partir de uma rede doméstica, seguir o `-latest` entrou em redirecionamento sem fim). O datado
+do dia aparece na listagem da pasta horas antes de responder, então a geração tenta, em ordem, o que o `-latest` aponta e
+os datados mais novos da listagem, e usa o primeiro cujo .md5 responde (uma tentativa só, sem esperar: 404, 502 ou
+conexão caída passam ao próximo). A hora dos dados é a do cabeçalho do arquivo, não a do state.txt de agora.
 """
 from __future__ import annotations
 
 import json
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import config, net
+from . import config, net, pbf_header
 from .util import file_hash
 
 # Espera base entre tentativas, em segundos (multiplicada pelo número da tentativa). Os testes zeram.
@@ -74,34 +78,91 @@ def _from_openstreetmap_fr(pbf: Path, local_meta: Path) -> Extract:
     return config.OSM_PBF_URL, timestamp, md5
 
 
-def _geofabrik_dated() -> Tuple[str, str]:
-    """(url do arquivo datado de agora, timestamp dele). O state.txt é lido depois do `-latest`; se a troca diária
-    cair entre os dois, a data do state não é a do arquivo, e os dois são lidos de novo uma vez."""
-    for attempt in (1, 2):
-        url = net.redirect_target(config.GEOFABRIK_LATEST_URL, delay=RETRY_DELAY)
-        name = re.search(r"/brazil-(\d{6})\.osm\.pbf$", url)
-        if name is None:
-            raise RuntimeError(f"o -latest da Geofabrik aponta um arquivo inesperado: {url}")
-        day = name.group(1)
-        timestamp = _state_timestamp(config.GEOFABRIK_STATE_URL)
-        if timestamp[2:10].replace("-", "") == day:
-            return url, timestamp
-    raise RuntimeError(f"o state.txt da Geofabrik ({timestamp}) não é do dia do arquivo brazil-{day}")
+DATED = re.compile(r"/brazil-(\d{6})\.osm\.pbf$")
+LISTED = re.compile(r"brazil-(\d{6})\.osm\.pbf(?![\w.])")  # sem o .md5 e o .torrent que a listagem também traz
+# Um .md5 de verdade: 32 dígitos hexadecimais no começo. Uma página de erro com status 200 não passa.
+MD5_LINE = re.compile(r"^[0-9a-fA-F]{32}(\s|$)")
+
+
+def _geofabrik_candidates() -> List[str]:
+    """Os arquivos datados que valem tentar, do preferido ao último recurso: o que o `-latest` aponta e, depois, até
+    `config.GEOFABRIK_LISTED_DATES` datados da listagem da pasta, do mais novo ao mais velho, sem repetir. Se o
+    `-latest` não responde, a listagem sozinha basta; só sem os dois a fonte falha."""
+    folder = config.GEOFABRIK_LISTING_URL
+    urls: List[str] = []
+    problems: List[str] = []
+    try:
+        urls.append(net.redirect_target(config.GEOFABRIK_LATEST_URL, delay=RETRY_DELAY,
+                                        stop=lambda u: DATED.search(u) is not None))
+        if DATED.search(urls[0]) is None:
+            problems.append(f"o -latest aponta um arquivo inesperado: {urls.pop()}")
+    except net.DownloadError as e:
+        problems.append(f"-latest: {e}")
+    try:
+        days = sorted(set(LISTED.findall(net.fetch_text(folder, delay=RETRY_DELAY))), reverse=True)
+        for day in days[:config.GEOFABRIK_LISTED_DATES]:
+            url = f"{folder}brazil-{day}.osm.pbf"
+            if url not in urls:
+                urls.append(url)
+        if not days:
+            problems.append("a listagem não tem nenhum brazil-AAMMDD.osm.pbf")
+    except net.DownloadError as e:
+        problems.append(f"listagem: {e}")
+    if problems:
+        print(f"[osm] AVISO: Geofabrik: {'; '.join(problems)}")
+    if not urls:
+        raise RuntimeError("a Geofabrik não indicou nenhum arquivo datado (" + "; ".join(problems) + ")")
+    return urls
+
+
+def _dated_md5(url: str) -> str:
+    """O md5 publicado do arquivo datado, com uma tentativa só. Levanta net.DownloadError se não responde."""
+    text = net.fetch_text(url + ".md5", attempts=1, timeout=30)
+    if MD5_LINE.match(text.strip()) is None:
+        raise net.DownloadError(f"{url}.md5: resposta que não é um md5")
+    return text.split()[0].lower()
+
+
+def _dated_timestamp(pbf: Path, url: str) -> str:
+    """A hora dos dados do arquivo baixado: a do cabeçalho do PBF. Se ele não dá, a meia-noite (UTC) do dia do nome do
+    arquivo, que é o mais cedo possível, e o log avisa."""
+    try:
+        return pbf_header.file_timestamp(pbf)
+    except (pbf_header.PbfHeaderError, OSError) as e:
+        day = DATED.search(url)
+        assert day is not None
+        stamp = datetime.strptime(day.group(1), "%y%m%d").replace(tzinfo=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        print(f"[osm] AVISO: o cabeçalho de {url.rsplit('/', 1)[-1]} não deu a hora dos dados ({e}); usando "
+              f"{stamp}, a meia-noite do dia do nome do arquivo")
+        return stamp
 
 
 def _from_geofabrik(pbf: Path, local_meta: Path) -> Extract:
-    url, timestamp = _geofabrik_dated()
-    md5 = net.fetch_text(url + ".md5", delay=RETRY_DELAY).split()[0]
-    if _local_matches(pbf, local_meta, md5):
-        print(f"[osm] extrato local já é o mais novo ({timestamp})")
+    skipped: List[str] = []
+    for url in _geofabrik_candidates():
+        name = url.rsplit("/", 1)[-1]
+        try:
+            md5 = _dated_md5(url)  # uma tentativa: sem resposta, passa ao anterior na hora (nada de esperar 5, 10, 15 s)
+        except net.DownloadError as e:
+            skipped.append(f"{name}: {e}")
+            print(f"[osm] Geofabrik: {name} não responde ({e}); tentando o anterior")
+            continue
+        if not _local_matches(pbf, local_meta, md5):
+            print(f"[osm] baixando {name} da Geofabrik...")
+            try:
+                net.download(url, pbf, identity=md5, delay=RETRY_DELAY)
+            except net.PermanentError as e:  # o .md5 saiu e o arquivo ainda não: o mesmo caso, passa ao anterior
+                skipped.append(f"{name}: {e}")
+                print(f"[osm] Geofabrik: {name} não baixa ({e}); tentando o anterior")
+                continue
+            local = file_hash(pbf, "md5")
+            if local != md5:  # o arquivo datado não muda: md5 diferente é arquivo corrompido
+                pbf.unlink()
+                raise RuntimeError(f"md5 do extrato não confere: {local} != {md5} publicado")
+        timestamp = _dated_timestamp(pbf, url)
+        print(f"[osm] Geofabrik: {name}, dados de {timestamp}" + (f" (pulados: {'; '.join(skipped)})" if skipped else ""))
         return url, timestamp, md5
-    print(f"[osm] baixando o extrato de {timestamp} da Geofabrik ({url.rsplit('/', 1)[-1]})...")
-    net.download(url, pbf, identity=md5, delay=RETRY_DELAY)
-    local = file_hash(pbf, "md5")
-    if local != md5:  # o arquivo datado não muda: md5 diferente é arquivo corrompido
-        pbf.unlink()
-        raise RuntimeError(f"md5 do extrato não confere: {local} != {md5} publicado")
-    return url, timestamp, md5
+    raise RuntimeError("nenhum arquivo datado da Geofabrik respondeu: " + "; ".join(skipped))
 
 
 SOURCES: Dict[str, Callable[[Path, Path], Extract]] = {

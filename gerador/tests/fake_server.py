@@ -16,7 +16,8 @@ class FakeServer:
     da lista). `no_range`: caminhos em que o servidor ignora Range e sempre manda 200. `code[caminho]`: status fixo.
     `gzip_always`: caminhos que vão sempre comprimidos (Content-Encoding: gzip, 200, sem Range), mesmo sem o cliente
     pedir, como o IBGE faz com o urllib nos executores do GitHub Actions. `redirect[caminho] = destino`: responde 307
-    com `Location: destino`, como o `-latest` da Geofabrik, que aponta para o arquivo datado do dia."""
+    (ou o status de `redirect_status[caminho]`, ex.: 301) com `Location: destino`, como o `-latest` da Geofabrik, que
+    dá dois saltos até o arquivo datado do dia."""
 
     def __init__(self) -> None:
         self.files: Dict[str, Content] = {}
@@ -25,6 +26,7 @@ class FakeServer:
         self.code: Dict[str, int] = {}
         self.gzip_always: set = set()
         self.redirect: Dict[str, str] = {}
+        self.redirect_status: Dict[str, int] = {}
         self.requests: List[Tuple[str, Optional[str]]] = []
         server = self
 
@@ -40,7 +42,7 @@ class FakeServer:
                     self.end_headers()
                     return
                 if self.path in server.redirect:
-                    self.send_response(307)
+                    self.send_response(server.redirect_status.get(self.path, 307))
                     self.send_header("Location", server.redirect[self.path])
                     self.send_header("Content-Length", "0")
                     self.end_headers()

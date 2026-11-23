@@ -202,6 +202,20 @@ def osm_extract() -> Dict[str, object]:
     return meta
 
 
+def old_extract_note(timestamp: str, now: datetime) -> Optional[str]:
+    """Uma nota se o extrato (`timestamp`, o do catálogo) é mais velho que `config.OSM_MAX_AGE_HOURS` em `now`; None
+    se não. É só um registro: o extrato velho não barra a geração (a trava de publicação só olha o extrato mais velho
+    que o publicado)."""
+    try:
+        taken = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+    hours = int((now - taken).total_seconds() // 3600)
+    if hours <= config.OSM_MAX_AGE_HOURS:
+        return None
+    return f"OSM de {timestamp[:10]}, {hours} h mais velho que o momento da geração"
+
+
 def mesh_problem(path: Path) -> Optional[str]:
     """O que há de errado com o arquivo da malha das UFs, ou None se é um GeoJSON com as 27 UFs.
 

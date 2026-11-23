@@ -140,14 +140,32 @@ class ScheduledGenerationTest(unittest.TestCase):
         """De 2026-11-03 a 2026-11-08, 11 gerações agendadas falharam sem ninguém saber."""
         report = job(self.text, "alert")
         self.assertTrue(report, "falta o job alert")
-        self.assertIn("needs: [interval, generate]\n", report)
         self.assertIn("if: always() && github.event_name == 'schedule' && "
                       "github.repository == 'Murkiriel/andorinha'\n", report)
         self.assertIn("scripts/alert.py", report)
         for value in ("${{ needs.interval.result }}", "${{ needs.generate.result }}", "${{ github.run_id }}"):
             self.assertIn(value, report)
-        # O estudo dos pesos, que roda depois da publicação, não abre a issue "Geração falhando".
-        self.assertNotIn("weights", report)
+
+    def test_the_alert_job_also_reads_the_weights_study(self):
+        """O estudo dos pesos roda depois da publicação e falhava sem aviso: o alert espera por ele e abre a issue dele."""
+        report = job(self.text, "alert")
+        self.assertIn("needs: [interval, generate, weights]\n", report)
+        self.assertIn("WEIGHTS_RESULT: ${{ needs.weights.result }}", report)
+        self.assertIn('--weights "$WEIGHTS_RESULT"', report)
+
+    def test_the_alert_job_reads_the_catalog_as_it_is_now(self):
+        """A "Publicação parada" lê a idade do catalogo.json: do ramo de agora, que o disparo pode ter acabado de
+        atualizar, e não do commit do disparo (que ficaria velho e abriria a issue por engano)."""
+        report = job(self.text, "alert")
+        self.assertIn("actions/checkout@", report)
+        self.assertIn("ref: ${{ github.ref }}", report)
+
+    def test_the_alert_job_runs_in_every_scheduled_run_whatever_the_interval_said(self):
+        """A idade da geração publicada se confere também quando o interval diz "ainda não" e o build é pulado."""
+        report = job(self.text, "alert")
+        self.assertIn("if: always() &&", report)
+        self.assertNotIn("needs.interval.outputs", report)
+        self.assertNotIn("generate.result ==", report)
 
     def test_only_the_alert_job_writes_issues(self):
         top = self.text.split("\njobs:\n", 1)[0]

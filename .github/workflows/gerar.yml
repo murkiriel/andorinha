@@ -18,8 +18,8 @@
 # disco temporário em /mnt, quando a máquina tem um) e usa as threads da máquina (2 num repositório privado, 4 num
 # público). Memória, swap e disco são registrados a cada 30 s e vão, com os logs, para os artefatos do job.
 #
-# Dois jobs depois do "interval", em fila, mais o "alert":
-#   generate -> weights
+# Dois jobs depois do "interval", em fila, mais o "alert" no fim de tudo:
+#   generate -> weights -> alert
 # - generate: extrato, tiles, pacotes, validação, catálogo e publicação, tudo como sempre. Parte da tabela de pesos da
 #   moto da release da geração publicada (as tabelas "proximo" que o estudo dela devolveu, senão as normais, senão a
 #   cópia do repositório) e sobe a tabela de que partiu na release, junto com os pacotes. Nada passa por artefato do
@@ -29,7 +29,9 @@
 #   sobe as tabelas novas (pesos_moto_*.proximo.csv e pesos_proximo.json) como assets extras da MESMA release, sem mexer
 #   no catalogo.json nem nos arquivos já publicados. A geração seguinte parte delas: os pesos refeitos chegam ao app
 #   uma geração depois. Falhar ou estourar o tempo aqui não muda nada do que foi publicado e não abre a issue "Geração
-#   falhando".
+#   falhando": o alert abre a "Estudo dos pesos falhando".
+# - alert: só em execução agendada, depois dos outros (ver o job). Três issues fixas: "Geração falhando",
+#   "Estudo dos pesos falhando" e "Publicação parada" (a geração publicada tem mais de 9 dias).
 #
 # Reprodutível só a geração corrente: as actions vão fixadas pelo SHA do commit, com a tag em comentário (uma
 # tag pode ser movida), e as dependências Python saem do gerador/requirements.txt, travado com hashes.
@@ -174,7 +176,8 @@ jobs:
           echo "build_id=$(python -c "import json; print(json.load(open('data/dist/catalogo.json'))['build_id'])")" >> "$GITHUB_OUTPUT"
 
   weights:
-    # Só depois de uma geração publicada. Não entra na conta da issue "Geração falhando" (o job alert não olha este).
+    # Só depois de uma geração publicada. Não entra na conta da issue "Geração falhando": o job alert o lê à parte, na
+    # issue "Estudo dos pesos falhando".
     needs: generate
     if: needs.generate.result == 'success' && needs.generate.outputs.build_id != ''
     runs-on: ubuntu-24.04
@@ -229,10 +232,15 @@ jobs:
           if-no-files-found: ignore
 
   alert:
-    # Aviso de falha: numa execução agendada que falhou, abre a issue "Geração falhando" (ou comenta nela); na primeira
-    # que gerar e publicar, comenta e fecha (scripts/alert.py). À mão não avisa: quem disparou está olhando. Sem isto,
-    # as gerações agendadas de 2026-11-03 a 2026-11-08 falharam sem ninguém saber.
-    needs: [interval, generate]
+    # Avisos, só em execução agendada (à mão não avisa: quem disparou está olhando). Roda por último, com o resultado de
+    # todos os jobs (scripts/alert.py), e mexe em três issues fixas:
+    # - "Geração falhando": abre (ou comenta) se o interval ou o generate falhou; comenta e fecha na primeira geração
+    #   que publicou. Sem isto, as gerações agendadas de 2026-11-03 a 2026-11-08 falharam sem ninguém saber.
+    # - "Estudo dos pesos falhando": o mesmo para o job weights, que falha sem mexer no que foi publicado.
+    # - "Publicação parada": em TODO disparo agendado, mesmo com o interval dizendo "ainda não", confere a idade da
+    #   geração publicada; mais de 9 dias (7 do ciclo e 2 de folga) abre a issue. Pega o que as outras não veem:
+    #   o agendamento que não dispara, o interval que erra, a release que não sobe.
+    needs: [interval, generate, weights]
     if: always() && github.event_name == 'schedule' && github.repository == 'Murkiriel/andorinha'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -240,12 +248,17 @@ jobs:
       contents: read
       issues: write
     steps:
+      # O catálogo do ramo como está agora, não o do commit do disparo: se este disparo publicou, a idade tem de ser a
+      # da geração nova, ou a issue "Publicação parada" ficaria aberta (ou abriria) por engano.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.ref }}
 
-      - name: Issue "Geração falhando"
+      - name: Issues "Geração falhando", "Estudo dos pesos falhando" e "Publicação parada"
         env:
           GH_TOKEN: ${{ github.token }}
           INTERVAL_RESULT: ${{ needs.interval.result }}
           GENERATE_RESULT: ${{ needs.generate.result }}
+          WEIGHTS_RESULT: ${{ needs.weights.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: python3 gerador/scripts/alert.py --interval "$INTERVAL_RESULT" --generate "$GENERATE_RESULT" --run-url "$RUN_URL"
+        run: python3 gerador/scripts/alert.py --interval "$INTERVAL_RESULT" --generate "$GENERATE_RESULT" --weights "$WEIGHTS_RESULT" --run-url "$RUN_URL"

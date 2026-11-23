@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -298,6 +299,31 @@ class GeofabrikTest(SourcesTestCase):
         older = {"build_id": "y", "osm": {"timestamp": "2026-11-07T21:00:00Z"}}
         published["osm"]["timestamp"] = meta["timestamp"]
         self.assertEqual(1, len(publishing.older_generation(published, older)))
+
+
+class OldExtractNoteTest(unittest.TestCase):
+    """Extrato mais velho que 36 h no momento da geração: só uma nota. Em 2026-11-22 a geração usou o de 21/11 sem aviso."""
+
+    NOW = datetime(2026, 11, 22, 15, 30, tzinfo=timezone.utc)
+
+    def test_extract_of_the_day_has_no_note(self):
+        self.assertIsNone(sources.old_extract_note("2026-11-22T00:54:00Z", self.NOW))
+
+    def test_extract_of_yesterday_has_no_note(self):
+        self.assertIsNone(sources.old_extract_note("2026-11-21T09:00:00Z", self.NOW))  # 30 h
+
+    def test_exactly_36_hours_has_no_note(self):
+        self.assertIsNone(sources.old_extract_note("2026-11-21T03:30:00Z", self.NOW))
+
+    def test_older_than_36_hours_has_a_note_with_the_day_and_the_hours(self):
+        note = sources.old_extract_note("2026-11-21T00:49:19Z", self.NOW)  # 38 h
+        self.assertEqual("OSM de 2026-11-21, 38 h mais velho que o momento da geração", note)
+
+    def test_unreadable_timestamp_has_no_note(self):
+        self.assertIsNone(sources.old_extract_note("ontem", self.NOW))
+
+    def test_limit_comes_from_the_config(self):
+        self.assertEqual(36, config.OSM_MAX_AGE_HOURS)
 
 
 class FallbackTest(SourcesTestCase):

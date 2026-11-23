@@ -59,6 +59,11 @@ def _generate(from_stage: str, recorder: run_record.RunRecorder) -> str:
     osm_meta_file = config.RAW / "brazil-latest.meta.json"
     with recorder.stage("osm"):
         osm = sources.osm_extract() if start <= 0 else json.loads(osm_meta_file.read_text(encoding="utf-8"))
+    if start <= 0:  # com --from, o extrato é o de uma execução anterior e a idade dele não é da geração de agora
+        stale = sources.old_extract_note(osm["timestamp"], datetime.now(timezone.utc))
+        if stale:
+            print(f"[gerar] AVISO: {stale}")
+            recorder.notes.append(stale)
     with recorder.stage("tiles"):
         tiles_dir = builder.build(Path(osm["path"])) if start <= 1 else config.BUILD / "valhalla_tiles"
 
@@ -89,11 +94,12 @@ def _generate(from_stage: str, recorder: run_record.RunRecorder) -> str:
         cat = catalog.build_catalog(build_id, osm, generated, municipality_files=municipal,
                                     weights_digests=municipalities.table_digests(config.DIST))
         catalog.save(cat, config.DIST / "catalogo.json")
-        # Pesos calculados com tiles de outra geração não param a geração: o catálogo diz de qual, por UF, e o aviso
-        # fica no log e no geracao.json.
+        # Pesos calculados com tiles de outra geração não param a geração: o catálogo diz de qual, por UF, e a nota
+        # vai para o geracao.json. No log é só `nota`, não AVISO: o desenho entrega os pesos uma geração depois, então
+        # isto é o normal de toda geração (o estudo parado tem a issue própria).
         in_catalog = {state: f for state, f in municipal.items() if state in generated}
         for note in municipalities.generation_notes(in_catalog, build_id, config.VALHALLA_VERSION):
-            print(f"[gerar] AVISO: {note}")
+            print(f"[gerar] nota: {note}")
             recorder.notes.append(note)
     total = sum(p.size for p in generated.values())
     return f"geração {build_id}: {len(generated)} pacotes, {total / 1e9:.2f} GB compactados"

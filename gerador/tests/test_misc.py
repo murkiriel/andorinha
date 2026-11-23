@@ -225,8 +225,10 @@ class MunicipalitiesInTheGenerationTest(unittest.TestCase):
         self.assertIn(WEIGHTS_BUILD_ID, record["notes"][0])
         self.assertIn("pesos de 2 estados", record["notes"][1])
         self.assertIs(False, cat["municipalities"]["states"]["GO"]["state_weights"]["same_generation"])
-        self.assertIn("AVISO: pesos de 2 estados", log.getvalue())
-        self.assertIn("AVISO: pesos de 4 municípios (2 UFs)", log.getvalue())
+        # no log é nota, não AVISO: o normal de toda geração, que entrega os pesos uma geração depois
+        self.assertIn("nota: pesos de 2 estados", log.getvalue())
+        self.assertIn("nota: pesos de 4 municípios (2 UFs)", log.getvalue())
+        self.assertNotIn("AVISO: pesos de", log.getvalue())
 
 
 if __name__ == "__main__":

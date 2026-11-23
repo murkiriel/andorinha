@@ -42,7 +42,11 @@ geração publicada (`built_at` do `catalogo.json`) é de antes do último domin
 roda, estuda o lote de pesos e publica. Se a geração falhar, o disparo seguinte tenta de novo, e os dias seguintes também, até sair; uma
 geração à mão no meio da semana não adia a do domingo. Uma execução agendada que falha abre a issue **"Geração
 falhando"** (ou comenta nela, se já estiver aberta), com o link da execução; a primeira que gerar e publicar comenta e
-fecha a issue (job `alert`, `scripts/alert.py`). Quem acompanha o repositório recebe a notificação. São dois horários, fora da hora cheia, porque o GitHub atrasa ou pula disparos
+fecha a issue (job `alert`, `scripts/alert.py`). Quem acompanha o repositório recebe a notificação. O mesmo job
+cuida de mais duas issues: **"Estudo dos pesos falhando"** (o job `weights` falhou; os pesos pararam de se renovar,
+mas nada do que foi publicado muda) e **"Publicação parada"** (a geração publicada tem mais de 9 dias, os 7 do ciclo
+e 2 de folga; é conferida em todo disparo agendado, mesmo quando o `interval` diz "ainda não", e pega o agendamento
+que não dispara, o `interval` que erra e a release que não sobe). O `alert` roda por último, depois do `weights`. São dois horários, fora da hora cheia, porque o GitHub atrasa ou pula disparos
 agendados sem avisar: o segundo cobre o primeiro e, se o primeiro já publicou, só confere a data e para. Disparado à
 mão, gera na hora e só publica com `publish` marcado. Num fork, o agendamento não gera.
 
@@ -75,7 +79,7 @@ novo, somar o download de 2,3 GB (25 min numa conexão de ~1,5 MB/s).
 |---|---|---|
 | (antes de tudo) | `andorinha/sources.py` | Confere a malha das UFs do IBGE, a cópia versionada `ibge_malha_uf.json`: as 27 UFs e o sha256 de `config.py`. Nada é baixado (a API do IBGE deixou de responder ao Actions em 2026-11-03), e a mesma malha dá sempre a mesma divisão dos pacotes. Vem primeiro para uma falha aparecer em segundos, não depois dos tiles. Para trocar a cópia, ver `IBGE_MESH_URL` em `config.py` |
 | (antes de tudo) | `andorinha/municipalities.py`, `andorinha/weights_tables.py` | Confere a malha municipal do IBGE, `ibge_malha_municipios.json.gz` (cópia versionada: sha256 do conteúdo e os 5.570 municípios), e as duas tabelas de pesos da moto de que a geração parte: as da release da geração publicada (as `.proximo`, que o estudo dela devolveu, ou, sem elas, as normais, `pesos_moto_municipios.csv` e `pesos_moto_estados.csv`; conferidas pelo sha256 e pela contagem, pelo formato, pela malha e por não perderem linhas) ou, se a release não as tem ou elas não conferem, a semente do repositório (sha256 e contagem do `config.py`). A malha e a semente não vêm da rede; a tabela da release, sim (uma tentativa de download e, se falhar, a semente com um aviso). Ver [Pesos da moto por município](#pesos-da-moto-por-município) |
-| osm | `andorinha/sources.py` | Baixa o extrato do Brasil quando há versão nova e confere o md5 publicado. Fonte principal: openstreetmap.fr (se ele troca o extrato durante o download, uma vez por dia, lê o md5 de novo e baixa a versão nova uma vez). Se ele falha, a Geofabrik, por um arquivo datado (`brazil-AAMMDD.osm.pbf`, que não muda): o que o `-latest` aponta (dois redirecionamentos) e, depois, até 3 datados da listagem da pasta, do mais novo ao mais velho. O datado do dia aparece na listagem horas antes de responder (404, ou 502 no `.md5`): o `.md5` é pedido uma vez só, sem esperar, e quem não responde passa ao anterior. A data e a hora do extrato vêm do cabeçalho do próprio arquivo (`andorinha/pbf_header.py`), não do `state.txt`; se o cabeçalho não der, vale a meia-noite do dia do nome, com aviso. O log avisa e o `url` do catálogo diz de onde veio. `ANDORINHA_OSM_SOURCES` muda a ordem (no Actions, a entrada `osm_sources` do disparo manual) |
+| osm | `andorinha/sources.py` | Baixa o extrato do Brasil quando há versão nova e confere o md5 publicado. Fonte principal: openstreetmap.fr (se ele troca o extrato durante o download, uma vez por dia, lê o md5 de novo e baixa a versão nova uma vez). Se ele falha, a Geofabrik, por um arquivo datado (`brazil-AAMMDD.osm.pbf`, que não muda): o que o `-latest` aponta (dois redirecionamentos) e, depois, até 3 datados da listagem da pasta, do mais novo ao mais velho. O datado do dia aparece na listagem horas antes de responder (404, ou 502 no `.md5`): o `.md5` é pedido uma vez só, sem esperar, e quem não responde passa ao anterior. A data e a hora do extrato vêm do cabeçalho do próprio arquivo (`andorinha/pbf_header.py`), não do `state.txt`; se o cabeçalho não der, vale a meia-noite do dia do nome, com aviso. O log avisa e o `url` do catálogo diz de onde veio. `ANDORINHA_OSM_SOURCES` muda a ordem (no Actions, a entrada `osm_sources` do disparo manual). Extrato mais velho que 36 h no momento da geração (`OSM_MAX_AGE_HOURS`) vira nota no `geracao.json` e aviso no log ("OSM de AAAA-MM-DD, N h mais velho que o momento da geração"); não barra |
 | tiles | `andorinha/builder.py` | Roda `valhalla_build_admins` e `valhalla_build_tiles` do pyvalhalla, com 8 threads (config e executáveis vêm do `engine.py`), com o banco de fusos só do Brasil de `andorinha/timezones.py` (desde 2026-10-05; o zip da release fixada do timezone-boundary-builder é conferido pelo sha256 de `config.py` e recusado se não bater; precisa do SpatiaLite, `mod_spatialite`) |
 | packages | `andorinha/packing.py` | Divide os tiles em base (nível 0) e um pacote por UF (níveis 1 e 2), pela malha do IBGE, e grava os `.tar.zst` (zstd 19; até 2026-10-05, `.tar.gz`) |
 | packages | `andorinha/municipalities.py` | Grava o arquivo de apoio de cada UF, `andorinha-municipios-<UF>.geojson.zst`: o contorno de cada município (malha municipal do IBGE), o peso do perfil de moto dele e, no cabeçalho, o peso do estado, e grava ao lado as duas tabelas de pesos de que partiu. O estudo dos pesos não roda aqui, e sim no job `weights`, depois; ver [Pesos da moto por município](#pesos-da-moto-por-município) |
@@ -209,7 +213,8 @@ geração, então cada geração refaz um lote.
   Depois `python scripts/weights.py upload --tag <build_id> --out pesos` (com o `GITHUB_TOKEN` do job, o único com
   essa permissão) sobe o resultado. **Se o estudo falhar ou estourar o tempo, nada do que foi publicado muda**, a
   geração seguinte parte das tabelas normais da release e o job `weights` aparece em vermelho; a falha não abre a issue
-  "Geração falhando" (o `alert` só olha o `generate`). Um artefato pequeno de diagnóstico (`pesos`, com o `estudo.json`
+  "Geração falhando", e sim a "Estudo dos pesos falhando" (o `alert` lê o `weights` à parte, comenta nas falhas
+  seguintes e fecha na primeira vez que o estudo passar). Um artefato pequeno de diagnóstico (`pesos`, com o `estudo.json`
   e o `/usr/bin/time -v`) sai com `continue-on-error`, e nada depende dele.
 - **O que sobe na release (assets extras da MESMA release).** `pesos_moto_municipios.proximo.csv`,
   `pesos_moto_estados.proximo.csv` e `pesos_proximo.json` (o `build_id` da release, a versão do Valhalla, o nome, o
@@ -347,8 +352,9 @@ saiu com `use_trails` 0,4 em todas as UFs e `use_highways` de 0,4 (AP) a 0,9 (DF
 **Uma tabela mais velha que os tiles não para a geração.** Mesmo com o estudo em lotes, os pesos de quase todos os
 municípios são de tiles de uma geração anterior (até 10 semanas atrás, e os estados, até 27). A geração segue, o catálogo
 diz de qual geração são os pesos de cada UF (`generations`, e `same_generation` falso; o mesmo dentro de
-`state_weights`) e os avisos, um para os municípios e um para os estados, vão para o log e para as `notes` do
-`geracao.json`. Os pesos de uma geração só se refazem com os tiles dela, então um peso tem sempre a idade do lote em que
+`state_weights`) e as notas, uma para os municípios e uma para os estados, vão para as `notes` do `geracao.json` (e
+para o log como `nota:`, sem `AVISO`: com o desenho de entregar os pesos uma geração depois, isso é o normal, e um
+aviso fixo em toda geração é ruído; o que de fato quebra, como o estudo parar, tem a issue própria). Os pesos de uma geração só se refazem com os tiles dela, então um peso tem sempre a idade do lote em que
 foi calculado.
 
 Tamanhos dos arquivos de apoio, medidos em 2026-11-14, já com o peso do estado (kB compactados): AC 17, AL 14, AM 115,

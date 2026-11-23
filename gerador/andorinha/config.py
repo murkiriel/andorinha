@@ -54,6 +54,11 @@ GEOFABRIK_LISTING_URL = "https://download.geofabrik.de/south-america/brazil/"
 # Quantos datados da listagem (do mais novo ao mais velho) a geração tenta depois do que o `-latest` aponta.
 GEOFABRIK_LISTED_DATES = 3
 
+# Extrato mais velho que isto, no momento da geração (horas), vira nota no geracao.json e aviso no log; não barra.
+# O openstreetmap.fr troca o extrato todo dia por volta de 01:00 UTC, e a Geofabrik também: o normal é menos de 30 h.
+# Em 2026-11-22 a geração usou o extrato de 21/11 sem aviso nenhum.
+OSM_MAX_AGE_HOURS = 36
+
 # Malha oficial das UFs (API de malhas do IBGE, v3, qualidade máxima): decide em que pacote cada tile entra. A geração
 # usa só a cópia no repositório, baixada desta URL em 2026-11-08 (1.001.279 bytes, as 27 UFs, idêntica à de 2026-09-30,
 # que gerou as primeiras releases). Até 2026-11-08 a geração baixava a malha; desde 2026-11-03 a API não respondia aos
